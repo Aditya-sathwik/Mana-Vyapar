@@ -29,12 +29,20 @@ export function useInventory() {
       if (response.success) {
         setProducts(response.data)
       }
-    } catch (err: any) {
-      setError(err.message || "Failed to fetch inventory")
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setError(err.message)
+      } else {
+        setError("Failed to fetch inventory")
+      }
     } finally {
       setLoading(false)
     }
   }, [])
+
+  useEffect(() => {
+    fetchInventory()
+  }, [fetchInventory])
 
   const addProduct = async (formData: FormData) => {
     try {
@@ -50,7 +58,7 @@ export function useInventory() {
       
       await fetchInventory();
       return result.data;
-    } catch (err: any) {
+    } catch (err: unknown) {
       throw err;
     }
   };

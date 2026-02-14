@@ -4,6 +4,7 @@ import "./globals.css";
 import { ThemeProvider } from "../components/theme-provider";
 import { AuthProvider } from "../context/auth-context";
 import { LanguageProvider } from "../context/language-context";
+import StoreProvider from "../components/providers/StoreProvider";
 
 const outfit = Outfit({
   variable: "--font-display",
@@ -30,18 +31,20 @@ export default function RootLayout({
       <body
         className={`${outfit.variable} ${inter.variable} antialiased font-body font-normal overflow-x-hidden`}
       >
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="dark"
-          enableSystem
-          disableTransitionOnChange
-        >
-          <LanguageProvider>
-            <AuthProvider>
-              {children}
-            </AuthProvider>
-          </LanguageProvider>
-        </ThemeProvider>
+        <StoreProvider>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="dark"
+            enableSystem
+            disableTransitionOnChange
+          >
+            <LanguageProvider>
+              <AuthProvider>
+                {children}
+              </AuthProvider>
+            </LanguageProvider>
+          </ThemeProvider>
+        </StoreProvider>
       </body>
     </html>
   );

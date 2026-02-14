@@ -25,14 +25,22 @@ export function useKhata() {
       if (response.success) {
         setKhataAccounts(response.data)
       }
-    } catch (err: any) {
-      setError(err.message || "Failed to fetch Khata list")
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setError(err.message)
+      } else {
+        setError("Failed to fetch Khata list")
+      }
     } finally {
       setLoading(false)
     }
   }, [])
 
-  const addCustomer = async (customerData: any) => {
+  useEffect(() => {
+    fetchKhata()
+  }, [fetchKhata])
+
+  const addCustomer = async (customerData: Record<string, unknown>) => {
     try {
       const response = await apiFetch("/khata", {
         method: "POST",
@@ -43,7 +51,7 @@ export function useKhata() {
         await fetchKhata();
         return response.data;
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       throw err;
     }
   };

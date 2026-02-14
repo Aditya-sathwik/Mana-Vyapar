@@ -13,10 +13,17 @@ interface User {
   role: string;
 }
 
+interface LoginCredentials {
+  email?: string;
+  username?: string;
+  password?: string;
+  [key: string]: unknown;
+}
+
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  login: (data: any) => Promise<void>;
+  login: (data: LoginCredentials) => Promise<void>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
 }
@@ -34,7 +41,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (response.success) {
         setUser(response.data);
       }
-    } catch (error) {
+    } catch {
       setUser(null);
     } finally {
       setLoading(false);
@@ -45,7 +52,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     refreshUser();
   }, []);
 
-  const login = async (credentials: any) => {
+  const login = async (credentials: LoginCredentials) => {
     const response = await apiFetch("/users/login", {
       method: "POST",
       body: JSON.stringify(credentials),

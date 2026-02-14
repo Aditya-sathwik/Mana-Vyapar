@@ -20,8 +20,12 @@ export default function LoginPage() {
     
     try {
       await login({ email, password })
-    } catch (err: any) {
-      setError(err.message || "Failed to login. Please check your credentials.")
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setError(err.message)
+      } else {
+        setError("Failed to login. Please check your credentials.")
+      }
     } finally {
       setIsLoading(false)
     }
@@ -84,7 +88,7 @@ export default function LoginPage() {
           </form>
           
           <div className="mt-6 text-center text-sm">
-            <span className="text-slate-500">Don't have an account? </span>
+            <span className="text-slate-500">Don&apos;t have an account? </span>
             <button className="text-emerald-500 hover:underline font-medium">Contact Support</button>
           </div>
         </CardContent>

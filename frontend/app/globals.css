@@ -4,26 +4,32 @@
   --font-display: "Outfit", sans-serif;
   --font-body: "Inter", sans-serif;
 
-  --color-primary: #10b981;
-  --color-primary-dark: #059669;
-  --color-accent: #f59e0b;
+  /* Merchant Theme (Emerald Green) */
+  --color-primary: #059467;
+  --color-primary-dark: #047854;
+  --color-primary-light: #d1fae5;
+
+  --color-background-light: #f5f8f7;
   
+  /* Admin Theme (Dark/Analytics) */
   --color-background-dark: #0f172a;
   --color-surface-dark: #1e293b;
   --color-card-dark: #334155;
+
+  --color-accent: #f59e0b;
 
   --radius-xl: 24px;
   --radius-2xl: 32px;
 }
 
 :root {
-  --background: #f8fafc; /* Slate-50 */
+  --background: #f5f8f7; /* Background Light */
   --foreground: #0f172a; /* Slate-900 */
   --card: #ffffff;
   --card-foreground: #0f172a;
   --popover: #ffffff;
   --popover-foreground: #0f172a;
-  --primary: #10b981; /* Emerald-500 */
+  --primary: #059467; /* Emerald Green */
   --primary-foreground: #ffffff;
   --secondary: #f1f5f9; /* Slate-100 */
   --secondary-foreground: #0f172a;
@@ -35,18 +41,18 @@
   --destructive-foreground: #f8fafc;
   --border: #e2e8f0; /* Slate-200 */
   --input: #e2e8f0;
-  --ring: #10b981;
-  --radius: 1rem;
+  --ring: #059467;
+  --radius: 0.5rem;
 }
 
 .dark {
-  --background: #0f172a; /* Slate-950 */
+  --background: #0f172a; /* Admin Theme Background */
   --foreground: #f8fafc; /* Slate-50 */
-  --card: #1e293b; /* Slate-800 */
+  --card: #1e293b; /* Surface Dark */
   --card-foreground: #f8fafc;
   --popover: #0f172a;
   --popover-foreground: #f8fafc;
-  --primary: #10b981;
+  --primary: #059467;
   --primary-foreground: #ffffff;
   --secondary: #1e293b;
   --secondary-foreground: #f8fafc;
@@ -58,7 +64,7 @@
   --destructive-foreground: #f8fafc;
   --border: #1e293b;
   --input: #1e293b;
-  --ring: #059669;
+  --ring: #047854;
 }
 
 @layer base {
@@ -66,7 +72,7 @@
     background: var(--background);
     color: var(--foreground);
     font-family: var(--font-body);
-    @apply antialiased selection:bg-primary/30 selection:text-primary;
+    @apply antialiased selection:bg-primary/30 selection:text-primary transition-colors duration-200;
   }
 
   h1, h2, h3, h4, h5, h6 {
@@ -78,21 +84,27 @@
 /* Custom Glassmorphism */
 @layer utilities {
   .glass {
-    @apply bg-white/10 backdrop-blur-md border border-white/20;
+    @apply bg-white/70 backdrop-blur-md border border-white/20;
   }
   
   .glass-dark {
-    @apply bg-slate-900/40 backdrop-blur-lg border border-slate-700/50;
+    @apply bg-slate-900/70 backdrop-blur-lg border border-slate-700/50;
   }
 
   .text-balance {
     text-wrap: balance;
+  }
+
+  /* Mobile-first utilities */
+  .safe-area-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
   }
 }
 
 /* Scrollbar Styling */
 ::-webkit-scrollbar {
   width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
