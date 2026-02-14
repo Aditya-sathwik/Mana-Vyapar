@@ -8,18 +8,17 @@ import {
   Wallet,
   Package,
   ScanLine,
-  BarChart3,
   Settings,
   Store,
   HeadphonesIcon
 } from "lucide-react"
+import { ThemeToggle } from "@/components/ui/theme-toggle"
 
 const sidebarItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/khata", label: "My Khata", icon: Wallet },
   { href: "/inventory", label: "Inventory", icon: Package },
   { href: "/scanner", label: "AI Scanner", icon: ScanLine },
-  // { href: "/reports", label: "Reports", icon: BarChart3 }, // Not in current scope but good to have
 ]
 
 export function Sidebar() {
@@ -27,7 +26,7 @@ export function Sidebar() {
 
   return (
     <aside className="w-64 bg-white dark:bg-[#132a23] border-r border-primary/10 flex-col hidden md:flex z-20 h-screen sticky top-0">
-      <div className="h-16 flex items-center px-6 border-b border-primary/10">
+      <div className="h-16 flex items-center justify-between px-6 border-b border-primary/10">
         <div className="flex items-center gap-2 text-primary font-bold text-xl tracking-tight">
           <Store className="h-6 w-6" />
           <span>Mana Vyapar</span>
@@ -56,15 +55,18 @@ export function Sidebar() {
       </nav>
 
       <div className="p-4 border-t border-primary/10">
-        <Link
-          href="/settings"
-          className="flex items-center gap-3 px-4 py-3 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-primary/5 hover:text-primary rounded-lg font-medium transition-colors"
-        >
-          <Settings className="h-5 w-5" />
-          <span>Settings</span>
-        </Link>
+        <div className="flex items-center justify-between mb-2">
+           <ThemeToggle />
+           <Link
+            href="/settings"
+            className="flex items-center gap-2 px-3 py-2 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-primary/5 hover:text-primary rounded-lg font-medium transition-colors text-sm"
+          >
+            <Settings className="h-4 w-4" />
+            <span>Settings</span>
+          </Link>
+        </div>
 
-        <div className="mt-4 p-4 rounded-xl bg-gradient-to-br from-primary to-primary-dark text-white relative overflow-hidden">
+        <div className="mt-2 p-4 rounded-xl bg-gradient-to-br from-primary to-primary-dark text-white relative overflow-hidden">
           <div className="relative z-10">
             <p className="text-sm font-medium opacity-90">Need Help?</p>
             <p className="text-xs opacity-75 mt-1">Contact our support team 24/7</p>

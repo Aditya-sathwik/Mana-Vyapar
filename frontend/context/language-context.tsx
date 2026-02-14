@@ -15,11 +15,14 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   const [language, setLanguage] = useState<Language>("en");
 
   useEffect(() => {
-    const savedLang = localStorage.getItem("app-language") as Language;
-    if (savedLang && (savedLang === "en" || savedLang === "te")) {
-      setLanguage(savedLang);
+    // Only run on client
+    if (typeof window !== "undefined") {
+        const savedLang = localStorage.getItem("app-language") as Language;
+        if (savedLang && (savedLang === "en" || savedLang === "te")) {
+            setLanguage(savedLang);
+        }
     }
-  }, []);
+  }, []); // Only run once on mount
 
   const handleSetLanguage = (lang: Language) => {
     setLanguage(lang);

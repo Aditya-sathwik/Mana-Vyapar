@@ -3,6 +3,7 @@
 import Link from "next/link"
 import { Store, Menu } from "lucide-react"
 import { useState } from "react"
+import { ThemeToggle } from "@/components/ui/theme-toggle"
 
 export function WebsiteNavbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
@@ -28,6 +29,7 @@ export function WebsiteNavbar() {
 
           {/* Right Actions */}
           <div className="hidden md:flex items-center space-x-4">
+            <ThemeToggle />
             <Link href="/auth/login" className="text-slate-600 dark:text-slate-300 hover:text-primary dark:hover:text-primary font-medium px-4 py-2 transition-colors">
               Login
             </Link>
@@ -37,7 +39,8 @@ export function WebsiteNavbar() {
           </div>
 
           {/* Mobile Menu Button */}
-          <div className="md:hidden flex items-center">
+          <div className="md:hidden flex items-center gap-4">
+            <ThemeToggle />
             <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="text-slate-600 dark:text-slate-300 hover:text-primary">
               <Menu className="h-8 w-8" />
             </button>
