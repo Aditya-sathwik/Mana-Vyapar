@@ -1,23 +1,89 @@
+"use client"
+
+import { useState } from "react"
 import { Sidebar } from "@/components/layout/Sidebar"
 import { BottomNav } from "@/components/layout/BottomNav"
+import { MerchantHeader } from "@/components/layout/MerchantHeader"
+import { motion, AnimatePresence } from "framer-motion"
+import { X } from "lucide-react"
 
 export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+
   return (
-    <div className="flex min-h-screen bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 font-body">
+    <div className="flex min-h-screen bg-slate-50 dark:bg-[#09090b] text-slate-900 dark:text-slate-100 font-body relative overflow-hidden">
+      {/* Background Mesh Gradient (Subtle for Merchant) */}
+      <div className="absolute inset-0 pointer-events-none opacity-[0.03] dark:opacity-[0.15]">
+        <div className="absolute top-[-5%] left-[-5%] w-[40%] h-[40%] bg-primary rounded-full blur-[100px]" />
+        <div className="absolute bottom-[5%] right-[-5%] w-[30%] h-[30%] bg-blue-500 rounded-full blur-[80px]" />
+      </div>
+
       {/* Desktop Sidebar */}
-      <Sidebar />
+      <Sidebar className="hidden md:flex" />
+
+      {/* Mobile Sidebar Overlay */}
+      <AnimatePresence>
+        {isMobileMenuOpen && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="fixed inset-0 z-[60] bg-black/40 backdrop-blur-sm md:hidden"
+            />
+            <motion.div
+              initial={{ x: "-100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "-100%" }}
+              transition={{ type: "spring", stiffness: 300, damping: 30 }}
+              className="fixed inset-y-0 left-0 z-[70] w-72 md:hidden"
+            >
+              <div className="relative h-full">
+                <button 
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="absolute right-[-48px] top-4 h-10 w-10 flex items-center justify-center bg-white dark:bg-slate-900 text-slate-900 dark:text-white rounded-xl border border-slate-200 dark:border-slate-800 shadow-2xl"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+                <div className="h-full w-full pointer-events-auto shadow-2xl">
+                   <Sidebar className="flex w-full" />
+                </div>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0 relative">
-        <main className="flex-1 p-4 md:p-8 overflow-y-auto pb-24 md:pb-8">
-          {children}
+      <div className="flex-1 flex flex-col min-w-0 relative z-10">
+        <MerchantHeader onMenuClick={() => setIsMobileMenuOpen(true)} />
+        
+        <main className="flex-1 overflow-y-auto p-4 md:p-8 lg:p-10 pb-24 md:pb-12 bg-transparent">
+          <div className="max-w-[1700px] mx-auto min-h-full">
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, ease: "easeOut" }}
+            >
+              {children}
+            </motion.div>
+          </div>
+          
+          <footer className="mt-20 py-8 border-t border-slate-200 dark:border-slate-800/50 flex flex-col md:flex-row justify-between items-center gap-4 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.3em]">
+            <p>© 2026 MANA VYAPAR • MERCHANT HUB V2.4</p>
+            <div className="flex items-center gap-6">
+              <a href="#" className="hover:text-primary transition-colors">Help Center</a>
+              <a href="#" className="hover:text-primary transition-colors">Privacy</a>
+              <a href="#" className="hover:text-primary transition-colors">Contact Node</a>
+            </div>
+          </footer>
         </main>
 
-        {/* Mobile Bottom Navigation */}
         <div className="md:hidden">
           <BottomNav />
         </div>

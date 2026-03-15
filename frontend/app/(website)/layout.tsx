@@ -7,7 +7,7 @@ export default function WebsiteLayout({
   children: React.ReactNode
 }) {
   return (
-    <div className="min-h-screen bg-white dark:bg-[#0f172a] text-slate-900 dark:text-white font-display">
+    <div className="min-h-screen bg-white dark:bg-[#09090b] text-slate-900 dark:text-white font-display">
       <WebsiteNavbar />
       {children}
       <WebsiteFooter />

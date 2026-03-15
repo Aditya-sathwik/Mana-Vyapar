@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { motion, AnimatePresence, useMotionValue, useTransform, PanInfo } from "framer-motion"
+import { motion, AnimatePresence } from "framer-motion"
 import {
   Search,
   Filter,
@@ -13,9 +13,15 @@ import {
   ChevronRight,
   MessageCircle,
   Plus,
-  Minus
+  Minus,
+  CheckCircle2,
+  ExternalLink,
+  MoreVertical,
+  Calendar,
+  Share2
 } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { Card } from "@/components/ui/card"
 
 interface Customer {
   id: number
@@ -28,7 +34,6 @@ interface Customer {
   color: string
 }
 
-// Mock Data
 const initialCustomers: Customer[] = [
   { id: 1, name: "Ramesh Kumar", phone: "+91 98765 43210", activity: "2 mins ago", balance: 850, type: "get", initial: "RK", color: "indigo" },
   { id: 2, name: "Sita Devi", phone: "+91 98123 45678", activity: "Yesterday", balance: 200, type: "give", initial: "SD", color: "orange" },
@@ -40,284 +45,284 @@ export default function KhataPage() {
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null)
 
   return (
-    <div className="flex h-[calc(100vh-8rem)] md:h-[calc(100vh-4rem)] relative overflow-hidden">
-      {/* Customer List */}
-      <div className="flex-1 flex flex-col h-full overflow-hidden w-full">
-        {/* Stats */}
-        <div className="p-4 md:p-6 pb-2 grid grid-cols-1 md:grid-cols-3 gap-4 shrink-0">
-          <div className="bg-white dark:bg-surface-dark p-4 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col">
-            <span className="text-sm text-slate-500 font-medium">Total Receivables</span>
-            <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-1">₹ 45,230.00</div>
-          </div>
-          <div className="bg-white dark:bg-surface-dark p-4 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col">
-            <span className="text-sm text-slate-500 font-medium">Total Payables</span>
-            <div className="text-2xl font-bold text-red-600 dark:text-red-400 mt-1">₹ 12,450.00</div>
-          </div>
-          <div className="bg-primary p-4 rounded-xl border border-primary shadow-sm flex flex-col text-white relative overflow-hidden group cursor-pointer hover:bg-primary-dark transition-colors">
-             <span className="text-sm text-white/80 font-medium z-10">Quick Action</span>
-             <div className="text-xl font-bold mt-1 z-10 flex items-center gap-2">
-                Scan Bill
-                <ArrowLeft className="h-4 w-4 rotate-180" />
-             </div>
-          </div>
+    <div className="space-y-10 pb-12 relative overflow-hidden h-full">
+      {/* Header Section */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div>
+           <h1 className="text-3xl md:text-4xl font-black text-slate-900 dark:text-white tracking-tighter uppercase leading-none">
+             Digital <span className="text-primary tracking-normal">Khata</span> Ledger
+           </h1>
+           <p className="text-slate-500 dark:text-slate-400 text-sm mt-1 font-medium italic">
+             Managing 124 loyal customers • ₹57,680 total exposure
+           </p>
         </div>
-
-        {/* Search */}
-        <div className="px-4 md:px-6 py-4 shrink-0">
-          <div className="relative max-w-2xl">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <Search className="h-5 w-5 text-slate-400" />
-            </div>
-            <input
-              className="block w-full pl-10 pr-3 py-3 border border-slate-200 dark:border-slate-700 rounded-lg leading-5 bg-white dark:bg-surface-dark text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary sm:text-sm shadow-sm"
-              placeholder="Search Customer by Name or Phone Number..."
-              type="text"
-            />
-            <div className="absolute inset-y-0 right-0 pr-2 flex items-center">
-              <button className="p-1 hover:bg-slate-100 dark:hover:bg-slate-700 rounded text-slate-400">
-                <Filter className="h-5 w-5" />
-              </button>
-            </div>
-          </div>
+        <div className="flex items-center gap-3">
+           <button className="h-12 flex items-center gap-3 px-6 bg-slate-900 text-white dark:bg-slate-100 dark:text-black rounded-2xl font-black text-sm shadow-xl transition-all hover:scale-105 active:scale-95 group">
+              <Share2 className="h-4 w-4" />
+              EXPORT REPORT
+           </button>
+           <button className="h-12 flex items-center gap-3 px-6 bg-primary hover:bg-primary-dark text-black rounded-2xl font-black text-sm shadow-xl shadow-primary/20 transition-all hover:scale-105 active:scale-95 group">
+              <UserPlus className="h-5 w-5" />
+              ADD NEW CUSTOMER
+           </button>
         </div>
-
-        {/* List Header */}
-        <div className="px-4 md:px-6 py-2 bg-slate-50/50 dark:bg-slate-900/50 border-y border-slate-200 dark:border-slate-700 flex items-center text-xs font-semibold text-slate-500 uppercase tracking-wider hidden md:flex">
-          <div className="w-1/3 pl-2">Customer</div>
-          <div className="w-1/4">Last Activity</div>
-          <div className="w-1/4 text-right">Balance</div>
-          <div className="w-1/6 text-center">Action</div>
-        </div>
-
-        {/* List */}
-        <div className="flex-1 overflow-y-auto custom-scrollbar p-4 md:p-6 pt-2 space-y-2">
-          {initialCustomers.map((customer) => (
-            <CustomerRow
-              key={customer.id}
-              customer={customer}
-              isSelected={selectedCustomer?.id === customer.id}
-              onClick={() => setSelectedCustomer(customer)}
-            />
-          ))}
-        </div>
-
-        {/* FAB */}
-        <button className="absolute bottom-6 right-6 lg:right-[420px] shadow-lg shadow-primary/40 bg-primary hover:bg-primary-dark text-white rounded-full p-4 flex items-center justify-center transition-transform hover:scale-105 active:scale-95 z-30">
-          <UserPlus className="h-6 w-6" />
-        </button>
       </div>
 
-      {/* Details Drawer/Overlay */}
-      <AnimatePresence mode="wait">
-        {selectedCustomer && (
-          <>
-            {/* Desktop Drawer */}
-            <motion.aside
-              initial={{ x: "100%" }}
-              animate={{ x: 0 }}
-              exit={{ x: "100%" }}
-              transition={{ type: "spring", damping: 25, stiffness: 200 }}
-              className="hidden md:flex w-[400px] bg-white dark:bg-surface-dark border-l border-slate-200 dark:border-slate-700 flex-col shadow-xl z-20 absolute inset-y-0 right-0"
-            >
-              <CustomerDetailContent customer={selectedCustomer} onClose={() => setSelectedCustomer(null)} />
-            </motion.aside>
+      {/* Summary Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+         <Card className="p-8 bg-white dark:bg-[#09090b] border-primary/10 relative overflow-hidden group">
+            <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+               <Plus className="h-16 w-16 text-emerald-500" />
+            </div>
+            <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Total Receivables</p>
+            <h3 className="text-3xl font-black text-emerald-600 dark:text-emerald-400 tracking-tighter">₹45,230.00</h3>
+            <p className="text-[10px] font-bold text-slate-400 mt-2">Expected collection within 7 days</p>
+         </Card>
+         <Card className="p-8 bg-white dark:bg-[#09090b] border-primary/10 relative overflow-hidden group">
+            <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+               <Minus className="h-16 w-16 text-red-500" />
+            </div>
+            <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Total Payables</p>
+            <h3 className="text-3xl font-black text-red-600 dark:text-red-400 tracking-tighter">₹12,450.00</h3>
+            <p className="text-[10px] font-bold text-slate-400 mt-2">Due to local vendors/suppliers</p>
+         </Card>
+         <Card className="p-8 bg-primary/5 dark:bg-primary/10 border-primary/20 border-dashed relative overflow-hidden group cursor-pointer hover:border-primary/40 transition-all">
+            <div className="flex items-center gap-4">
+               <div className="h-14 w-14 rounded-2xl bg-primary text-black flex items-center justify-center shadow-lg shadow-primary/20 transition-transform group-hover:rotate-12">
+                  <Plus className="h-8 w-8" />
+               </div>
+               <div>
+                  <h4 className="font-black text-slate-900 dark:text-white uppercase tracking-tighter leading-none mb-1">Quick Ledger</h4>
+                  <p className="text-xs text-slate-500 font-medium italic underline underline-offset-4">Add instant entry</p>
+               </div>
+            </div>
+         </Card>
+      </div>
 
-            {/* Mobile Full Screen Overlay */}
-            <motion.div
-              initial={{ x: "100%" }}
-              animate={{ x: 0 }}
-              exit={{ x: "100%" }}
-              transition={{ type: "spring", damping: 25, stiffness: 200 }}
-              className="md:hidden fixed inset-0 bg-white dark:bg-background-dark z-50 flex flex-col"
-            >
-              <CustomerDetailContent customer={selectedCustomer} onClose={() => setSelectedCustomer(null)} isMobile />
-            </motion.div>
-          </>
-        )}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+         {/* Customer List Column */}
+         <div className="lg:col-span-12 space-y-6">
+            <Card className="p-4 bg-white dark:bg-[#09090b] border-primary/10">
+               <div className="flex flex-col md:flex-row items-center gap-4">
+                  <div className="relative flex-1 w-full">
+                     <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
+                     <input 
+                      type="text" 
+                      placeholder="Search by name, phone, or location..." 
+                      className="w-full pl-12 pr-4 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl text-sm focus:ring-2 focus:ring-primary focus:outline-none transition-all"
+                     />
+                  </div>
+                  <div className="flex items-center gap-2 w-full md:w-auto">
+                     <button className="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-3 border border-slate-200 dark:border-slate-800 rounded-2xl text-xs font-bold text-slate-500 hover:text-primary transition-all uppercase tracking-widest">
+                        <Filter className="h-4 w-4" />
+                        Filters
+                     </button>
+                  </div>
+               </div>
+            </Card>
+
+            <Card className="bg-white dark:bg-[#09090b] border-primary/10 overflow-hidden shadow-2xl">
+               <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse">
+                     <thead>
+                        <tr className="bg-slate-50/50 dark:bg-slate-950/50 text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">
+                           <th className="px-8 py-6">Customer Profile</th>
+                           <th className="px-6 py-6">Last Transaction</th>
+                           <th className="px-6 py-6">Status</th>
+                           <th className="px-6 py-6 font-black text-right pr-12">Net Balance</th>
+                           <th className="px-6 py-6 text-right"></th>
+                        </tr>
+                     </thead>
+                     <tbody className="divide-y divide-slate-100 dark:divide-slate-900 font-medium">
+                        {initialCustomers.map((customer) => (
+                           <tr 
+                            key={customer.id} 
+                            onClick={() => setSelectedCustomer(customer)}
+                            className="hover:bg-primary/5 transition-all cursor-pointer group"
+                           >
+                              <td className="px-8 py-6">
+                                 <div className="flex items-center gap-4">
+                                    <div className={cn(
+                                      "h-14 w-14 rounded-[1.5rem] flex items-center justify-center font-black text-lg transition-transform group-hover:scale-105 group-hover:rotate-3 shadow-lg",
+                                      customer.color === "indigo" ? "bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-300" :
+                                      customer.color === "orange" ? "bg-orange-100 dark:bg-orange-900/40 text-orange-600 dark:text-orange-400" :
+                                      customer.color === "pink" ? "bg-pink-100 dark:bg-pink-900/40 text-pink-600 dark:text-pink-300" :
+                                      "bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 shadow-none"
+                                    )}>
+                                       {customer.initial}
+                                    </div>
+                                    <div>
+                                       <h4 className="font-black text-slate-900 dark:text-white text-lg tracking-tight leading-none mb-1.5">{customer.name}</h4>
+                                       <p className="text-xs text-slate-400 flex items-center gap-1">
+                                          <Phone className="h-3 w-3" /> {customer.phone}
+                                       </p>
+                                    </div>
+                                 </div>
+                              </td>
+                              <td className="px-6 py-6">
+                                 <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
+                                    <Calendar className="h-4 w-4 text-slate-400" />
+                                    {customer.activity}
+                                 </div>
+                              </td>
+                              <td className="px-6 py-6">
+                                 <span className={cn(
+                                   "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider",
+                                   customer.balance === 0 ? "bg-slate-100 text-slate-500 dark:bg-slate-800" :
+                                   customer.type === 'get' ? "bg-red-100 text-red-700 dark:bg-red-900/20 dark:text-red-400" :
+                                   "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400"
+                                 )}>
+                                    <div className={cn("h-1.5 w-1.5 rounded-full animate-pulse", 
+                                      customer.balance === 0 ? "bg-slate-400" :
+                                      customer.type === 'get' ? "bg-red-500" : "bg-emerald-500"
+                                    )} />
+                                    {customer.type === 'get' ? "You get" : customer.type === 'give' ? "You give" : "Settled"}
+                                 </span>
+                              </td>
+                              <td className="px-6 py-6 text-right pr-12">
+                                 <div className={cn("text-xl font-black tracking-tighter", 
+                                   customer.balance === 0 ? "text-slate-400" :
+                                   customer.type === 'get' ? "text-red-600 dark:text-red-400" : "text-emerald-600 dark:text-emerald-400"
+                                 )}>
+                                    ₹ {customer.balance.toLocaleString()}.00
+                                 </div>
+                              </td>
+                              <td className="px-6 py-6 text-right">
+                                 <button className="p-3 text-slate-300 hover:text-primary transition-all hover:bg-primary/10 rounded-2xl">
+                                    <ChevronRight className="h-6 w-6" />
+                                 </button>
+                              </td>
+                           </tr>
+                        ))}
+                     </tbody>
+                  </table>
+               </div>
+            </Card>
+         </div>
+      </div>
+
+      {/* Customer Side Drawer Overlay */}
+      <AnimatePresence>
+         {selectedCustomer && (
+            <>
+               <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setSelectedCustomer(null)}
+                className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[60]"
+               />
+               <motion.aside
+                initial={{ x: '100%' }}
+                animate={{ x: 0 }}
+                exit={{ x: '100%' }}
+                transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+                className="fixed top-0 right-0 h-screen w-full md:w-[600px] bg-white dark:bg-[#09090b] shadow-2xl z-[70] border-l border-primary/10 flex flex-col"
+               >
+                  <div className="p-8 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/50 relative overflow-hidden">
+                     <div className="absolute top-0 right-0 p-10 opacity-5 pointer-events-none">
+                        <History className="h-48 w-48 text-primary" />
+                     </div>
+                     <button 
+                      onClick={() => setSelectedCustomer(null)}
+                      className="absolute top-6 right-6 p-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl text-slate-400 hover:text-red-500 transition-all hover:rotate-90"
+                     >
+                        <X className="h-6 w-6" />
+                     </button>
+                     
+                     <div className="flex items-center gap-6 mb-10">
+                        <div className={cn(
+                          "h-24 w-24 rounded-[2.5rem] flex items-center justify-center font-black text-3xl shadow-2xl",
+                          selectedCustomer.color === "indigo" ? "bg-indigo-100 dark:bg-indigo-900 text-indigo-500" :
+                          selectedCustomer.color === "orange" ? "bg-orange-100 dark:bg-orange-900 text-orange-500" :
+                          "bg-slate-100 dark:bg-slate-800 text-slate-500"
+                        )}>
+                           {selectedCustomer.initial}
+                        </div>
+                        <div>
+                           <h2 className="text-4xl font-black text-slate-900 dark:text-white tracking-tighter leading-none mb-3">{selectedCustomer.name}</h2>
+                           <div className="flex items-center gap-6">
+                              <p className="text-sm font-bold text-slate-500 flex items-center gap-2">
+                                 <Phone className="h-4 w-4 text-primary" /> {selectedCustomer.phone}
+                              </p>
+                              <p className="text-sm font-bold text-slate-500 flex items-center gap-2">
+                                 <CheckCircle2 className="h-4 w-4 text-emerald-500" /> Verified 
+                              </p>
+                           </div>
+                        </div>
+                     </div>
+
+                     <div className="grid grid-cols-2 gap-4">
+                        <div className="p-6 bg-white dark:bg-slate-900 rounded-[2rem] border border-slate-200 dark:border-slate-800 shadow-inner">
+                           <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Current Balance</p>
+                           <h4 className={cn("text-3xl font-black tracking-tighter", 
+                             selectedCustomer.type === 'get' ? "text-red-600" : "text-emerald-600"
+                           )}>₹{selectedCustomer.balance.toLocaleString()}.00</h4>
+                           <span className="text-[10px] font-black text-slate-400 uppercase">{selectedCustomer.type === 'get' ? "Pending recovery" : "Safe payout"}</span>
+                        </div>
+                        <div className="p-6 bg-white dark:bg-slate-900 rounded-[2rem] border border-slate-200 dark:border-slate-800 shadow-inner">
+                           <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Last Settled</p>
+                           <h4 className="text-3xl font-black text-slate-900 dark:text-white tracking-tighter italic">24 Oct</h4>
+                           <span className="text-[10px] font-black text-slate-400 uppercase">Automated sync</span>
+                        </div>
+                     </div>
+                  </div>
+
+                  <div className="flex-1 overflow-y-auto p-10 space-y-8 bg-white dark:bg-[#09090b]">
+                     <h3 className="text-xs font-black text-slate-400 uppercase tracking-[0.3em] text-center mb-10">— TRANSACTION LEDGER —</h3>
+                     <div className="space-y-6">
+                        {[1, 2, 3, 4, 5].map((item, i) => (
+                           <div key={i} className="group relative flex gap-6">
+                              <div className="flex flex-col items-center gap-2">
+                                 <div className={cn("h-4 w-4 rounded-full border-4 border-white dark:border-[#09090b] shadow-sm z-10", i % 2 === 0 ? "bg-red-500" : "bg-emerald-500")} />
+                                 {i < 4 && <div className="w-0.5 flex-1 bg-slate-100 dark:bg-slate-800 rounded-full" />}
+                              </div>
+                              <div className="flex-1 pb-10">
+                                 <div className="bg-slate-50 dark:bg-slate-950 p-6 rounded-[2rem] border border-slate-100 dark:border-slate-800 group-hover:border-primary/30 transition-all">
+                                    <div className="flex justify-between items-start mb-4">
+                                       <div>
+                                          <p className="text-[10px] font-black text-slate-400 uppercase mb-1">TXN #{1024 + i}</p>
+                                          <h5 className="font-black text-slate-900 dark:text-white uppercase tracking-tight">Purchase: Grocery Combo</h5>
+                                       </div>
+                                       <span className={cn("text-lg font-black tracking-tighter", i % 2 === 0 ? "text-red-600" : "text-emerald-600")}>
+                                          {i % 2 === 0 ? "-" : "+"} ₹{450 * (i + 1)}.00
+                                       </span>
+                                    </div>
+                                    <div className="flex items-center justify-between mt-auto pt-4 border-t border-slate-200 dark:border-slate-800 border-dashed">
+                                       <div className="flex items-center gap-2 text-[10px] font-bold text-slate-500 uppercase">
+                                          <Calendar className="h-3 w-3" /> Oct {24 - i}, 10:45 AM
+                                       </div>
+                                       <button className="text-[10px] font-black text-primary hover:underline uppercase tracking-widest flex items-center gap-1">
+                                          View Bill <ExternalLink className="h-3 w-3" />
+                                       </button>
+                                    </div>
+                                 </div>
+                              </div>
+                           </div>
+                        ))}
+                     </div>
+                  </div>
+
+                  <div className="p-8 border-t border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-950 safe-area-bottom">
+                     <div className="grid grid-cols-2 gap-6 mb-4">
+                        <button className="h-16 bg-red-500 text-white rounded-3xl font-black text-sm shadow-xl shadow-red-500/20 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-3">
+                           <Minus className="h-5 w-5" />
+                           YOU GAVE (OUT)
+                        </button>
+                        <button className="h-16 bg-emerald-500 text-white rounded-3xl font-black text-sm shadow-xl shadow-emerald-500/20 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-3">
+                           <Plus className="h-5 w-5" />
+                           YOU GOT (IN)
+                        </button>
+                     </div>
+                     <button className="w-full h-16 bg-[#25D366] text-white rounded-3xl font-black text-sm shadow-xl shadow-emerald-900/10 hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-center gap-3 uppercase tracking-widest">
+                        <MessageCircle className="h-6 w-6" />
+                        SEND WHATSAPP REMINDER
+                     </button>
+                  </div>
+               </motion.aside>
+            </>
+         )}
       </AnimatePresence>
-    </div>
-  )
-}
-
-function CustomerRow({ customer, isSelected, onClick }: { customer: Customer, isSelected: boolean, onClick: () => void }) {
-  const x = useMotionValue(0)
-  const backgroundOpacity = useTransform(x, [-100, 0], [1, 0])
-  const [swiped, setSwiped] = useState(false)
-
-  const handleDragEnd = (_event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
-    if (info.offset.x < -100) {
-      setSwiped(true)
-    } else {
-      setSwiped(false)
-    }
-  }
-
-  // To use swiped state effectively, we'd need to trigger an action.
-  // For now, it just tracks the gesture.
-  // Using swiped to avoid lint error about unused var
-  if (swiped) {
-    // console.log("Swiped!", customer.name)
-  }
-
-  return (
-    <div className="relative overflow-hidden rounded-lg">
-      {/* Swipe Action Background */}
-      <motion.div
-        style={{ opacity: backgroundOpacity }}
-        className="absolute inset-y-0 right-0 w-full bg-[#25D366] flex items-center justify-end px-6 rounded-lg pointer-events-none"
-      >
-        <div className="flex items-center text-white font-bold gap-2">
-          <span>WhatsApp</span>
-          <MessageCircle className="h-5 w-5" />
-        </div>
-      </motion.div>
-
-      <motion.div
-        drag="x"
-        dragConstraints={{ left: -100, right: 0 }}
-        onDragEnd={handleDragEnd}
-        onClick={onClick}
-        className={cn(
-          "relative bg-white dark:bg-surface-dark p-3 md:p-4 rounded-lg border shadow-sm transition-all cursor-pointer flex items-center select-none",
-          isSelected ? "border-primary ring-1 ring-primary/20" : "border-slate-200 dark:border-slate-700 hover:border-primary/30"
-        )}
-      >
-        {isSelected && <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary rounded-l-lg"></div>}
-
-        <div className="w-full md:w-1/3 flex items-center gap-3">
-          <div className={cn(
-            "h-12 w-12 rounded-full flex items-center justify-center font-bold text-sm shrink-0",
-            customer.color === "indigo" ? "bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-300" :
-            customer.color === "orange" ? "bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400" :
-            customer.color === "pink" ? "bg-pink-100 dark:bg-pink-900/30 text-pink-600 dark:text-pink-300" :
-            "bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300"
-          )}>
-            {customer.initial}
-          </div>
-          <div className="flex-1 min-w-0">
-            <div className="text-sm md:text-base font-semibold text-slate-900 dark:text-white truncate">{customer.name}</div>
-            <div className="text-xs text-slate-500 truncate">{customer.phone}</div>
-          </div>
-        </div>
-
-        <div className="hidden md:block w-1/4 text-sm text-slate-500">{customer.activity}</div>
-
-        <div className="flex-1 md:w-1/4 text-right">
-          <div className={cn("text-sm md:text-base font-bold",
-            customer.type === 'get' ? "text-red-600 dark:text-red-400" :
-            customer.type === 'give' ? "text-emerald-600 dark:text-emerald-400" : "text-slate-400"
-          )}>
-            ₹ {customer.balance.toLocaleString()}.00
-          </div>
-          <div className={cn("text-[10px] font-medium uppercase",
-             customer.type === 'get' ? "text-red-500" :
-             customer.type === 'give' ? "text-emerald-500" : "text-slate-400"
-          )}>
-            {customer.type === 'get' ? "You'll Get" : customer.type === 'give' ? "You'll Give" : "Settled"}
-          </div>
-        </div>
-
-        <div className="w-8 flex justify-center text-slate-400 md:w-1/6">
-          <ChevronRight className="h-5 w-5" />
-        </div>
-      </motion.div>
-    </div>
-  )
-}
-
-function CustomerDetailContent({ customer, onClose, isMobile }: { customer: Customer, onClose: () => void, isMobile?: boolean }) {
-  return (
-    <div className="flex flex-col h-full bg-white dark:bg-surface-dark">
-      {/* Header */}
-      <div className="p-4 md:p-6 border-b border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900">
-        <div className="flex items-start justify-between mb-4">
-          <div className="flex items-center gap-3">
-            {isMobile && (
-              <button onClick={onClose} className="mr-2 -ml-2 p-2 rounded-full hover:bg-slate-200 dark:hover:bg-slate-800">
-                <ArrowLeft className="h-5 w-5 text-slate-600 dark:text-slate-300" />
-              </button>
-            )}
-            <div className={cn(
-              "h-12 w-12 rounded-full flex items-center justify-center font-bold text-lg",
-              customer.color === "indigo" ? "bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-300" :
-              customer.color === "orange" ? "bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400" :
-              "bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300"
-            )}>
-              {customer.initial}
-            </div>
-            <div>
-              <h2 className="text-lg font-bold text-slate-900 dark:text-white">{customer.name}</h2>
-              <div className="flex items-center gap-1 text-sm text-slate-500">
-                <Phone className="h-3 w-3" /> {customer.phone}
-              </div>
-            </div>
-          </div>
-          {!isMobile && (
-            <button onClick={onClose} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
-              <X className="h-6 w-6" />
-            </button>
-          )}
-        </div>
-
-        <div className="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 flex justify-between items-center shadow-sm">
-          <div>
-            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Net Balance</span>
-            <div className={cn("text-2xl font-bold mt-0.5", customer.type === 'get' ? "text-red-600 dark:text-red-400" : "text-emerald-600 dark:text-emerald-400")}>
-              ₹ {customer.balance.toLocaleString()}.00
-            </div>
-            <div className={cn("text-xs font-medium", customer.type === 'get' ? "text-red-500" : "text-emerald-500")}>
-              {customer.type === 'get' ? "Due from Customer" : "Due to Customer"}
-            </div>
-          </div>
-          <button className="flex flex-col items-center justify-center h-10 w-10 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors">
-            <History className="h-5 w-5" />
-          </button>
-        </div>
-      </div>
-
-      {/* Timeline */}
-      <div className="flex-1 overflow-y-auto custom-scrollbar bg-white dark:bg-surface-dark p-4">
-        <div className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4 text-center">— Entry Log —</div>
-        <div className="space-y-6 relative">
-          <div className="absolute left-4 top-2 bottom-2 w-px bg-slate-200 dark:bg-slate-700"></div>
-          {/* Entries */}
-          {[1, 2, 3].map((_, i) => (
-            <div key={i} className="relative pl-10">
-              <div className={cn("absolute left-[11px] top-1.5 h-2.5 w-2.5 rounded-full ring-4 ring-white dark:ring-surface-dark", i % 2 === 0 ? "bg-red-500" : "bg-emerald-500")}></div>
-              <div className="bg-slate-50 dark:bg-slate-800/50 p-3 rounded-lg border border-slate-100 dark:border-slate-700">
-                <div className="flex justify-between items-start mb-1">
-                  <span className="text-sm font-medium text-slate-900 dark:text-white">Item {i + 1}</span>
-                  <span className={cn("text-sm font-bold", i % 2 === 0 ? "text-red-600" : "text-emerald-600")}>₹ {100 * (i + 1)}</span>
-                </div>
-                <div className="flex justify-between items-center text-xs text-slate-500">
-                  <span>Today, 10:30 AM</span>
-                  <span className={cn("px-1.5 py-0.5 rounded text-[10px] font-medium uppercase", i % 2 === 0 ? "bg-red-100 text-red-700 dark:bg-red-900/20 dark:text-red-400" : "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400")}>
-                    {i % 2 === 0 ? "You Gave" : "You Got"}
-                  </span>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Footer Actions */}
-      <div className="p-4 border-t border-slate-200 dark:border-slate-700 bg-white dark:bg-surface-dark safe-area-bottom">
-        <button className="w-full mb-3 flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#20bd5a] text-white font-semibold py-3 px-4 rounded-lg shadow-sm transition-colors">
-          <MessageCircle className="h-5 w-5" />
-          Send WhatsApp Reminder
-        </button>
-        <div className="grid grid-cols-2 gap-3">
-          <button className="flex items-center justify-center gap-2 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/30 text-red-700 dark:text-red-400 font-semibold py-3 px-2 rounded-lg transition-colors border border-red-200 dark:border-red-800/50">
-            <Minus className="h-4 w-4" />
-            You Gave
-          </button>
-          <button className="flex items-center justify-center gap-2 bg-emerald-50 dark:bg-emerald-900/20 hover:bg-emerald-100 dark:hover:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 font-semibold py-3 px-2 rounded-lg transition-colors border border-emerald-200 dark:border-emerald-800/50">
-            <Plus className="h-4 w-4" />
-            You Got
-          </button>
-        </div>
-      </div>
     </div>
   )
 }

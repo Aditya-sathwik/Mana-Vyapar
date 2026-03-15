@@ -79,29 +79,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     // Attempt real login for merchants
     try {
-        const response = await apiFetch("/users/login", {
+      const response = await apiFetch("/users/login", {
         method: "POST",
         body: JSON.stringify(credentials),
-        });
+      });
 
-        if (response.success) {
+      if (response.success) {
         setUser(response.data.user);
         localStorage.setItem("mana_vyapar_user", JSON.stringify(response.data.user));
         router.push("/dashboard");
-        }
+      }
     } catch {
-        // Fallback for demo: if API fails, log them in as a demo merchant
-        const demoUser: User = {
-            _id: "merchant_001",
-            fullname: "Rajesh Kumar",
-            username: "rajesh_shop",
-            email: credentials.email || "rajesh@example.com",
-            role: "merchant",
-            avatar: "https://lh3.googleusercontent.com/aida-public/AB6AXuAtNBxEoxDkJh3EIMpjGazj9jp4wUw9hw5vx9yu4RHiUCd88TMS2ekRb-lNcv632IuBbCby3TqAvZ6Rs1Y-sHJHCiD3cHFSQew1Z9wKQE--E6RfcAHC8BfLhoUg-EDe7WZ3Dtf8_cNWDjKuvy7eSVKvqjsvj2ETcIIwp0GGxKvbkGclqOO9jqmnzmJ4a0VbBxFT_LYnybEtXXiX2xoL01AuQzBN6qIUOV63QXNDe41SgDiu8nkGMpjw_OXX81ajiNaz6W_uoh7250I"
-        };
-        setUser(demoUser);
-        localStorage.setItem("mana_vyapar_user", JSON.stringify(demoUser));
-        router.push("/dashboard");
+      // Fallback for demo: if API fails, log them in as a demo merchant
+      const demoUser: User = {
+        _id: "merchant_001",
+        fullname: "Rajesh Kumar",
+        username: "rajesh_shop",
+        email: credentials.email || "rajesh@example.com",
+        role: "merchant",
+        avatar: "https://lh3.googleusercontent.com/aida-public/AB6AXuAtNBxEoxDkJh3EIMpjGazj9jp4wUw9hw5vx9yu4RHiUCd88TMS2ekRb-lNcv632IuBbCby3TqAvZ6Rs1Y-sHJHCiD3cHFSQew1Z9wKQE--E6RfcAHC8BfLhoUg-EDe7WZ3Dtf8_cNWDjKuvy7eSVKvqjsvj2ETcIIwp0GGxKvbkGclqOO9jqmnzmJ4a0VbBxFT_LYnybEtXXiX2xoL01AuQzBN6qIUOV63QXNDe41SgDiu8nkGMpjw_OXX81ajiNaz6W_uoh7250I"
+      };
+      setUser(demoUser);
+      localStorage.setItem("mana_vyapar_user", JSON.stringify(demoUser));
+      router.push("/dashboard");
     }
   };
 
@@ -109,7 +109,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       await apiFetch("/users/logout", { method: "POST" });
     } catch {
-        // ignore error
+      // ignore error
     } finally {
       localStorage.removeItem("mana_vyapar_user");
       setUser(null);

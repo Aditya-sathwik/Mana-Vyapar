@@ -9,6 +9,7 @@ import {
   ScanLine
 } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { motion } from "framer-motion"
 
 export function BottomNav() {
   const pathname = usePathname()
@@ -16,13 +17,13 @@ export function BottomNav() {
   const navItems = [
     { href: "/dashboard", label: "Home", icon: LayoutDashboard },
     { href: "/scanner", label: "Scanner", icon: ScanLine },
-    { href: "/inventory", label: "Inventory", icon: Package },
+    { href: "/inventory", label: "Stocks", icon: Package },
     { href: "/khata", label: "Khata", icon: Wallet },
   ]
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 bg-white/90 dark:bg-[#132a23]/90 backdrop-blur-lg border-t border-slate-200 dark:border-primary/10 md:hidden pb-safe-area-bottom">
-      <nav className="flex items-center justify-around h-16 px-2">
+    <div className="fixed bottom-0 left-0 right-0 z-50 px-4 pb-4 md:hidden pointer-events-none">
+      <nav className="flex items-center justify-around h-16 bg-white/80 dark:bg-[#09090b]/80 backdrop-blur-xl border border-slate-200 dark:border-slate-800 shadow-[0_-10px_30px_-10px_rgba(0,0,0,0.1)] dark:shadow-[0_-10px_30px_-10px_rgba(0,0,0,0.5)] rounded-2xl px-2 pointer-events-auto max-w-md mx-auto">
         {navItems.map((item) => {
           const isActive = pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href))
 
@@ -31,14 +32,32 @@ export function BottomNav() {
               key={item.href}
               href={item.href}
               className={cn(
-                "flex flex-col items-center justify-center w-full h-full gap-1 transition-colors",
+                "flex flex-col items-center justify-center w-full h-full gap-1 transition-all duration-300 relative",
                 isActive
-                  ? "text-primary"
-                  : "text-slate-500 dark:text-slate-400 hover:text-primary"
+                  ? "text-primary scale-110"
+                  : "text-slate-500 dark:text-slate-400"
               )}
             >
-              <item.icon className={cn("h-6 w-6", isActive && "fill-current/20")} />
-              <span className="text-[10px] font-medium">{item.label}</span>
+              {isActive && (
+                <motion.div
+                  layoutId="bottom-nav-indicator"
+                  className="absolute -top-1 h-1 w-6 bg-primary rounded-full shadow-[0_0_10px_rgba(5,148,103,1)]"
+                  transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                />
+              )}
+              
+              <div className={cn(
+                "p-1.5 rounded-lg transition-all",
+                isActive && "bg-primary/10"
+              )}>
+                 <item.icon className={cn("h-5 w-5", isActive && "stroke-[2.5px]")} />
+              </div>
+              <span className={cn(
+                "text-[9px] font-black uppercase tracking-widest",
+                isActive ? "opacity-100" : "opacity-70"
+              )}>
+                {item.label}
+              </span>
             </Link>
           )
         })}

@@ -9,7 +9,7 @@ export function WebsiteNavbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   return (
-    <nav className="fixed w-full z-50 transition-all duration-300 bg-white/70 dark:bg-[#0f172a]/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-800">
+    <nav className="fixed w-full z-50 transition-all duration-300 bg-white/70 dark:bg-[#09090b]/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-800">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-20 items-center">
           {/* Logo */}
@@ -50,7 +50,7 @@ export function WebsiteNavbar() {
 
       {/* Mobile Menu */}
       {mobileMenuOpen && (
-        <div className="md:hidden bg-white dark:bg-[#0f172a] border-t border-gray-200 dark:border-gray-800">
+        <div className="md:hidden bg-white dark:bg-[#09090b] border-t border-gray-200 dark:border-gray-800">
           <div className="px-4 pt-2 pb-4 space-y-1">
             <Link href="#" className="block px-3 py-2 text-base font-medium text-slate-600 dark:text-slate-300 hover:text-primary">Features</Link>
             <Link href="/pricing" className="block px-3 py-2 text-base font-medium text-slate-600 dark:text-slate-300 hover:text-primary">Pricing</Link>
