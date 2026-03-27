@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
+import Image from "next/image"
 import { usePathname } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
 import { cn } from "@/lib/utils"
@@ -132,8 +133,14 @@ export function Sidebar({ className }: { className?: string }) {
       )}>
         <div className="flex items-center gap-3">
           <div className="relative">
-            <div className="h-10 w-10 bg-gradient-to-tr from-primary to-emerald-400 rounded-xl flex items-center justify-center shrink-0 shadow-[0_0_20px_rgba(5,148,103,0.3)]">
-              <Store className="h-6 w-6 text-black" />
+            <div className="h-10 w-10 bg-gradient-to-tr from-primary/20 to-emerald-400/20 rounded-xl flex items-center justify-center shrink-0 border border-primary/30 shadow-[0_0_20px_rgba(5,148,103,0.3)] overflow-hidden">
+              <Image 
+                src="/images/logo.png"
+                alt="Logo"
+                width={28}
+                height={28}
+                className="object-contain"
+              />
             </div>
             <div className="absolute -top-1 -right-1 h-3 w-3 bg-primary rounded-full border-2 border-white dark:border-[#09090b] shadow-[0_0_5px_rgba(5,148,103,1)]" />
           </div>

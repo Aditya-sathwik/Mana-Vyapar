@@ -1,5 +1,6 @@
 import { WebsiteNavbar } from "@/components/layout/WebsiteNavbar"
 import { WebsiteFooter } from "@/components/layout/WebsiteFooter"
+import { SmoothScroll } from "@/components/layout/SmoothScroll"
 
 export default function WebsiteLayout({
   children,
@@ -7,10 +8,12 @@ export default function WebsiteLayout({
   children: React.ReactNode
 }) {
   return (
-    <div className="min-h-screen bg-white dark:bg-[#09090b] text-slate-900 dark:text-white font-display">
-      <WebsiteNavbar />
-      {children}
-      <WebsiteFooter />
-    </div>
+    <SmoothScroll>
+      <div className="min-h-screen bg-white dark:bg-[#09090b] text-slate-900 dark:text-white font-display overflow-x-hidden">
+        <WebsiteNavbar />
+        {children}
+        <WebsiteFooter />
+      </div>
+    </SmoothScroll>
   )
 }
