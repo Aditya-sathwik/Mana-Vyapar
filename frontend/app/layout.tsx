@@ -5,6 +5,8 @@ import { ThemeProvider } from "../components/theme-provider";
 import { AuthProvider } from "../context/auth-context";
 import { LanguageProvider } from "../context/language-context";
 import StoreProvider from "../components/providers/StoreProvider";
+import { COLORS } from "@/lib/colors";
+import { Toaster } from "react-hot-toast";
 
 const outfit = Outfit({
   variable: "--font-display",
@@ -41,6 +43,39 @@ export default function RootLayout({
             <LanguageProvider>
               <AuthProvider>
                 {children}
+                <Toaster 
+                  position="top-right"
+                  toastOptions={{
+                    style: {
+                      background: COLORS.slate[900],
+                      color: COLORS.text.primary,
+                      border: `1px solid ${COLORS.slate[800]}`,
+                      borderRadius: '16px',
+                      padding: '16px 24px',
+                      fontSize: '14px',
+                      fontWeight: '500',
+                      backdropFilter: 'blur(10px)',
+                    },
+                    success: {
+                      iconTheme: {
+                        primary: COLORS.primary.vibrant,
+                        secondary: '#fff',
+                      },
+                      style: {
+                        boxShadow: `0 10px 30px -5px ${COLORS.primary.vibrant}20`,
+                      }
+                    },
+                    error: {
+                      iconTheme: {
+                        primary: COLORS.error,
+                        secondary: '#fff',
+                      },
+                      style: {
+                        boxShadow: `0 10px 30px -5px ${COLORS.error}20`,
+                      }
+                    }
+                  }}
+                />
               </AuthProvider>
             </LanguageProvider>
           </ThemeProvider>

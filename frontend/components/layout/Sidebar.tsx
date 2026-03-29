@@ -93,10 +93,16 @@ const NavItem = ({ item, isCollapsed, isActive }: any) => {
   )
 }
 
+import { useAuth } from "@/context/auth-context"
+import { Modal } from "@/components/ui/modal"
+import { COLORS } from "@/lib/colors"
+
 export function Sidebar({ className }: { className?: string }) {
   const [isCollapsed, setIsCollapsed] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
+  const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false)
   const pathname = usePathname()
+  const { logout } = useAuth()
 
   useEffect(() => {
     const handleResize = () => {
@@ -108,149 +114,170 @@ export function Sidebar({ className }: { className?: string }) {
     return () => window.removeEventListener("resize", handleResize)
   }, [])
 
-  return (
-    <motion.aside
-      initial={false}
-      animate={{ width: isCollapsed ? 80 : 280 }}
-      transition={{ type: "spring", stiffness: 300, damping: 30 }}
-      className={cn(
-        "relative bg-white/95 dark:bg-[#09090b]/90 backdrop-blur-2xl border-r border-slate-200 dark:border-slate-800/50 flex flex-col z-40 h-screen sticky top-0 shadow-2xl overflow-visible group/sidebar",
-        className
-      )}
-    >
-      {/* Sidebar Toggle Button */}
-      <button
-        onClick={() => setIsCollapsed(!isCollapsed)}
-        className="absolute -right-3.5 top-10 bg-slate-900 text-slate-400 h-7 w-7 rounded-full hidden md:flex items-center justify-center shadow-xl hover:text-primary hover:border-primary/50 transition-all border border-slate-700 z-50 group-hover/sidebar:opacity-100 opacity-0"
-      >
-        {isCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
-      </button>
+  const handleLogout = async () => {
+    setIsLogoutModalOpen(false)
+    await logout()
+  }
 
-      {/* Header / Logo */}
-      <div className={cn(
-        "h-20 flex items-center border-b border-slate-200 dark:border-slate-800/50 transition-all duration-300",
-        isCollapsed ? "px-4 justify-center" : "px-6"
-      )}>
-        <div className="flex items-center gap-3">
-          <div className="relative">
-            <div className="h-10 w-10 bg-gradient-to-tr from-primary/20 to-emerald-400/20 rounded-xl flex items-center justify-center shrink-0 border border-primary/30 shadow-[0_0_20px_rgba(5,148,103,0.3)] overflow-hidden">
-              <Image 
-                src="/images/logo.png"
-                alt="Logo"
-                width={28}
-                height={28}
-                className="object-contain"
+  return (
+    <>
+      <motion.aside
+        initial={false}
+        animate={{ width: isCollapsed ? 80 : 280 }}
+        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+        className={cn(
+          "relative bg-white/95 dark:bg-[#09090b]/90 backdrop-blur-2xl border-r border-slate-200 dark:border-slate-800/50 flex flex-col z-40 h-screen sticky top-0 shadow-2xl overflow-visible group/sidebar",
+          className
+        )}
+      >
+        {/* Sidebar Toggle Button */}
+        <button
+          onClick={() => setIsCollapsed(!isCollapsed)}
+          className="absolute -right-3.5 top-10 bg-slate-900 text-slate-400 h-7 w-7 rounded-full hidden md:flex items-center justify-center shadow-xl hover:text-primary hover:border-primary/50 transition-all border border-slate-700 z-50 group-hover/sidebar:opacity-100 opacity-0"
+        >
+          {isCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+        </button>
+
+        {/* Header / Logo */}
+        <div className={cn(
+          "h-20 flex items-center border-b border-slate-200 dark:border-slate-800/50 transition-all duration-300",
+          isCollapsed ? "px-4 justify-center" : "px-6"
+        )}>
+          <div className="flex items-center gap-3">
+            <div className="relative">
+              <div className="h-10 w-10 bg-gradient-to-tr from-primary/20 to-emerald-400/20 rounded-xl flex items-center justify-center shrink-0 border border-primary/30 shadow-[0_0_20px_rgba(5,148,103,0.3)] overflow-hidden">
+                <Image 
+                  src="/images/logo.png"
+                  alt="Logo"
+                  width={28}
+                  height={28}
+                  className="object-contain"
+                />
+              </div>
+              <div className="absolute -top-1 -right-1 h-3 w-3 bg-primary rounded-full border-2 border-white dark:border-[#09090b] shadow-[0_0_5px_rgba(5,148,103,1)]" />
+            </div>
+            {!isCollapsed && (
+              <motion.div 
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                className="flex flex-col"
+              >
+                <span className="text-slate-900 dark:text-white font-black text-lg tracking-tighter leading-none uppercase">MANA VYAPAR</span>
+                <div className="flex items-center gap-1.5 mt-1">
+                  <span className="h-1 w-1 rounded-full bg-primary animate-pulse" />
+                  <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 tracking-[0.2em] uppercase">Merchant Hub</span>
+                </div>
+              </motion.div>
+            )}
+          </div>
+        </div>
+
+        {/* Search Bar */}
+        {!isCollapsed && (
+          <div className="px-6 py-4">
+            <div className="relative group">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500 group-focus-within:text-primary transition-colors" />
+              <input 
+                type="text"
+                placeholder="Search features..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-xl py-2 pl-10 pr-4 text-xs dark:text-slate-300 focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/20 transition-all placeholder:text-slate-500"
               />
             </div>
-            <div className="absolute -top-1 -right-1 h-3 w-3 bg-primary rounded-full border-2 border-white dark:border-[#09090b] shadow-[0_0_5px_rgba(5,148,103,1)]" />
           </div>
-          {!isCollapsed && (
-            <motion.div 
-              initial={{ opacity: 0, x: -10 }}
-              animate={{ opacity: 1, x: 0 }}
-              className="flex flex-col"
-            >
-              <span className="text-slate-900 dark:text-white font-black text-lg tracking-tighter leading-none uppercase">MANA VYAPAR</span>
-              <div className="flex items-center gap-1.5 mt-1">
-                <span className="h-1 w-1 rounded-full bg-primary animate-pulse" />
-                <span className="text-[10px] font-bold text-slate-500 tracking-[0.2em] uppercase">Merchant Hub</span>
+        )}
+
+        {/* Navigation */}
+        <nav className="flex-1 overflow-y-auto py-4 px-4 space-y-6 custom-scrollbar">
+          {sidebarSections.map((section) => (
+            <div key={section.title} className="space-y-1">
+              {!isCollapsed && (
+                <p className="text-[10px] font-bold text-slate-400 dark:text-slate-600 uppercase tracking-[0.3em] mb-3 ml-2 flex items-center gap-2">
+                  <span className="h-px flex-1 bg-slate-200 dark:bg-slate-800" />
+                  {section.title}
+                </p>
+              )}
+              <div className="space-y-1">
+                {section.items.map((item) => (
+                  <NavItem
+                    key={item.href}
+                    item={item}
+                    isCollapsed={isCollapsed}
+                    isActive={pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href))}
+                  />
+                ))}
               </div>
-            </motion.div>
-          )}
-        </div>
-      </div>
+            </div>
+          ))}
+        </nav>
 
-      {/* Search Bar */}
-      {!isCollapsed && (
-        <div className="px-6 py-4">
-          <div className="relative group">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500 group-focus-within:text-primary transition-colors" />
-            <input 
-              type="text"
-              placeholder="Search features..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-xl py-2 pl-10 pr-4 text-xs dark:text-slate-300 focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/20 transition-all placeholder:text-slate-500"
-            />
-          </div>
-        </div>
-      )}
-
-      {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto py-4 px-4 space-y-6 custom-scrollbar">
-        {sidebarSections.map((section) => (
-          <div key={section.title} className="space-y-1">
-            {!isCollapsed && (
-              <p className="text-[10px] font-bold text-slate-400 dark:text-slate-600 uppercase tracking-[0.3em] mb-3 ml-2 flex items-center gap-2">
-                <span className="h-px flex-1 bg-slate-200 dark:bg-slate-800" />
-                {section.title}
-              </p>
-            )}
-            <div className="space-y-1">
-              {section.items.map((item) => (
-                <NavItem
-                  key={item.href}
-                  item={item}
-                  isCollapsed={isCollapsed}
-                  isActive={pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href))}
-                />
-              ))}
+        {/* Support Card */}
+        {!isCollapsed && (
+          <div className="px-4 mb-4">
+            <div className="bg-slate-50 dark:bg-primary/10 rounded-2xl p-4 border border-slate-100 dark:border-primary/10 group relative overflow-hidden">
+               <div className="relative z-10">
+                  <div className="flex items-center gap-2 mb-2">
+                      <HeadphonesIcon className="h-4 w-4 text-primary" />
+                      <span className="text-[10px] font-black uppercase text-slate-500 dark:text-slate-400">Node Support</span>
+                  </div>
+                  <button className="w-full py-2 bg-primary text-black rounded-xl text-[10px] font-black uppercase tracking-widest hover:scale-105 transition-all shadow-lg shadow-primary/20">Get AI Assistance</button>
+               </div>
+               <div className="absolute -right-4 -bottom-4 opacity-10 group-hover:rotate-12 transition-transform">
+                  <Zap className="h-16 w-16 text-primary fill-primary" />
+               </div>
             </div>
           </div>
-        ))}
-      </nav>
+        )}
 
-      {/* Support Card */}
-      {!isCollapsed && (
-        <div className="px-4 mb-4">
-          <div className="bg-slate-50 dark:bg-primary/10 rounded-2xl p-4 border border-slate-100 dark:border-primary/10 group relative overflow-hidden">
-             <div className="relative z-10">
-                <div className="flex items-center gap-2 mb-2">
-                    <HeadphonesIcon className="h-4 w-4 text-primary" />
-                    <span className="text-[10px] font-black uppercase text-slate-500 dark:text-slate-400">Node Support</span>
-                </div>
-                <button className="w-full py-2 bg-primary text-black rounded-xl text-[10px] font-black uppercase tracking-widest hover:scale-105 transition-all shadow-lg shadow-primary/20">Get AI Assistance</button>
-             </div>
-             <div className="absolute -right-4 -bottom-4 opacity-10 group-hover:rotate-12 transition-transform">
-                <Zap className="h-16 w-16 text-primary fill-primary" />
-             </div>
-          </div>
-        </div>
-      )}
-
-      {/* Footer / Settings */}
-      <div className={cn(
-        "p-4 border-t border-slate-200 dark:border-slate-800/50 bg-white/50 dark:bg-[#09090b]/50 backdrop-blur-md",
-        isCollapsed ? "flex flex-col items-center gap-4" : ""
-      )}>
-        <div className="flex items-center justify-between gap-2 px-1">
-           <ThemeToggle />
-           {!isCollapsed && (
-             <Link
-              href="/store-settings"
-              className={cn(
-                "flex-1 flex items-center justify-center gap-2 px-3 py-2 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-primary rounded-xl font-bold transition-all text-[10px] uppercase tracking-widest border border-transparent hover:border-slate-200 dark:hover:border-slate-700",
-                pathname === "/store-settings" && "text-primary bg-primary/10 border-primary/20"
-              )}
-            >
-              <Settings className="h-4 w-4 shrink-0" />
-              <span>Settings</span>
-            </Link>
-           )}
-           {isCollapsed && (
-              <Link href="/store-settings" className="h-8 w-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-primary transition-colors">
-                  <Settings className="h-5 w-5" />
+        {/* Footer / Settings */}
+        <div className={cn(
+          "p-4 border-t border-slate-200 dark:border-slate-800/50 bg-white/50 dark:bg-[#09090b]/50 backdrop-blur-md",
+          isCollapsed ? "flex flex-col items-center gap-4" : ""
+        )}>
+          <div className="flex items-center justify-between gap-2 px-1">
+             <ThemeToggle />
+             {!isCollapsed && (
+               <Link
+                href="/store-settings"
+                className={cn(
+                  "flex-1 flex items-center justify-center gap-2 px-3 py-2 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-primary rounded-xl font-bold transition-all text-[10px] uppercase tracking-widest border border-transparent hover:border-slate-200 dark:hover:border-slate-700",
+                  pathname === "/store-settings" && "text-primary bg-primary/10 border-primary/20"
+                )}
+              >
+                <Settings className="h-4 w-4 shrink-0" />
+                <span>Settings</span>
               </Link>
-           )}
-        </div>
+             )}
+             {isCollapsed && (
+                <Link href="/store-settings" className="h-8 w-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-primary transition-colors">
+                    <Settings className="h-5 w-5" />
+                </Link>
+             )}
+          </div>
 
-        <button
-          className="w-full mt-2 flex items-center gap-3 px-3 py-2.5 rounded-xl text-red-500 hover:bg-red-500/10 transition-all group relative border border-transparent hover:border-red-500/10"
-        >
-          <LogOut className="h-5 w-5 shrink-0 transition-transform group-hover:-translate-x-1" />
-          {!isCollapsed && <span className="font-bold text-[10px] uppercase tracking-widest">End Session</span>}
-        </button>
-      </div>
-    </motion.aside>
+          <button
+            onClick={() => setIsLogoutModalOpen(true)}
+            className="w-full mt-2 flex items-center gap-3 px-3 py-2.5 rounded-xl text-red-500 hover:bg-red-500/10 transition-all group relative border border-transparent hover:border-red-500/10"
+          >
+            <LogOut className="h-5 w-5 shrink-0 transition-transform group-hover:-translate-x-1" />
+            {!isCollapsed && <span className="font-bold text-[10px] uppercase tracking-widest">End Session</span>}
+          </button>
+        </div>
+      </motion.aside>
+
+      {/* Reusable Logout Confirmation Modal */}
+      <Modal
+        isOpen={isLogoutModalOpen}
+        onClose={() => setIsLogoutModalOpen(false)}
+        title="End Session?"
+        description="Are you sure you want to log out of your merchant dashboard? All unsaved digital ledger entries may be lost."
+        confirmLabel="Logout Now"
+        onConfirm={handleLogout}
+        variant="danger"
+        size="sm"
+      />
+    </>
   )
 }
+

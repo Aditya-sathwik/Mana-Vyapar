@@ -31,7 +31,7 @@ const userSchema = new Schema(
     // Role-based access
     role: {
       type: String,
-      enum: ["Super Admin", "Merchant", "Customer Care"],
+      enum: ["Super Admin", "Merchant", "Customer"],
       required: true,
       default: "Merchant",
     },

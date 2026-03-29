@@ -25,7 +25,7 @@ export const generateAccessAndRefreshToken = async (userId) => {
     }
 };
 
-export const registerUser = async ({ fullname, username, email, password, avatarlocalpath, coverimagelocalpath }) => {
+export const registerUser = async ({ fullname, username, email, password, phone, businessName, avatarlocalpath, coverimagelocalpath }) => {
     // Check if user already exists
     const existedUser = await User.findOne({
         $or: [{ username }, { email }]
@@ -52,6 +52,8 @@ export const registerUser = async ({ fullname, username, email, password, avatar
         avatar: avatar?.url || "",
         coverimage: coverimage?.url || "",
         email,
+        phone: phone || "",
+        businessName: businessName || "",
         password,
         username: username.toLowerCase()
     });
@@ -65,12 +67,18 @@ export const registerUser = async ({ fullname, username, email, password, avatar
     return createdUser;
 };
 
-export const loginUser = async ({ email, username, password }) => {
-    if (!email && !username) {
-        throw new ApiError(400, "Email or username is required");
+export const loginUser = async ({ email, username, password, phone }) => {
+    if (!email && !username && !phone) {
+        throw new ApiError(400, "Email or username or phone is required");
     }
 
-    const query = email ? { email: email.toLowerCase() } : { username: username.toLowerCase() };
+    const query = {
+        $or: [
+            { email: email ? email.toLowerCase() : undefined },
+            { username: username ? username.toLowerCase() : undefined },
+            { phone: phone ? phone : undefined }
+        ].filter(condition => Object.values(condition)[0] !== undefined)
+    }
 
     const user = await User.findOne(query);
 
@@ -216,3 +224,11 @@ export const updateUserCoverImage = async (userId, coverimagelocalpath) => {
 
     return user;
 };
+
+
+
+export const getAllUsers = async () => {
+    const users = await User.find({}).select("-password -refreshToken");
+    const totalCount = await User.countDocuments();
+    return { users, totalCount };
+}

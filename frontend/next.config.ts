@@ -11,6 +11,14 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: 'cdn.tailwindcss.com', // Just in case, though usually client side
       },
+      {
+        protocol: 'https',
+        hostname: 'images.unsplash.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'upload.wikimedia.org',
+      },
     ],
   },
 };

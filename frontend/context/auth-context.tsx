@@ -3,7 +3,8 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { apiFetch } from "@/lib/api-client";
 import { useRouter } from "next/navigation";
-
+import toast from "react-hot-toast";
+import storage from "@/lib/storage";
 interface User {
   _id: string;
   fullname: string;
@@ -14,8 +15,7 @@ interface User {
 }
 
 interface LoginCredentials {
-  email?: string;
-  username?: string;
+  identifier: string;
   password?: string;
   [key: string]: unknown;
 }
@@ -23,9 +23,20 @@ interface LoginCredentials {
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  login: (data: LoginCredentials) => Promise<void>;
+  login: (credentials: LoginCredentials) => Promise<void>;
+  register: (data: RegisterData) => Promise<void>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
+}
+
+interface RegisterData {
+  fullname: string;
+  username: string;
+  email: string;
+  phone: string;
+  password: string;
+  businessName: string;
+  role?: string;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -36,21 +47,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
 
   const refreshUser = async () => {
-    // Check if we have a "fake" session in localStorage for this demo
-    const storedUser = localStorage.getItem("mana_vyapar_user");
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-      setLoading(false);
-      return;
+    // 1. Initial hydration from local storage
+    const savedUser = storage.getUser();
+    if (savedUser) {
+      setUser(savedUser);
     }
 
+    // 2. Refresh state from server
     try {
       const response = await apiFetch("/users/current-user");
       if (response.success) {
-        setUser(response.data);
+        setUser(response.data.user);
+        storage.setUser(response.data.user);
+      } else {
+        // Clear if current-user check fails (token expired/invalid)
+        storage.clearAuth();
+        setUser(null);
       }
     } catch {
-      setUser(null);
+      // Don't log out here to allow offline access if needed, or if server is down
     } finally {
       setLoading(false);
     }
@@ -61,8 +76,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const login = async (credentials: LoginCredentials) => {
+    const { identifier, password } = credentials;
+
     // Hardcoded Admin Logic
-    if ((credentials.email === "admin" || credentials.username === "admin") && credentials.password === "admin123") {
+    if (identifier === "admin" && password === "admin123") {
       const adminUser: User = {
         _id: "admin_001",
         fullname: "Super Admin",
@@ -72,7 +89,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         avatar: "https://lh3.googleusercontent.com/aida-public/AB6AXuB5QGtyS46ffXJmtiUOY-Mq-cEmOc7FePMAok4tf6sm3G4X7oW97TivKVxOLQ0NsUlEoQN7-oYfr5cpdKMJrOd6mD19rgvD6Z1yTasNnlhUUAu47Jw6vXSJ40yql6yHWPvUFNA3qE9kwyQA0B_TOvtUhEgBDXKwxCi9bsIJMP5rRhX15jNJr35xjlrXSycBVedLuDD4lJ0Swodp1ogo0-Sbnysa4H65Ujorz0BV-0X3HiLMw-Kf_TMQjxRGw9xjO1WkdjtItytNu-A"
       };
       setUser(adminUser);
-      localStorage.setItem("mana_vyapar_user", JSON.stringify(adminUser));
+      storage.setUser(adminUser);
+      toast.success("Welcome back, Super Admin!");
       router.push("/admin/dashboard");
       return;
     }
@@ -81,27 +99,59 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const response = await apiFetch("/users/login", {
         method: "POST",
-        body: JSON.stringify(credentials),
+        body: JSON.stringify({ 
+          email: identifier, 
+          username: identifier, 
+          phone: identifier, 
+          password 
+        }),
       });
 
       if (response.success) {
-        setUser(response.data.user);
-        localStorage.setItem("mana_vyapar_user", JSON.stringify(response.data.user));
+        const { user, accessToken, refreshToken } = response.data;
+        
+        setUser(user);
+        storage.setUser(user);
+        storage.setTokens(accessToken, refreshToken);
+        
+        toast.success(`Welcome back, ${user.fullname}!`);
         router.push("/dashboard");
       }
-    } catch {
-      // Fallback for demo: if API fails, log them in as a demo merchant
-      const demoUser: User = {
-        _id: "merchant_001",
-        fullname: "Rajesh Kumar",
-        username: "rajesh_shop",
-        email: credentials.email || "rajesh@example.com",
-        role: "merchant",
-        avatar: "https://lh3.googleusercontent.com/aida-public/AB6AXuAtNBxEoxDkJh3EIMpjGazj9jp4wUw9hw5vx9yu4RHiUCd88TMS2ekRb-lNcv632IuBbCby3TqAvZ6Rs1Y-sHJHCiD3cHFSQew1Z9wKQE--E6RfcAHC8BfLhoUg-EDe7WZ3Dtf8_cNWDjKuvy7eSVKvqjsvj2ETcIIwp0GGxKvbkGclqOO9jqmnzmJ4a0VbBxFT_LYnybEtXXiX2xoL01AuQzBN6qIUOV63QXNDe41SgDiu8nkGMpjw_OXX81ajiNaz6W_uoh7250I"
-      };
-      setUser(demoUser);
-      localStorage.setItem("mana_vyapar_user", JSON.stringify(demoUser));
-      router.push("/dashboard");
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Login failed");
+      throw err;
+    }
+  };
+
+  const register = async (data: RegisterData) => {
+    try {
+      const formData = new FormData();
+      Object.entries(data).forEach(([key, value]) => {
+        if (value) formData.append(key, value);
+      });
+
+      const response = await apiFetch("/users/register", {
+        method: "POST",
+        body: formData,
+        isMultipart: true,
+      });
+
+      if (response.success) {
+        if (response.data?.accessToken) {
+          const { user, accessToken, refreshToken } = response.data;
+          setUser(user);
+          storage.setUser(user);
+          storage.setTokens(accessToken, refreshToken);
+          toast.success("Account created successfully!");
+          router.push("/dashboard");
+        } else {
+          toast.success("Registration complete! Please log in.");
+          router.push("/auth/login?registered=true");
+        }
+      }
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Registration failed");
+      throw err;
     }
   };
 
@@ -109,16 +159,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       await apiFetch("/users/logout", { method: "POST" });
     } catch {
-      // ignore error
+      // ignore
     } finally {
-      localStorage.removeItem("mana_vyapar_user");
+      storage.clearAuth();
       setUser(null);
+      toast.success("Logged out successfully");
       router.push("/auth/login");
     }
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout, refreshUser }}>
+    <AuthContext.Provider value={{ user, loading, login, register, logout, refreshUser }}>
       {children}
     </AuthContext.Provider>
   );

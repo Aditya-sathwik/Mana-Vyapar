@@ -7,10 +7,15 @@ import * as userService from "../services/user.service.js";
  * Controller to handle user registration.
  */
 const registerUser = asyncHandler(async (req, res) => {
-    const { fullname, username, email, password } = req.body;
+    const { fullname, username, email, password, phone, businessName, role } = req.body;
 
     if ([fullname, username, email, password].some((field) => field?.trim() === "")) {
         throw new ApiError(400, "All fields are required");
+    }
+
+    const allowedRoles = ["Customer", "Merchant"];
+    if (role && !allowedRoles.includes(role)) {
+        throw new ApiError(400, "Invalid role requested for Registration");
     }
 
     const avatarlocalpath = req.files?.avatar ? req.files.avatar[0]?.path : null;
@@ -21,6 +26,8 @@ const registerUser = asyncHandler(async (req, res) => {
         username,
         email,
         password,
+        phone,
+        businessName,
         avatarlocalpath,
         coverimagelocalpath
     });
@@ -34,12 +41,13 @@ const registerUser = asyncHandler(async (req, res) => {
  * Controller to handle user login.
  */
 const loginUser = asyncHandler(async (req, res) => {
-    const { email, username, password } = req.body;
+    const { email, username, password, phone } = req.body;
 
     const { user, accessToken, refreshToken } = await userService.loginUser({
         email,
         username,
-        password
+        password,
+        phone
     });
 
     const options = {
@@ -169,6 +177,15 @@ const updateUserCoverImage = asyncHandler(async (req, res) => {
         .json(new ApiResponse(200, user, "Cover image updated successfully"));
 });
 
+// fetch all users
+
+const getAllUsers = asyncHandler(async (req, res) => {
+    const { users, totalCount } = await userService.getAllUsers();
+    return res
+        .status(200)
+        .json(new ApiResponse(200, { users, totalCount }, "All users fetched successfully"));
+});
+
 export {
     registerUser,
     loginUser,
@@ -178,5 +195,6 @@ export {
     getCurrentUser,
     updateAccountDetails,
     updateUserAvatar,
-    updateUserCoverImage
+    updateUserCoverImage,
+    getAllUsers
 };

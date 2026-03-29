@@ -8,7 +8,8 @@ import {
     getCurrentUser,
     updateAccountDetails,
     updateUserAvatar,
-    updateUserCoverImage
+    updateUserCoverImage,
+    getAllUsers
 } from "../controllers/user.controller.js";
 import { upload } from "../middlewares/multer.middleware.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
@@ -53,6 +54,13 @@ router.route("/admin/all-merchants").get(
             new ApiResponse(200, merchants, "All merchants fetched successfully")
         );
     })
+);
+
+
+router.route("/admin/all-users").get(
+    verifyJWT,
+    restrictTo("Super Admin"),
+    getAllUsers
 );
 
 export default router;
