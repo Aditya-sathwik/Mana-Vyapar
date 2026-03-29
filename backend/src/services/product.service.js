@@ -1,4 +1,5 @@
 import { Product } from "../models/Product.models.js";
+import { Store } from "../models/Store.models.js";
 import { ApiError } from "../utlis/apierror.js";
 import { uploadOnCloudinary } from "../utlis/cloudinary.js";
 
@@ -13,7 +14,7 @@ export const createProduct = async (merchantId, productData, imageLocalPaths = [
         throw new ApiError(400, "Name, price and category are required");
     }
 
-    // Check if SKU is unique if provided
+    // Check if SKU is unique if provided for this merchant
     if (sku) {
         const existingProduct = await Product.findOne({ sku, merchantId });
         if (existingProduct) {
@@ -26,9 +27,9 @@ export const createProduct = async (merchantId, productData, imageLocalPaths = [
     for (const path of imageLocalPaths) {
         const result = await uploadOnCloudinary(path);
         if (result?.url) {
-            uploadedImages.push({ 
-                url: result.url, 
-                isPrimary: uploadedImages.length === 0 
+            uploadedImages.push({
+                url: result.url,
+                isPrimary: uploadedImages.length === 0
             });
         }
     }
@@ -47,30 +48,62 @@ export const createProduct = async (merchantId, productData, imageLocalPaths = [
         images: uploadedImages
     });
 
-    return product;
+    return await product.populate("category", "name slug image");
 };
 
 export const getAllProducts = async (merchantId, query = {}) => {
     const { category, isActive, search } = query;
-    
+
     let filter = { merchantId };
-    
+
     if (category) filter.category = category;
     if (isActive !== undefined) filter.isActive = isActive;
-    
+
     if (search) {
         filter.$or = [
             { name: { $regex: search, $options: "i" } },
-            { category: { $regex: search, $options: "i" } },
             { brand: { $regex: search, $options: "i" } }
         ];
     }
 
-    return await Product.find(filter).sort({ createdAt: -1 });
+    return await Product.find(filter)
+        .populate("category", "name slug image")
+        .sort({ createdAt: -1 });
+};
+
+/** 🌐 Public API for a specific store */
+export const getProductsByStoreSlug = async (slug, query = {}) => {
+    const { categoryId, search, minPrice, maxPrice, sort = "-createdAt" } = query;
+
+    const store = await Store.findOne({ slug, isActive: true });
+    if (!store) throw new ApiError(404, "Store not found");
+
+    const filter = {
+        merchantId: store.owner,
+        isActive: true
+    };
+
+    if (categoryId) filter.category = categoryId;
+    if (search) {
+        filter.$or = [
+            { name: { $regex: search, $options: "i" } },
+            { description: { $regex: search, $options: "i" } }
+        ];
+    }
+
+    if (minPrice || maxPrice) {
+        filter.price = {};
+        if (minPrice) filter.price.$gte = Number(minPrice);
+        if (maxPrice) filter.price.$lte = Number(maxPrice);
+    }
+
+    return await Product.find(filter)
+        .populate("category", "name slug image")
+        .sort(sort);
 };
 
 export const getProductById = async (merchantId, productId) => {
-    const product = await Product.findOne({ _id: productId, merchantId });
+    const product = await Product.findOne({ _id: productId, merchantId }).populate("category", "name slug image");
     if (!product) {
         throw new ApiError(404, "Product not found");
     }
@@ -82,7 +115,7 @@ export const updateProduct = async (merchantId, productId, updateData) => {
         { _id: productId, merchantId },
         { $set: updateData },
         { new: true }
-    );
+    ).populate("category", "name slug image");
 
     if (!product) {
         throw new ApiError(404, "Product not found or unauthorized");
@@ -101,11 +134,11 @@ export const deleteProduct = async (merchantId, productId) => {
 
 export const updateStock = async (merchantId, productId, quantity, operation) => {
     const product = await Product.findOne({ _id: productId, merchantId });
-    
+
     if (!product) {
         throw new ApiError(404, "Product not found");
     }
 
     await product.updateStock(quantity, operation);
-    return product;
+    return await product.populate("category", "name slug image");
 };

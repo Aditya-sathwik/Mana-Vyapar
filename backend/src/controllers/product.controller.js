@@ -67,11 +67,24 @@ const adjustStock = asyncHandler(async (req, res) => {
     );
 });
 
+/**
+ * 🌐 GET Public Products for a Storefront (No Auth)
+ */
+const getStoreProducts = asyncHandler(async (req, res) => {
+    const { slug } = req.params;
+    const products = await productService.getProductsByStoreSlug(slug, req.query);
+    
+    return res.status(200).json(
+        new ApiResponse(200, products, "Store products fetched successfully")
+    );
+});
+
 export {
     createProduct,
     getInventory,
     getProductDetails,
     updateProduct,
     deleteProduct,
-    adjustStock
+    adjustStock,
+    getStoreProducts
 };

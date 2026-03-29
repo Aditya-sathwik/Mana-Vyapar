@@ -1,4 +1,5 @@
 import mongoose, { Schema } from "mongoose";
+import { Category } from "./Category.models";
 
 const productSchema = new Schema(
   {
@@ -48,17 +49,12 @@ const productSchema = new Schema(
     },
 
     // Category hierarchy
-    category: {
-      type: String,
+    category: [{
+      type: Schema.Types.ObjectId,
+      ref: "Category",
       required: true,
-      trim: true,
       index: true,
-    },
-    subCategory: {
-      type: String,
-      trim: true,
-      index: true,
-    },
+    }],
 
     // Custom units (kg, inch, bundle, etc.)
     unit: {

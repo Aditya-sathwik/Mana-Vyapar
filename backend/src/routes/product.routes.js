@@ -12,7 +12,10 @@ import { upload } from "../middlewares/multer.middleware.js";
 
 const router = Router();
 
-// All product routes are secured because they belong to a Merchant
+/** 🌐 Public Route: Storefront Browsing (No Auth) **/
+router.route("/store/:slug").get(getStoreProducts);
+
+/** 🔐 Private Routes: Merchant Dashboard (Requires Auth) **/
 router.use(verifyJWT);
 
 router.route("/")

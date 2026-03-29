@@ -27,11 +27,11 @@ export function ProductCard({ product }: { product: Product }) {
   };
 
   return (
-    <Hover3DCard className="group h-full w-full rounded-2xl bg-card p-3 shadow-sm ring-1 ring-border transition-all duration-300 hover:shadow-xl hover:shadow-primary/10">
+    <Hover3DCard className="group h-full w-full rounded-3xl bg-card p-4 shadow-[0px_12px_32px_rgba(0,105,72,0.06)] dark:shadow-[0px_12px_32px_rgba(16,185,129,0.05)] transition-all duration-300 hover:shadow-[0px_16px_40px_rgba(0,105,72,0.12)] dark:hover:shadow-[0px_16px_40px_rgba(16,185,129,0.15)]">
       <Link href={`/store/products/${product.id}`} className="flex h-full flex-col gap-4">
         {/* Image Container with depth style */}
         <div 
-          className="relative aspect-[4/5] w-full overflow-hidden rounded-xl bg-slate-100"
+          className="relative aspect-[4/5] w-full overflow-hidden rounded-2xl bg-muted"
           style={{ transform: 'translateZ(30px)' }}
         >
           <Image

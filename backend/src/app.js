@@ -20,11 +20,15 @@ app.use(express.static('public'));
 import userRouter from "./routes/user.routes.js";
 import productRouter from "./routes/product.routes.js";
 import khataRouter from "./routes/khata.routes.js";
+import storeRouter from "./routes/store.routes.js";
+import categoryRouter from "./routes/category.routes.js";
 
 // Routes declaration
 app.use('/api/v1/users', userRouter);
 app.use('/api/v1/products', productRouter);
 app.use('/api/v1/khata', khataRouter);
+app.use('/api/v1/stores', storeRouter);
+app.use('/api/v1/categories', categoryRouter);
 
 // Error Handler Middleware (must be last)
 app.use(errorHandler);

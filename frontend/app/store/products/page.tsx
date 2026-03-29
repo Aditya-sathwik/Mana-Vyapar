@@ -37,7 +37,7 @@ export default function StoreProducts() {
       </SlideUp>
 
       {/* Filters & Search */}
-      <div className="mb-10 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between sticky top-[100px] z-20 bg-background/90 backdrop-blur-md py-4 border-b border-border">
+      <div className="mb-10 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between sticky top-20 md:top-0 z-20 bg-background/90 backdrop-blur-md py-4 border-b border-border">
         <div className="flex flex-1 items-center gap-2 max-w-md">
           <div className="relative w-full">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />

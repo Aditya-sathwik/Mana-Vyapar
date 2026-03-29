@@ -1,269 +1,284 @@
-Here’s a **clean, professional `README.md` for Week 1 (Auth System)** based on your progress 👇
-You can directly paste this into your repo.
+# 🛍️ Mana-Vyapar Backend – Week 2 (Merchant & Product Module)
+
+This module implements the **core business layer** of Mana-Vyapar, enabling merchants to manage their products and power fully dynamic, multi-tenant storefronts.
 
 ---
 
-# 🔐 Mana-Vyapar Backend – Week 1 (Authentication System)
+## 🚀 Week 2 Objective
 
-This module implements the **core authentication and authorization system** for the Mana-Vyapar platform. It supports multiple user roles and provides secure access using JWT.
+Build a **merchant-driven commerce system** with:
 
----
-
-## 🚀 Week 1 Objective
-
-Build a solid backend foundation with:
-
-* User Registration (Merchant & Customer)
-* Secure Login (Email / Phone)
-* JWT Authentication
-* Role-Based Access Control (RBAC)
-* Frontend Integration Ready APIs
+* Merchant profile management
+* Product CRUD (Create, Read, Update, Delete)
+* Multi-tenant data isolation
+* Public product APIs for storefront
+* Dynamic store rendering support
 
 ---
 
-## 🏗️ Tech Stack
+## 🧠 Core Concept: Multi-Tenant Architecture
 
-* **Node.js** + **Express.js**
-* **MongoDB** + **Mongoose**
-* **JWT (jsonwebtoken)** for authentication
-* **bcryptjs** for password hashing
-* **dotenv** for environment configuration
+Mana-Vyapar is designed as a **multi-tenant platform**:
+
+> Each merchant has an independent store with isolated data.
+
+### 🔑 Golden Rule:
+
+Every resource must include:
+
+```js
+merchantId
+```
 
 ---
 
-## 📁 Project Structure
+## 📁 Project Structure (Updated)
 
 ```bash
 backend/
-  config/
-    db.js
   controllers/
     authController.js
+    merchantController.js
+    productController.js
   models/
     User.js
+    Merchant.js
+    Product.js
   routes/
     authRoutes.js
+    merchantRoutes.js
+    productRoutes.js
   middleware/
     authMiddleware.js
+  config/
+    db.js
   server.js
 ```
 
 ---
 
-## ⚙️ Setup Instructions
+## 🏢 Merchant Module
 
-### 1️⃣ Install Dependencies
-
-```bash
-npm install
-```
-
----
-
-### 2️⃣ Environment Variables
-
-Create a `.env` file in root:
-
-```env
-PORT=5000
-MONGO_URI=your_mongodb_connection_string
-JWT_SECRET=your_secret_key
-```
-
----
-
-### 3️⃣ Run Server
-
-```bash
-npm run dev
-```
-
----
-
-## 👤 User Roles
-
-| Role       | Description                        |
-| ---------- | ---------------------------------- |
-| `admin`    | Super Admin (manual creation only) |
-| `merchant` | Business owner using platform      |
-| `customer` | End user buying products           |
-
----
-
-## 🔑 Authentication Flow
-
-### 📝 Register
-
-**Endpoint:**
-
-```http
-POST /api/auth/register
-```
-
-**Body:**
-
-```json
-{
-  "name": "John Doe",
-  "email": "john@example.com",
-  "phone": "9876543210",
-  "password": "123456",
-  "role": "merchant"
-}
-```
-
-**Rules:**
-
-* Either **email OR phone** is required
-* Duplicate users are not allowed
-* `admin` role cannot be assigned via API
-
----
-
-### 🔐 Login
-
-**Endpoint:**
-
-```http
-POST /api/auth/login
-```
-
-**Body:**
-
-```json
-{
-  "email": "john@example.com",
-  "password": "123456"
-}
-```
-
-OR
-
-```json
-{
-  "phone": "9876543210",
-  "password": "123456"
-}
-```
-
----
-
-### 🔑 Response
-
-```json
-{
-  "message": "Login successful",
-  "token": "JWT_TOKEN",
-  "user": {
-    "_id": "...",
-    "name": "...",
-    "role": "merchant"
-  }
-}
-```
-
----
-
-## 🛡️ Middleware
-
-### 🔒 Protect Routes
-
-Validates JWT token:
-
-```http
-Authorization: Bearer <token>
-```
-
----
-
-### 🎯 Role-Based Access
-
-Example:
+### 📌 Merchant Model
 
 ```js
-router.get("/admin", protect, authorize("admin"), handler);
+{
+  _id,
+  userId,        // Reference to User
+  storeName,
+  phone,
+  address,
+  isActive,
+  createdAt
+}
+```
+
+---
+
+### 🔗 Merchant Flow
+
+1. User registers as `merchant`
+2. Create merchant profile
+3. Merchant logs in
+4. Access merchant dashboard
+
+---
+
+### 📡 APIs
+
+#### ➕ Create Merchant
+
+```http
+POST /api/merchant
+```
+
+#### 👁️ Get Merchant Profile
+
+```http
+GET /api/merchant/me
+```
+
+---
+
+## 📦 Product Module
+
+### 📌 Product Model
+
+```js
+{
+  _id,
+  merchantId,     // VERY IMPORTANT
+  name,
+  price,
+  stock,
+  image,
+  createdAt
+}
+```
+
+---
+
+## 📡 Product APIs
+
+### ➕ Add Product (Merchant Only)
+
+```http
+POST /api/products
+```
+
+---
+
+### 📥 Get Merchant Products (Dashboard)
+
+```http
+GET /api/products/my
+```
+
+👉 Returns products of logged-in merchant
+
+---
+
+### ✏️ Update Product
+
+```http
+PUT /api/products/:id
+```
+
+---
+
+### ❌ Delete Product
+
+```http
+DELETE /api/products/:id
+```
+
+---
+
+### 🌐 Public Products API (Storefront)
+
+```http
+GET /api/products?merchantId=abc123
+```
+
+👉 Used by customer-facing frontend
+
+---
+
+## 🔐 Security & Data Isolation
+
+### MUST FOLLOW:
+
+* Every query filtered by:
+
+```js
+merchantId
+```
+
+* Merchant can:
+
+  * Access ONLY their products
+  * Cannot access other merchants' data
+
+---
+
+### Example Protection
+
+```js
+Product.find({
+  merchantId: req.user.id
+});
+```
+
+---
+
+## 🌐 Dynamic Storefront Support
+
+Each merchant has a unique store:
+
+```bash
+/store/:merchantId
+```
+
+---
+
+### Example:
+
+| Merchant | Store URL       |
+| -------- | --------------- |
+| A        | `/store/abc123` |
+| B        | `/store/xyz789` |
+
+---
+
+### Frontend Flow:
+
+1. Customer visits:
+
+```
+/store/abc123
+```
+
+2. Frontend calls:
+
+```http
+GET /api/products?merchantId=abc123
+```
+
+3. Products displayed dynamically
+
+---
+
+## 🎡 Future Support (Preview)
+
+To support dynamic UI (carousel, banners):
+
+### Store Config (Coming Later)
+
+```js
+{
+  merchantId,
+  bannerImages: [],
+  featuredProducts: []
+}
 ```
 
 ---
 
 ## 🧪 Testing Checklist
 
-* [x] Register merchant
-* [x] Register customer
-* [x] Prevent duplicate users
-* [x] Login using email
-* [x] Login using phone
-* [x] JWT token generated
-* [x] Protected routes working
-* [x] Role-based access working
-
----
-
-## 🔗 Frontend Integration
-
-### Store Token
-
-```js
-localStorage.setItem("token", token);
-```
-
----
-
-### Send Token in Requests
-
-```js
-headers: {
-  Authorization: `Bearer ${token}`
-}
-```
-
----
-
-### Role-Based Routing
-
-```js
-if (user.role === "merchant") {
-  navigate("/merchant-dashboard");
-}
-```
+* [ ] Merchant profile created
+* [ ] Merchant login works
+* [ ] Add product works
+* [ ] Fetch merchant products
+* [ ] Update product works
+* [ ] Delete product works
+* [ ] Public API returns correct merchant products
+* [ ] No cross-merchant data leak
 
 ---
 
 ## ⚠️ Important Notes
 
-* Admin users must be created manually in DB
-* No payment or subscription logic included in Week 1
-* OTP login can be added in future phases
-* Keep system simple for MVP
+* `merchantId` is mandatory in all business data
+* Do NOT mix merchant data
+* Keep APIs simple and scalable
+* No payment or WhatsApp logic yet
 
 ---
 
-## 🎯 Week 1 Outcome
+## 🎯 Week 2 Outcome
 
-✅ Fully working authentication system
-✅ Role-based access control
-✅ Backend ready for product & merchant modules
-✅ Frontend connected with backend
-
----
-
-## 🚀 Next Phase (Week 2)
-
-* Product Management APIs
-* Merchant Dashboard Integration
-* Inventory System
+✅ Merchant dashboard backend ready
+✅ Product management system complete
+✅ Multi-tenant architecture implemented
+✅ Dynamic storefront enabled
 
 ---
 
-<div align="center">
-  Built with ⚡ to empower digital merchants
-</div>
+## 🚀 Next Phase (Week 3)
+
+* Customer storefront frontend integration
+* Cart system
+* Order placement APIs
 
 ---
-
-If you want, next I can give you:
-
-👉 **Week 2 README (Products + Merchant APIs)**
-👉 Or directly **complete product module code**
-
-Just say 👍
