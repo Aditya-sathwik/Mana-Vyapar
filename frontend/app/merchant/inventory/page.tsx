@@ -229,24 +229,28 @@ function InventoryContent() {
               </p>
            </div>
         </div>
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 h-fit px-2 sm:px-0">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 w-full px-6 sm:px-0 mt-4 sm:mt-0">
            <button 
              onClick={() => router.push("/merchant/categories")}
-             className="h-14 md:h-20 flex-1 flex items-center justify-center gap-4 px-6 md:px-8 bg-muted border border-border rounded-xl md:rounded-3xl font-black text-[10px] tracking-widest uppercase hover:bg-foreground hover:text-white transition-all active:scale-95 shadow-xl"
+             className="flex items-center justify-start gap-4 p-2.5 pr-8 md:p-2 md:pr-8 bg-card hover:bg-accent transition-colors rounded-full active:scale-95 border border-border shadow-sm w-full sm:w-fit"
            >
-              <div className="p-2 lg:p-3 bg-card rounded-xl border border-border transition-transform group-hover:rotate-12">
-                <Layers className="h-4 w-4 text-primary" />
+              <div className="h-10 w-10 md:h-11 md:w-11 rounded-full bg-background flex items-center justify-center shrink-0 border border-border/50 shadow-inner">
+                <Layers className="h-5 w-5 text-foreground stroke-[2]" />
               </div>
-              <span className="text-left font-bold tracking-widest leading-none">Catalog<br /><span className="text-[9px] text-muted-foreground">Categories</span></span>
+              <div className="text-left flex flex-col justify-center gap-0.5">
+                <p className="text-[11px] md:text-xs font-black text-foreground tracking-[0.1em] leading-none uppercase">Catalog</p>
+                <p className="text-[9px] font-bold text-muted-foreground tracking-[0.1em] leading-none uppercase">Categories</p>
+              </div>
            </button>
+           
            <button 
              onClick={() => handleOpenModal()}
-             className="h-16 md:h-20 flex-[1.5] flex items-center justify-center gap-4 md:gap-5 px-8 md:px-10 bg-primary hover:bg-emerald-600 text-white rounded-xl md:rounded-3xl font-black text-[11px] md:text-[12px] tracking-widest uppercase shadow-[0_0_30px_rgba(5,148,103,0.3)] transition-all active:scale-95 border-2 border-primary/20"
+             className="flex-1 lg:max-w-md flex items-center justify-center gap-3 md:gap-4 py-3.5 px-6 md:px-8 xl:px-10 bg-background hover:bg-accent text-foreground rounded-full transition-all active:scale-95 border-[1.5px] border-foreground shadow-[0_5px_15px_rgba(0,0,0,0.05)] mx-auto sm:mx-0"
            >
-              <Plus className="h-6 w-6 md:h-8 md:w-8 stroke-[4] animate-pulse" />
-              <div className="text-left">
-                <p className="text-[9px] opacity-70 leading-none mb-0.5 font-black uppercase">Quick Action</p>
-                <p className="text-base md:text-lg font-black tracking-widest uppercase">Add Product</p>
+              <Plus className="h-7 w-7 md:h-8 md:w-8 stroke-[3] text-foreground shrink-0" />
+              <div className="text-center md:text-left flex flex-col justify-center gap-0.5">
+                <p className="text-[8px] md:text-[9px] font-black text-muted-foreground tracking-[0.15em] leading-none uppercase">Quick Action</p>
+                <p className="text-sm md:text-lg font-black text-foreground tracking-[0.1em] uppercase leading-none">Add Product</p>
               </div>
            </button>
         </div>
