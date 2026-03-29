@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Outfit, Inter } from "next/font/google";
+import { Manrope, Inter } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "../components/theme-provider";
 import { AuthProvider } from "../context/auth-context";
@@ -8,7 +8,7 @@ import StoreProvider from "../components/providers/StoreProvider";
 import { COLORS } from "@/lib/colors";
 import { Toaster } from "react-hot-toast";
 
-const outfit = Outfit({
+const manrope = Manrope({
   variable: "--font-display",
   subsets: ["latin"],
 });
@@ -31,7 +31,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${outfit.variable} ${inter.variable} antialiased font-body font-normal overflow-x-hidden`}
+        className={`${manrope.variable} ${inter.variable} antialiased font-body font-normal overflow-x-hidden`}
       >
         <StoreProvider>
           <ThemeProvider

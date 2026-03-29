@@ -5,7 +5,8 @@ import {
     getProductDetails,
     updateProduct,
     deleteProduct,
-    adjustStock
+    adjustStock,
+    getStoreProducts
 } from "../controllers/product.controller.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 import { upload } from "../middlewares/multer.middleware.js";
@@ -24,7 +25,7 @@ router.route("/")
 
 router.route("/:productId")
     .get(getProductDetails)
-    .patch(updateProduct)
+    .patch(upload.fields([{ name: "images", maxCount: 5 }]), updateProduct)
     .delete(deleteProduct);
 
 router.route("/:productId/stock").patch(adjustStock);

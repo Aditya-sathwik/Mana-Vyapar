@@ -8,12 +8,14 @@ import { useAppSelector } from '@/redux/hooks';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { cn } from '@/lib/utils';
+import { CartDrawer } from './ui/CartDrawer';
 
 export function StoreNavbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(true);
   const [isHovered, setIsHovered] = useState(false);
+  const [cartDrawerOpen, setCartDrawerOpen] = useState(false);
   const totalQuantity = useAppSelector((state) => state.cart.totalQuantity);
   const { isAuthenticated } = useAppSelector((state) => state.auth);
   const pathname = usePathname();
@@ -21,7 +23,7 @@ export function StoreNavbar() {
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 20);
     window.addEventListener('scroll', handleScroll, { passive: true });
-    
+
     // Auto-collapse on medium devices
     const handleResize = () => {
       if (window.innerWidth < 1280) setIsCollapsed(true);
@@ -52,7 +54,7 @@ export function StoreNavbar() {
   return (
     <>
       {/* --- DESKTOP SIDEBAR --- */}
-      <motion.aside 
+      <motion.aside
         initial={false}
         animate={{ width: effectivelyCollapsed ? 80 : 256 }}
         transition={{ type: "spring", stiffness: 300, damping: 30 }}
@@ -102,16 +104,16 @@ export function StoreNavbar() {
               {navLinks.map((link) => {
                 const isActive = pathname === link.href || (pathname.startsWith(link.href) && link.href !== '/store');
                 const Icon = link.icon;
-                
+
                 return (
-                  <Link 
-                    key={link.name} 
+                  <Link
+                    key={link.name}
                     href={link.href}
                     onClick={handleLinkClick}
                     className={cn(
                       "group relative flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-300",
                       effectivelyCollapsed ? "justify-center px-0 w-11 h-11 mx-auto" : "",
-                      isActive 
+                      isActive
                         ? "bg-primary/10 text-primary border border-primary/20 shadow-[0_0_10px_-2px_rgba(5,148,103,0.1)]"
                         : "text-muted-foreground hover:bg-muted hover:text-foreground border border-transparent"
                     )}
@@ -128,7 +130,7 @@ export function StoreNavbar() {
                       isActive ? "text-primary" : "text-muted-foreground group-hover:text-primary transition-colors"
                     )} />
                     {!effectivelyCollapsed && <span className="text-sm font-bold truncate tracking-tight">{link.name}</span>}
-                    
+
                     {effectivelyCollapsed && (
                       <div className="absolute left-14 bg-foreground text-background text-[10px] px-2.5 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none transition-all duration-300 whitespace-nowrap z-50 font-bold uppercase tracking-widest translate-x-[-10px] group-hover:translate-x-0 shadow-xl">
                         {link.name}
@@ -147,7 +149,7 @@ export function StoreNavbar() {
                 Account
               </p>
             )}
-            <Link 
+            <Link
               href={isAuthenticated ? "/store/orders" : "/store/login"}
               onClick={handleLinkClick}
               className={cn(
@@ -156,8 +158,8 @@ export function StoreNavbar() {
                 effectivelyCollapsed ? "justify-center px-0 w-11 h-11 mx-auto" : "px-3"
               )}
             >
-              {isAuthenticated 
-                ? <LayoutDashboard className={cn("h-5 w-5 shrink-0 transition-transform duration-300 group-hover:scale-110", pathname === "/store/orders" ? "text-primary" : "text-muted-foreground group-hover:text-primary")} /> 
+              {isAuthenticated
+                ? <LayoutDashboard className={cn("h-5 w-5 shrink-0 transition-transform duration-300 group-hover:scale-110", pathname === "/store/orders" ? "text-primary" : "text-muted-foreground group-hover:text-primary")} />
                 : <LogIn className="h-5 w-5 shrink-0 transition-transform duration-300 group-hover:scale-110 text-muted-foreground group-hover:text-primary" />
               }
               {!effectivelyCollapsed && <span className="text-sm font-bold truncate tracking-tight">{isAuthenticated ? "My Orders" : "Sign In"}</span>}
@@ -168,7 +170,7 @@ export function StoreNavbar() {
               )}
             </Link>
 
-            <Link 
+            <Link
               href="/store/settings"
               onClick={handleLinkClick}
               className={cn(
@@ -177,7 +179,7 @@ export function StoreNavbar() {
                 effectivelyCollapsed ? "justify-center px-0 w-11 h-11 mx-auto" : "px-3"
               )}
             >
-              <User className={cn("h-5 w-5 shrink-0 transition-transform duration-300 group-hover:scale-110", pathname === "/store/settings" ? "text-primary" : "text-muted-foreground group-hover:text-primary")} /> 
+              <User className={cn("h-5 w-5 shrink-0 transition-transform duration-300 group-hover:scale-110", pathname === "/store/settings" ? "text-primary" : "text-muted-foreground group-hover:text-primary")} />
               {!effectivelyCollapsed && <span className="text-sm font-bold truncate tracking-tight">Profile Settings</span>}
               {effectivelyCollapsed && (
                 <div className="absolute left-14 bg-foreground text-background text-[10px] px-2.5 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none transition-all duration-300 whitespace-nowrap z-50 font-bold uppercase tracking-widest translate-x-[-10px] group-hover:translate-x-0 shadow-xl">
@@ -190,9 +192,8 @@ export function StoreNavbar() {
 
         {/* Footer Area of Sidebar */}
         <div className={cn("p-4 pb-8 border-t border-border/50 bg-background/50 backdrop-blur-md", effectivelyCollapsed ? "flex flex-col items-center gap-4" : "flex flex-col gap-4")}>
-          <Link 
-            href="/store/cart"
-            onClick={handleLinkClick} 
+          <button
+            onClick={() => setCartDrawerOpen(true)}
             className={cn(
               "flex items-center justify-between bg-muted border border-border/50 rounded-2xl group relative overflow-hidden transition-all shadow-sm hover:shadow-lg shadow-primary/5 hover:shadow-primary/20",
               effectivelyCollapsed ? "p-3 mx-auto flex-col gap-1 w-11 h-11" : "px-4 py-3"
@@ -206,7 +207,7 @@ export function StoreNavbar() {
               <motion.span
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
-                key={totalQuantity} 
+                key={totalQuantity}
                 className={cn(
                   "relative z-10 flex items-center justify-center rounded-full bg-primary font-bold text-primary-foreground tracking-widest shadow-lg shadow-primary/20",
                   effectivelyCollapsed ? "absolute -top-1 -right-1 h-3.5 w-3.5 text-[8px]" : "h-5 w-5 text-[10px] uppercase"
@@ -215,29 +216,33 @@ export function StoreNavbar() {
                 {totalQuantity}
               </motion.span>
             )}
-          </Link>
-          
+          </button>
+
           <div className={cn("flex items-center gap-2", effectivelyCollapsed ? "justify-center" : "justify-between px-1")}>
-             <ThemeToggle />
-             {!effectivelyCollapsed && <span className="flex-1 text-center text-[10px] uppercase tracking-widest text-muted-foreground font-bold">Theme</span>}
+            <ThemeToggle />
+            {!effectivelyCollapsed && <span className="flex-1 text-center text-[10px] uppercase tracking-widest text-muted-foreground font-bold">Theme</span>}
           </div>
         </div>
       </motion.aside>
 
       {/* --- MOBILE TOPBAR --- */}
       <header
-        className={cn(
-          "md:hidden fixed top-0 w-full z-50 transition-all duration-300",
-          isScrolled || mobileMenuOpen ? "glass py-3" : "bg-transparent py-5"
-        )}
+        className="md:hidden fixed top-0 w-full z-50 bg-background/50 backdrop-blur-xl border-b border-border/50 py-3 shadow-sm dark:shadow-2xl"
       >
         <div className="flex items-center justify-between px-4">
-          <button 
-            className="p-2 text-foreground rounded-full hover:bg-muted/50 transition-colors"
-            onClick={() => setMobileMenuOpen(true)}
-          >
-            <Menu className="h-6 w-6" />
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              className="p-2.5 text-foreground rounded-2xl bg-muted/30 backdrop-blur-md hover:bg-muted/50 transition-all active:scale-95"
+              onClick={() => setMobileMenuOpen(true)}
+            >
+              <Menu className="h-5 w-5 text-foreground" />
+            </button>
+            <button
+              className="p-2.5 text-foreground rounded-2xl bg-muted/30 backdrop-blur-md hover:bg-muted/50 transition-all active:scale-95 border border-transparent focus:border-primary/30"
+            >
+              <Search className="h-5 w-5 text-foreground" />
+            </button>
+          </div>
 
           {/* Logo Center */}
           <Link href="/store" className="flex items-center justify-center pointer-events-auto">
@@ -246,20 +251,25 @@ export function StoreNavbar() {
             </div>
           </Link>
 
-          {/* Mobile Cart Icon */}
-          <Link href="/store/cart" className="relative p-2 text-foreground hover:bg-muted/50 rounded-full transition-colors">
-            <ShoppingCart className="h-6 w-6" />
+          {/* Mobile Cart Icon - Improved with Badge Styling */}
+          <button
+            onClick={() => setCartDrawerOpen(true)}
+            className="relative p-2.5 group active:scale-95 transition-all"
+          >
+            <div className="p-2.5 rounded-2xl bg-primary/10 border border-primary/20 backdrop-blur-md">
+              <ShoppingCart className={cn("h-5 w-5", totalQuantity === 0 ? "text-foreground" : "text-primary")} />
+            </div>
             {totalQuantity > 0 && (
               <motion.span
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
-                key={`mobile-${totalQuantity}`} 
-                className="absolute right-0 top-0 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground shadow-sm"
+                key={`mobile-cart-${totalQuantity}`}
+                className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] font-black text-primary-foreground shadow-lg shadow-primary/30 border-2 border-background"
               >
                 {totalQuantity}
               </motion.span>
             )}
-          </Link>
+          </button>
         </div>
       </header>
 
@@ -290,17 +300,17 @@ export function StoreNavbar() {
                   <X className="h-5 w-5" />
                 </button>
               </div>
-              
+
               <nav className="flex-1 flex flex-col gap-2 p-4 overflow-y-auto">
                 <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 px-2 mt-2">Discover</div>
                 {navLinks.map((link) => {
                   const isActive = pathname === link.href || (pathname.startsWith(link.href) && link.href !== '/store');
                   const Icon = link.icon;
                   return (
-                    <Link 
+                    <Link
                       key={link.name}
-                      onClick={() => setMobileMenuOpen(false)} 
-                      href={link.href} 
+                      onClick={() => setMobileMenuOpen(false)}
+                      href={link.href}
                       className={cn(
                         "flex items-center gap-4 px-4 py-3 rounded-xl text-md font-medium transition-colors",
                         isActive ? "bg-primary/10 text-primary" : "text-foreground hover:bg-muted"
@@ -313,19 +323,19 @@ export function StoreNavbar() {
                 })}
 
                 <div className="mt-6 mb-4 h-px w-full bg-border" />
-                
-                <Link 
-                  onClick={() => setMobileMenuOpen(false)} 
-                  href={isAuthenticated ? "/store/orders" : "/store/login"} 
+
+                <Link
+                  onClick={() => setMobileMenuOpen(false)}
+                  href={isAuthenticated ? "/store/orders" : "/store/login"}
                   className={cn("flex items-center gap-4 px-4 py-3 rounded-xl text-md font-medium transition-colors", pathname === "/store/orders" ? "bg-primary/10 text-primary" : "text-foreground hover:bg-muted")}
                 >
                   {isAuthenticated ? <LayoutDashboard className={cn("h-5 w-5", pathname === "/store/orders" ? "text-primary" : "text-muted-foreground")} /> : <LogIn className="h-5 w-5 text-muted-foreground" />}
                   {isAuthenticated ? "My Orders" : "Sign In"}
                 </Link>
 
-                <Link 
-                  onClick={() => setMobileMenuOpen(false)} 
-                  href="/store/settings" 
+                <Link
+                  onClick={() => setMobileMenuOpen(false)}
+                  href="/store/settings"
                   className={cn("flex items-center gap-4 px-4 py-3 rounded-xl text-md font-medium transition-colors", pathname === "/store/settings" ? "bg-primary/10 text-primary" : "text-foreground hover:bg-muted")}
                 >
                   <User className={cn("h-5 w-5", pathname === "/store/settings" ? "text-primary" : "text-muted-foreground")} />
@@ -341,6 +351,59 @@ export function StoreNavbar() {
           </>
         )}
       </AnimatePresence>
+
+      <CartDrawer
+        isOpen={cartDrawerOpen}
+        onClose={() => setCartDrawerOpen(false)}
+      />
+
+      {/* --- MOBILE BOTTOM NAV --- */}
+      <div className="fixed bottom-0 left-0 right-0 z-50 px-4 pb-4 md:hidden pointer-events-none">
+        <nav className="flex items-center justify-around h-16 bg-card/80 backdrop-blur-xl border border-border shadow-[0_-10px_30px_-10px_rgba(0,0,0,0.1)] dark:shadow-[0_-10px_30px_-10px_rgba(0,0,0,0.5)] rounded-2xl px-2 pointer-events-auto max-w-md mx-auto">
+          {[
+            { href: "/store", label: "Home", icon: Home },
+            { href: "/store/categories", label: "Categories", icon: Grid },
+            { href: "/store/products", label: "Shop", icon: ShoppingBag },
+            { href: "/store/settings", label: "Profile", icon: User },
+          ].map((item) => {
+            const isActive = pathname === item.href || (item.href !== "/store" && pathname.startsWith(item.href));
+
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={cn(
+                  "flex flex-col items-center justify-center w-full h-full gap-1 transition-all duration-300 relative",
+                  isActive
+                    ? "text-primary scale-110"
+                    : "text-muted-foreground"
+                )}
+              >
+                {isActive && (
+                  <motion.div
+                    layoutId="store-bottom-nav-indicator"
+                    className="absolute -top-1 h-1 w-6 bg-primary rounded-full shadow-[0_0_10px_rgba(5,148,103,1)]"
+                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                  />
+                )}
+                
+                <div className={cn(
+                  "p-1.5 rounded-lg transition-all",
+                  isActive && "bg-primary/10"
+                )}>
+                   <item.icon className={cn("h-5 w-5", isActive && "stroke-[2.5px]")} />
+                </div>
+                <span className={cn(
+                  "text-[9px] font-black uppercase tracking-widest",
+                  isActive ? "opacity-100" : "opacity-70"
+                )}>
+                  {item.label}
+                </span>
+              </Link>
+            )
+          })}
+        </nav>
+      </div>
     </>
   );
 }

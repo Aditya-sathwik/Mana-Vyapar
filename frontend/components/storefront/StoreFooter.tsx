@@ -1,21 +1,26 @@
+'use client';
+
 import Link from 'next/link';
+import { useAppSelector } from '@/redux/hooks';
 
 export function StoreFooter() {
+  const { currentStore } = useAppSelector((state) => state.store);
+  const storeName = currentStore?.name || "Mana Store";
   return (
     <footer className="mt-20 border-t border-border bg-card pb-12 pt-16 sm:mt-32">
       <div className="container mx-auto grid max-w-7xl grid-cols-1 gap-12 px-6 sm:grid-cols-2 md:grid-cols-4">
         {/* Brand */}
         <div className="flex flex-col gap-4">
           <Link href="/store" className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-              <span className="font-display text-sm font-bold">M</span>
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-lg shadow-primary/20">
+              <span className="font-display text-lg font-black uppercase">{storeName.charAt(0)}</span>
             </div>
-            <span className="font-display text-lg font-bold tracking-tight text-foreground">
-              Mana Store
+            <span className="font-display text-xl font-bold tracking-tight text-foreground uppercase">
+              {storeName}
             </span>
           </Link>
-          <p className="text-sm text-muted-foreground">
-            Premium products delivered with quality and trust. Powered by Mana-Vyapar.
+          <p className="text-sm text-muted-foreground leading-relaxed">
+            {currentStore?.description || "Premium products delivered with quality and trust. Powered by Mana-Vyapar technology."}
           </p>
         </div>
 
@@ -44,8 +49,8 @@ export function StoreFooter() {
         </div>
       </div>
       <div className="container mx-auto mt-12 flex max-w-7xl flex-col items-center justify-between gap-4 border-t border-border px-6 pt-8 sm:flex-row">
-        <p className="text-xs text-muted-foreground">
-          © {new Date().getFullYear()} Mana Store. All rights reserved.
+        <p className="text-xs text-muted-foreground font-medium">
+          © {new Date().getFullYear()} <span className="text-foreground">{storeName}</span>. Proudly powered by <span className="text-primary font-bold">Mana Vyapar</span>.
         </p>
       </div>
     </footer>

@@ -33,10 +33,13 @@ const getProductDetails = asyncHandler(async (req, res) => {
 });
 
 const updateProduct = asyncHandler(async (req, res) => {
+    const imageLocalPaths = req.files?.images?.map(file => file.path) || [];
+    
     const product = await productService.updateProduct(
         req.user._id, 
         req.params.productId, 
-        req.body
+        req.body,
+        imageLocalPaths
     );
     
     return res.status(200).json(

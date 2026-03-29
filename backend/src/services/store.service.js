@@ -31,7 +31,7 @@ export const createStore = async (merchantId, storeData) => {
 
 
 export const updateStoreByOwnerId = async (ownerId, storeData) => {
-    const { name, description, slug, theme, socialLinks, contactInfo, bannerImages, isActive } = storeData;
+    const { name, description, slug, theme, socialLinks, contactInfo, corouselImages, isActive } = storeData;
 
     const store = await Store.findOne({ owner: ownerId });
     if (!store) {
@@ -44,7 +44,7 @@ export const updateStoreByOwnerId = async (ownerId, storeData) => {
     if (theme) store.theme = theme;
     if (socialLinks) store.socialLinks = socialLinks;
     if (contactInfo) store.contactInfo = contactInfo;
-    if (bannerImages) store.bannerImages = bannerImages;
+    if (corouselImages) store.corouselImages = corouselImages;
     if (isActive !== undefined) store.isActive = isActive;
 
     await store.save();
@@ -207,6 +207,22 @@ export const addCategory = async (storeId, categoryData) => {
         isActive
     });
     store.categories.push(category);
+    await store.save();
+    return store;
+}
+
+export const updateStoreLogo = async (ownerId, logoLocalPath) => {
+    const store = await Store.findOne({ owner: ownerId });
+    if (!store) {
+        throw new ApiError(404, "Store not found");
+    }
+
+    const result = await uploadOnCloudinary(logoLocalPath);
+    if (!result?.url) {
+        throw new ApiError(400, "Error while uploading logo");
+    }
+
+    store.logo = result.url;
     await store.save();
     return store;
 }

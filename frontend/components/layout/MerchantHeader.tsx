@@ -1,53 +1,78 @@
 "use client"
 
 import { Search, Bell, Menu, User, Store } from "lucide-react"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
+import { useAuth } from "@/context/auth-context"
+import { useState } from "react"
+import Image from "next/image"
 
 export function MerchantHeader({ onMenuClick }: { onMenuClick: () => void }) {
   const pathname = usePathname()
+  const router = useRouter()
+  const { user } = useAuth()
+  const [search, setSearch] = useState("")
   const pageTitle = pathname.split("/").pop()?.replace(/-/g, " ") || "Dashboard"
 
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!search.trim()) return
+    router.push(`/merchant/inventory?search=${encodeURIComponent(search.trim())}`)
+    setSearch("")
+  }
+
   return (
-    <header className="sticky top-0 z-30 flex h-16 w-full items-center justify-between border-b border-slate-200 dark:border-slate-800/50 bg-white/80 dark:bg-[#09090b]/80 px-6 backdrop-blur-xl">
+    <header className="sticky top-0 z-30 flex h-16 w-full items-center justify-between border-b border-border/50 bg-card/80 px-6 backdrop-blur-xl">
       <div className="flex items-center gap-4">
         <button
           onClick={onMenuClick}
-          className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 md:hidden"
+          className="flex h-10 w-10 items-center justify-center rounded-xl bg-muted border border-border text-muted-foreground md:hidden"
         >
           <Menu className="h-5 w-5" />
         </button>
         
         <div className="hidden md:flex flex-col">
           <p className="text-[10px] font-bold text-primary uppercase tracking-[0.2em]">Merchant Workspace</p>
-          <h1 className="text-xl font-bold dark:text-white text-slate-900 capitalize">{pageTitle}</h1>
+          <h1 className="text-xl font-bold text-foreground capitalize">{pageTitle}</h1>
         </div>
       </div>
 
       <div className="flex items-center gap-3">
-        <div className="relative hidden sm:block">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
+        <form onSubmit={handleSearch} className="relative hidden sm:block">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <input
             type="text"
-            placeholder="Search in store..."
-            className="h-10 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 pl-10 pr-4 text-xs dark:text-slate-300 focus:border-primary/50 focus:outline-none focus:ring-1 focus:ring-primary/20 w-64 transition-all"
+            placeholder="Search products in store..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="h-10 rounded-xl border border-border bg-muted/50 pl-10 pr-4 text-xs text-foreground focus:border-primary/50 focus:outline-none focus:ring-1 focus:ring-primary/20 w-64 transition-all"
           />
-        </div>
+        </form>
 
-        <button className="relative flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 text-slate-500 dark:text-slate-400 hover:text-black dark:hover:text-white transition-all">
+        <button className="relative flex h-10 w-10 items-center justify-center rounded-xl border border-border bg-muted/50 text-muted-foreground hover:text-foreground transition-all">
           <Bell className="h-5 w-5" />
           <span className="absolute right-2.5 top-2.5 h-2 w-2 rounded-full bg-primary shadow-[0_0_8px_rgba(5,148,103,1)]" />
         </button>
 
-        <div className="h-8 w-px bg-slate-200 dark:bg-slate-800 mx-1" />
+        <div className="h-8 w-px bg-border mx-1" />
 
         <div className="flex items-center gap-3 pl-1">
           <div className="hidden lg:flex flex-col items-end text-right">
-            <p className="text-xs font-bold dark:text-white text-slate-900 leading-none">Vamshi Electronics</p>
-            <p className="text-[10px] font-bold text-primary uppercase tracking-tighter mt-1">Premium Dealer</p>
+            <p className="text-xs font-bold text-foreground leading-none">{user?.businessName || user?.fullname || "Vamshi Electronics"}</p>
+            <p className="text-[10px] font-bold text-primary uppercase tracking-tighter mt-1">{user?.role === "Merchant" ? "Premium Dealer" : user?.role || "Merchant Hub"}</p>
           </div>
-          <div className="h-10 w-10 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 flex items-center justify-center text-slate-400 overflow-hidden">
-             <Store className="h-5 w-5 text-primary" />
+          <div className="h-10 w-10 rounded-xl border border-border bg-muted/50 flex items-center justify-center text-muted-foreground overflow-hidden">
+             {user?.avatar ? (
+               <Image 
+                 src={user.avatar} 
+                 alt={user.fullname} 
+                 width={40} 
+                 height={40} 
+                 className="h-full w-full object-cover"
+               />
+             ) : (
+               <Store className="h-5 w-5 text-primary" />
+             )}
           </div>
         </div>
       </div>

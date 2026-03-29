@@ -12,9 +12,10 @@ export default function StoreLayout({ children }: { children: React.ReactNode })
     <StoreProvider>
       <div className="min-h-screen flex bg-background text-foreground font-body relative overflow-hidden">
         {/* Ambient background glow effects */}
-        <div className="absolute inset-0 pointer-events-none opacity-[0.03] dark:opacity-[0.15] z-0">
-          <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-primary rounded-full blur-[120px] animate-pulse-slow" />
-          <div className="absolute bottom-[-5%] right-[-5%] w-[40%] h-[40%] bg-emerald-500 rounded-full blur-[100px] opacity-60" />
+        <div className="absolute inset-0 pointer-events-none opacity-[0.05] dark:opacity-[0.2] z-0">
+          <div className="absolute top-[-20%] left-[-15%] w-[60%] h-[60%] bg-primary rounded-full blur-[160px] animate-pulse-slow active" />
+          <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-[#2cd08b] rounded-full blur-[140px] opacity-40 hover:opacity-100 transition-opacity duration-1000" />
+          <div className="absolute top-[40%] right-[-10%] w-[30%] h-[30%] bg-primary/20 rounded-full blur-[100px] pointer-events-none" />
         </div>
 
         <StoreNavbar /> {/* This now contains both Mobile Topbar & Desktop Sidebar */}

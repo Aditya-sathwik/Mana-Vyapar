@@ -3,7 +3,7 @@
 import { use, useEffect, useState } from 'react';
 import Image from 'next/image';
 import { useAppDispatch, useAppSelector } from '@/redux/hooks';
-import { fetchProducts } from '@/redux/slices/productSlice';
+import { fetchProductsByStoreSlug } from '@/redux/slices/productSlice';
 import { addToCart } from '@/redux/slices/cartSlice';
 import { Button } from '@/components/storefront/ui/Button';
 import { SlideUp, FadeIn } from '@/components/storefront/ui/MotionComponents';
@@ -22,11 +22,11 @@ export default function ProductDetail({ params }: { params: Promise<{ id: string
 
   useEffect(() => {
     if (status === 'idle') {
-      dispatch(fetchProducts());
+      dispatch(fetchProductsByStoreSlug("mana-store"));
     }
   }, [status, dispatch]);
 
-  const product = items.find((p) => p.id === unwrappedParams.id);
+  const product = items.find((p) => p._id === unwrappedParams.id);
 
   if (status === 'loading') {
     return (
@@ -58,7 +58,13 @@ export default function ProductDetail({ params }: { params: Promise<{ id: string
 
   const handleAddToCart = () => {
     setAdding(true);
-    dispatch(addToCart({ ...product, quantity }));
+    dispatch(addToCart({ 
+      id: product._id, 
+      name: product.name, 
+      price: product.price, 
+      image: product.images?.[0] || '',
+      quantity 
+    }));
     
     setTimeout(() => {
       setAdding(false);
@@ -84,20 +90,18 @@ export default function ProductDetail({ params }: { params: Promise<{ id: string
 
       <div className="grid grid-cols-1 gap-12 md:grid-cols-2 lg:gap-16 items-start">
         {/* Gallery */}
-        <SlideUp duration={0.6} className="sticky top-32 z-10">
+        <SlideUp duration={0.6} className="relative md:sticky md:top-32 z-10">
+
           <Hover3DCard className="aspect-square w-full overflow-hidden rounded-3xl bg-card shadow-lg ring-1 ring-border p-4">
             <div className="relative h-full w-full rounded-2xl overflow-hidden bg-muted" style={{ transform: 'translateZ(40px)' }}>
               <Image
-                src={product.image}
+                src={product.images?.[0] || ''}
                 alt={product.name}
                 fill
                 priority
                 className="object-cover"
                 sizes="(max-width: 768px) 100vw, 50vw"
               />
-              <div className="absolute top-4 left-4 bg-background/80 backdrop-blur-md px-3 py-1 rounded-full border border-border">
-                <span className="text-xs font-bold text-foreground tracking-wider uppercase">{product.category}</span>
-              </div>
             </div>
           </Hover3DCard>
         </SlideUp>
@@ -105,9 +109,14 @@ export default function ProductDetail({ params }: { params: Promise<{ id: string
         {/* Info */}
         <FadeIn delay={0.2} duration={0.8} className="flex flex-col gap-8 py-8">
           <div>
-            <div className="flex items-center gap-2 mb-3">
-              <span className="flex text-amber-500"><Star className="h-4 w-4 fill-current" /><Star className="h-4 w-4 fill-current" /><Star className="h-4 w-4 fill-current" /><Star className="h-4 w-4 fill-current" /><Star className="h-4 w-4 fill-current text-muted" /></span>
-              <span className="text-sm text-muted-foreground">(128 Reviews)</span>
+            <div className="flex items-center gap-4 mb-4">
+              <div className="bg-primary/10 px-3 py-1 rounded-full border border-primary/20">
+                <span className="text-[10px] font-black text-primary tracking-widest uppercase">{product.category}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="flex text-amber-500"><Star className="h-4 w-4 fill-current" /><Star className="h-4 w-4 fill-current" /><Star className="h-4 w-4 fill-current" /><Star className="h-4 w-4 fill-current" /><Star className="h-4 w-4 fill-current text-muted" /></span>
+                <span className="text-sm text-muted-foreground font-medium">(128 Reviews)</span>
+              </div>
             </div>
             <h1 className="font-display text-4xl font-bold tracking-tight text-foreground sm:text-5xl border-b border-border pb-6">{product.name}</h1>
             <div className="mt-6 flex items-end gap-4">
@@ -150,7 +159,7 @@ export default function ProductDetail({ params }: { params: Promise<{ id: string
               size="lg" 
               className="w-full relative overflow-hidden group h-14 rounded-2xl text-lg font-bold shadow-xl shadow-primary/25"
               onClick={handleAddToCart}
-              disabled={!product.inStock || adding}
+              disabled={product.stock <= 0 || adding}
             >
               <AnimatePresence>
                 {adding && (

@@ -68,6 +68,14 @@ const storeSchema = new Schema(
         isActive: { type: Boolean, default: true },
       }
     ],
+    openingHours: [
+      {
+        dayGroup: { type: String, required: true }, // e.g., "Monday - Friday"
+        openTime: { type: String, default: "09:00" },
+        closeTime: { type: String, default: "21:00" },
+        isClosed: { type: Boolean, default: false }
+      }
+    ],
     isActive: {
       type: Boolean,
       default: true,

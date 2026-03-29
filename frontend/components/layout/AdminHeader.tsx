@@ -6,9 +6,12 @@ import { usePathname } from "next/navigation"
 import { Search, Bell, Menu, X, Shield, User, Zap } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { motion, AnimatePresence } from "framer-motion"
+import { useAuth } from "@/context/auth-context"
+import Image from "next/image"
 
 export function AdminHeader({ onMenuClick }: { onMenuClick: () => void }) {
   const pathname = usePathname()
+  const { user } = useAuth()
   const pageTitle = pathname.split("/").pop()?.replace(/-/g, " ") || "Dashboard"
 
   return (
@@ -46,11 +49,21 @@ export function AdminHeader({ onMenuClick }: { onMenuClick: () => void }) {
 
         <div className="flex items-center gap-3 pl-1">
           <div className="hidden lg:flex flex-col items-end text-right">
-            <p className="text-xs font-bold text-white leading-none">Aditya Sathwik</p>
-            <p className="text-[10px] font-bold text-primary uppercase tracking-tighter mt-1">Operator 01</p>
+            <p className="text-xs font-bold text-white leading-none">{user?.fullname || "Aditya Sathwik"}</p>
+            <p className="text-[10px] font-bold text-primary uppercase tracking-tighter mt-1">{user?.role === "admin" ? "Operator 01" : user?.role || "System Admin"}</p>
           </div>
           <div className="h-10 w-10 rounded-xl border border-slate-800 bg-slate-900/50 flex items-center justify-center text-slate-400 overflow-hidden">
-            <User className="h-5 w-5" />
+            {user?.avatar ? (
+              <Image 
+                src={user.avatar} 
+                alt={user.fullname} 
+                width={40} 
+                height={40} 
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              <User className="h-5 w-5" />
+            )}
           </div>
         </div>
       </div>

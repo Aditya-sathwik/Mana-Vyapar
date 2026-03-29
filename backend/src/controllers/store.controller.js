@@ -105,6 +105,19 @@ const deleteCarouselImage = asyncHandler(async (req, res) => {
     );
 });
 
+const updateStoreLogo = asyncHandler(async (req, res) => {
+    const logolocalpath = req.file?.path;
+    if (!logolocalpath) {
+        throw new ApiError(400, "Logo file is missing");
+    }
+
+    const store = await storeService.updateStoreLogo(req.user._id, logolocalpath);
+
+    return res.status(200).json(
+        new ApiResponse(200, store, "Store logo updated successfully")
+    );
+});
+
 export {
     createStore,
     updateStore,
@@ -113,5 +126,6 @@ export {
     getMyStore,
     deleteStore,
     uploadCarousel,
-    deleteCarouselImage
+    deleteCarouselImage,
+    updateStoreLogo
 };

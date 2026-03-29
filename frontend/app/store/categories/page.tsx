@@ -1,14 +1,46 @@
 'use client';
 
-import React from 'react';
+import { useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Search, SlidersHorizontal, ArrowUpRight, Leaf, BookOpen, Palette, Wind } from 'lucide-react';
+import { useAppDispatch, useAppSelector } from '@/redux/hooks';
+import { fetchCategoriesByStoreId } from '@/redux/slices/categorySlice';
+import { Search, SlidersHorizontal, ArrowUpRight, Leaf, BookOpen, Palette, Wind, PackageOpen } from 'lucide-react';
 import { FadeIn, SlideUp } from '@/components/storefront/ui/MotionComponents';
+import { useParams } from 'next/navigation';
+import { cn } from '@/lib/utils';
 
 export default function CategoriesPage() {
+  const dispatch = useAppDispatch();
+  const params = useParams();
+  const slug = (params?.slug as string) || "mana-store";
+  
+  const { currentStore } = useAppSelector((state) => state.store);
+  const { items: categories, status } = useAppSelector((state) => state.categories);
+
+  useEffect(() => {
+    if (currentStore?._id && status === 'idle') {
+      dispatch(fetchCategoriesByStoreId(currentStore._id));
+    }
+  }, [currentStore, status, dispatch]);
+
+  const bentoIcons = [Leaf, BookOpen, Palette, Wind];
+
+  const displayCategories = categories.length > 0 
+    ? categories 
+    : [
+        { _id: 'c1', name: 'Artisan Handicrafts', description: 'Traditional skills meeting modern design. Explore textiles, pottery, and woodwork.', image: "https://images.unsplash.com/photo-1610701596007-11502861dcfa?q=80&w=1200" },
+        { _id: 'c2', name: 'Gourmet Pantry', description: 'Pure ingredients and family recipes straight from the farm.', image: "https://images.unsplash.com/photo-1596040033229-a9821ebd058d?q=80&w=800" },
+        { _id: 'c3', name: 'Ethical Fashion', description: 'Conscious apparel that honors the maker and the planet.', image: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=800" },
+        { _id: 'c4', name: 'Sustainable Decor', description: 'Elevate your living space with items that tell a story.', image: "https://images.unsplash.com/photo-1513694203232-719a280e022f?q=80&w=1200" },
+      ];
   return (
-    <div className="container mx-auto px-4 sm:px-8 py-12 md:py-16 max-w-7xl">
+    <div className="relative min-h-screen pb-20 overflow-hidden">
+      {/* Background Decorative Glows */}
+      <div className="absolute top-0 right-0 -z-10 h-[500px] w-[500px] rounded-full bg-primary/10 blur-[120px]" />
+      <div className="absolute top-[20%] left-[-10%] -z-10 h-[600px] w-[600px] rounded-full bg-primary/5 blur-[150px]" />
+
+      <div className="container mx-auto max-w-7xl px-4 pt-24 sm:px-6 md:pt-32">
       {/* Hero Section */}
       <header className="mb-20 flex flex-col items-center text-center">
         <SlideUp>
@@ -42,89 +74,44 @@ export default function CategoriesPage() {
 
       {/* Categories Bento Grid */}
       <div className="grid grid-cols-1 md:grid-cols-12 gap-8 mb-24">
-        {/* Category Card: Large (Handicrafts) */}
-        <div className="md:col-span-8 group cursor-pointer">
-          <SlideUp delay={0.1}>
-            <div className="relative h-[480px] rounded-[2.5rem] overflow-hidden bg-card border border-border/50 transition-all duration-500 xl:hover:shadow-2xl xl:hover:-translate-y-2">
-              <Image 
-                fill
-                alt="Artisan Pottery" 
-                className="object-cover transition-transform duration-700 group-hover:scale-110" 
-                src="https://images.unsplash.com/photo-1610701596007-11502861dcfa?q=80&w=1200&auto=format&fit=crop"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
-              <div className="absolute bottom-0 left-0 p-10 w-full z-10">
-                <div className="flex justify-between items-end">
-                  <div className="max-w-md">
-                    <span className="bg-primary text-primary-foreground text-[10px] uppercase tracking-widest px-3 py-1 rounded-full font-bold mb-4 inline-block shadow-lg shadow-primary/20">Trending</span>
-                    <h3 className="font-display text-4xl font-bold text-white mb-3 tracking-tight">Artisan Handicrafts</h3>
-                    <p className="text-white/80 font-body text-lg leading-relaxed">Traditional skills meeting modern design. Explore textiles, pottery, and woodwork from local masters.</p>
+        {displayCategories.map((cat, idx) => {
+          const isLarge = idx % 3 === 0;
+          const Icon = bentoIcons[idx % bentoIcons.length];
+          
+          return (
+            <div key={cat._id} className={cn("group cursor-pointer", isLarge ? "md:col-span-8" : "md:col-span-4")}>
+              <SlideUp delay={idx * 0.1}>
+                <Link href={`/store/categories/${cat._id}`}>
+                  <div className={cn(
+                    "relative rounded-[2.5rem] overflow-hidden bg-card border border-border/50 transition-all duration-500 xl:hover:shadow-2xl xl:hover:-translate-y-2",
+                    isLarge ? "h-[450px]" : "h-[450px]"
+                  )}>
+                    <Image 
+                      fill
+                      alt={cat.name} 
+                      className="object-cover transition-transform duration-700 group-hover:scale-110" 
+                      src={cat.image || "https://images.unsplash.com/photo-1548036328-c9fa89d128fa?q=80&w=800"}
+                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent"></div>
+                    <div className="absolute bottom-0 left-0 p-8 sm:p-10 w-full z-10">
+                      <div className="flex justify-between items-end gap-4">
+                        <div className="max-w-md">
+                          {idx === 0 && <span className="bg-primary text-primary-foreground text-[10px] uppercase tracking-widest px-3 py-1 rounded-full font-bold mb-4 inline-block shadow-lg shadow-primary/20">Trending</span>}
+                          <h3 className={cn("font-display font-bold text-white mb-3 tracking-tight", isLarge ? "text-3xl sm:text-4xl" : "text-2xl sm:text-3xl")}>{cat.name}</h3>
+                          <p className="text-white/80 font-body text-sm sm:text-lg leading-relaxed line-clamp-2">{cat.description}</p>
+                        </div>
+                        <span className="hidden sm:flex bg-white/20 backdrop-blur-md text-white p-3 rounded-full group-hover:bg-primary group-hover:text-primary-foreground transition-colors shadow-lg">
+                          <ArrowUpRight className="w-6 h-6" />
+                        </span>
+                      </div>
+                    </div>
                   </div>
-                  <span className="bg-white/20 backdrop-blur-md text-white p-4 rounded-full group-hover:bg-primary group-hover:text-primary-foreground transition-colors shadow-lg shadow-primary/10">
-                    <ArrowUpRight className="w-8 h-8" />
-                  </span>
-                </div>
-              </div>
+                </Link>
+              </SlideUp>
             </div>
-          </SlideUp>
-        </div>
-
-        {/* Category Card: Small (Gourmet) */}
-        <div className="md:col-span-4 group cursor-pointer">
-          <SlideUp delay={0.2}>
-            <div className="relative h-[480px] rounded-[2.5rem] overflow-hidden bg-card border border-border/50 transition-all duration-500 xl:hover:shadow-2xl xl:hover:-translate-y-2">
-              <Image 
-                fill
-                alt="Local Food" 
-                className="object-cover transition-transform duration-700 group-hover:scale-110" 
-                src="https://images.unsplash.com/photo-1596040033229-a9821ebd058d?q=80&w=800&auto=format&fit=crop"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
-              <div className="absolute bottom-0 left-0 p-10 z-10">
-                <h3 className="font-display text-3xl font-bold text-white mb-2 tracking-tight">Gourmet Pantry</h3>
-                <p className="text-white/80 font-body leading-relaxed">Pure ingredients and family recipes straight from the farm to your table.</p>
-              </div>
-            </div>
-          </SlideUp>
-        </div>
-
-        {/* Category Card: Medium (Fashion) */}
-        <div className="md:col-span-4 group cursor-pointer">
-          <SlideUp delay={0.3}>
-            <div className="relative h-[380px] rounded-[2.5rem] overflow-hidden bg-card border border-border/50 transition-all duration-500 xl:hover:shadow-2xl xl:hover:-translate-y-2">
-              <Image 
-                fill
-                alt="Sustainable Fashion" 
-                className="object-cover transition-transform duration-700 group-hover:scale-110" 
-                src="https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=800&auto=format&fit=crop"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent"></div>
-              <div className="absolute bottom-0 left-0 p-8 z-10">
-                <h3 className="font-display text-2xl font-bold text-white mb-2 tracking-tight">Ethical Fashion</h3>
-                <p className="text-white/80 font-body leading-relaxed">Conscious apparel that honors the maker and the planet.</p>
-              </div>
-            </div>
-          </SlideUp>
-        </div>
-
-        {/* Category Card: Wide (Decor) */}
-        <div className="md:col-span-8 group cursor-pointer">
-          <SlideUp delay={0.4}>
-            <div className="relative h-[380px] rounded-[2.5rem] overflow-hidden bg-card border border-border/50 transition-all duration-500 xl:hover:shadow-2xl xl:hover:-translate-y-2">
-              <Image 
-                fill
-                alt="Home Decor" 
-                className="object-cover transition-transform duration-700 group-hover:scale-110" 
-                src="https://images.unsplash.com/photo-1513694203232-719a280e022f?q=80&w=1200&auto=format&fit=crop"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
-              <div className="absolute bottom-0 left-0 p-10 z-10">
-                <h3 className="font-display text-3xl font-bold text-white mb-2 tracking-tight">Sustainable Home Decor</h3>
-                <p className="text-white/80 text-lg font-body leading-relaxed max-w-md">Elevate your living space with items that tell a story of heritage and home.</p>
-              </div>
-            </div>
-          </SlideUp>
-        </div>
+          );
+        })}
       </div>
 
       {/* Subtle "No-Line" Zones: Secondary Categories */}
@@ -213,6 +200,7 @@ export default function CategoriesPage() {
           </div>
         </div>
       </SlideUp>
+      </div>
     </div>
   );
 }

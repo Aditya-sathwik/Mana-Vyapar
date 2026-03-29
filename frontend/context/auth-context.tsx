@@ -5,13 +5,16 @@ import { apiFetch } from "@/lib/api-client";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import storage from "@/lib/storage";
+
 interface User {
   _id: string;
   fullname: string;
   username: string;
   email: string;
+  phone?: string;
   avatar?: string;
   role: string;
+  businessName?: string;
 }
 
 interface LoginCredentials {
@@ -47,26 +50,37 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
 
   const refreshUser = async () => {
-    // 1. Initial hydration from local storage
+    // 1. Initial hydration from local storage (Fast recovery)
     const savedUser = storage.getUser();
+    const token = storage.getAccessToken();
+
     if (savedUser) {
       setUser(savedUser);
     }
 
-    // 2. Refresh state from server
-    try {
-      const response = await apiFetch("/users/current-user");
-      if (response.success) {
-        setUser(response.data.user);
-        storage.setUser(response.data.user);
-      } else {
-        // Clear if current-user check fails (token expired/invalid)
-        storage.clearAuth();
-        setUser(null);
+    // 2. Refresh state from server to ensure data is current (UserDetails API)
+    // We only call this if we previously had a token or user in storage
+    if (token) {
+      try {
+        const response = await apiFetch("/users/current-user");
+        if (response.success && response.data) {
+          // If response.data is directly the user or inside property
+          const userData = response.data.user || response.data;
+          setUser(userData);
+          storage.setUser(userData);
+        } else {
+          // Clear if current-user check fails (session ended/invalid)
+          storage.clearAuth();
+          setUser(null);
+        }
+      } catch (err) {
+        // If the API call fails, we rely on the storage until the user manually logs out 
+        // OR we clear it if the error is 401/403
+        console.error("Session refresh failed:", err);
+      } finally {
+        setLoading(false);
       }
-    } catch {
-      // Don't log out here to allow offline access if needed, or if server is down
-    } finally {
+    } else {
       setLoading(false);
     }
   };
@@ -108,14 +122,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
 
       if (response.success) {
-        const { user, accessToken, refreshToken } = response.data;
+        const { user: userData, accessToken, refreshToken } = response.data;
         
-        setUser(user);
-        storage.setUser(user);
+        setUser(userData);
+        storage.setUser(userData);
         storage.setTokens(accessToken, refreshToken);
         
-        toast.success(`Welcome back, ${user.fullname}!`);
-        router.push("/dashboard");
+        toast.success(`Welcome back, ${userData.fullname}!`);
+        
+        // Dynamic Redirect Logic based on role
+        if (userData.role === "Merchant") {
+          router.push("/merchant/dashboard");
+        } else if (userData.role === "Super Admin" || userData.role === "admin") {
+          router.push("/admin/dashboard");
+        } else {
+          router.push("/store");
+        }
       }
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : "Login failed");
@@ -138,12 +160,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (response.success) {
         if (response.data?.accessToken) {
-          const { user, accessToken, refreshToken } = response.data;
-          setUser(user);
-          storage.setUser(user);
+          const { user: userData, accessToken, refreshToken } = response.data;
+          setUser(userData);
+          storage.setUser(userData);
           storage.setTokens(accessToken, refreshToken);
           toast.success("Account created successfully!");
-          router.push("/dashboard");
+          
+          if (userData.role === "Merchant") {
+            router.push("/merchant/dashboard");
+          } else {
+            router.push("/store");
+          }
         } else {
           toast.success("Registration complete! Please log in.");
           router.push("/auth/login?registered=true");

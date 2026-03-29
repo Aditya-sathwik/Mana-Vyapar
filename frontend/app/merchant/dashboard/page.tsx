@@ -30,23 +30,23 @@ export default function DashboardPage() {
                   <Activity className="h-3 w-3 animate-pulse" />
                   Real-time Ledger Sync Active
                </div>
-               <h1 className="text-4xl md:text-5xl font-black text-slate-900 dark:text-white tracking-tighter uppercase leading-[0.9]">
+               <h1 className="text-4xl md:text-5xl font-black text-foreground tracking-tighter uppercase leading-[0.9]">
                   Mission <span className="text-primary italic">Control</span>
                </h1>
-               <div className="flex items-center gap-4 text-slate-500 text-[10px] font-bold uppercase tracking-widest">
+               <div className="flex items-center gap-4 text-muted-foreground text-[10px] font-bold uppercase tracking-widest">
                   <span>Node: RJ-1024</span>
-                  <span className="h-1 w-1 bg-slate-300 rounded-full" />
+                  <span className="h-1 w-1 bg-border rounded-full" />
                   <span>Sector: Electronics</span>
                </div>
             </div>
             
             <div className="flex items-center gap-4">
                <div className="text-right hidden sm:block">
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Global Rank</p>
-                  <p className="text-xl font-black text-slate-900 dark:text-white">TOP 5%</p>
+                  <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Global Rank</p>
+                  <p className="text-xl font-black text-foreground">TOP 5%</p>
                </div>
-               <Link href="/scanner" className="h-14 flex items-center gap-3 px-8 bg-primary hover:bg-emerald-600 text-black rounded-2xl font-black text-xs shadow-2xl shadow-primary/30 transition-all hover:scale-[1.02] active:scale-95 group relative overflow-hidden">
-                  <ScanLine className="h-5 w-5 group-hover:rotate-12 transition-transform relative z-10" />
+               <Link href="/merchant/scanner" className="h-14 flex items-center gap-3 px-8 bg-primary hover:bg-emerald-600 text-white rounded-2xl font-black text-xs shadow-2xl shadow-primary/30 transition-all hover:scale-[1.02] active:scale-95 group relative overflow-hidden">
+                  <ScanLine className="h-5 w-5 group-hover:rotate-12 transition-transform relative z-10 text-white" />
                   <span className="relative z-10 uppercase tracking-widest">Launch Smart Scanner</span>
                   <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
                </Link>
@@ -56,7 +56,7 @@ export default function DashboardPage() {
          {/* Hero Analytics Section */}
          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
             <div className="lg:col-span-8">
-               <Card className="h-full bg-slate-900 border-none shadow-2xl relative overflow-hidden group min-h-[400px]">
+               <Card className="h-full bg-foreground text-background dark:bg-card dark:text-foreground border-none shadow-2xl relative overflow-hidden group min-h-[400px]">
                   {/* Premium Background Elements */}
                   <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10" />
                   <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/20 rounded-full blur-[120px] -mr-40 -mt-40 animate-pulse" />
@@ -65,18 +65,18 @@ export default function DashboardPage() {
                   <div className="relative z-10 p-10 flex flex-col h-full">
                      <div className="flex justify-between items-start mb-12">
                         <div>
-                           <p className="text-slate-400 text-[10px] font-black uppercase tracking-[0.3em] mb-3">Gross Revenue Portfolio</p>
+                           <p className="text-background/60 dark:text-muted-foreground text-[10px] font-black uppercase tracking-[0.3em] mb-3">Gross Revenue Portfolio</p>
                            <div className="flex items-baseline gap-4">
-                              <h2 className="text-6xl lg:text-8xl font-black text-white tracking-tighter tabular-nums drop-shadow-2xl">
+                              <h2 className="text-6xl lg:text-8xl font-black text-background dark:text-foreground tracking-tighter tabular-nums drop-shadow-2xl">
                                  ₹8,42,500
                               </h2>
-                              <div className="flex items-center gap-1.5 px-3 py-1.5 bg-primary text-black rounded-lg text-[10px] font-black shadow-lg shadow-primary/20">
+                              <div className="flex items-center gap-1.5 px-3 py-1.5 bg-primary text-white rounded-lg text-[10px] font-black shadow-lg shadow-primary/20">
                                  <TrendingUp className="h-3 w-3" />
                                  +12.4%
                               </div>
                            </div>
                         </div>
-                        <button className="p-4 bg-white/5 hover:bg-white/10 text-white rounded-2xl backdrop-blur-xl border border-white/10 transition-all">
+                        <button className="p-4 bg-background/5 dark:bg-muted/50 hover:bg-background/10 dark:hover:bg-muted text-background dark:text-foreground rounded-2xl backdrop-blur-xl border border-background/10 dark:border-border transition-all">
                            <Terminal className="h-6 w-6" />
                         </button>
                      </div>
@@ -91,10 +91,10 @@ export default function DashboardPage() {
                            <div key={i} className="space-y-2 group/item">
                               <div className="flex items-center gap-2">
                                  <stat.icon className={cn("h-4 w-4", stat.color)} />
-                                 <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest">{stat.label}</p>
+                                 <p className="text-[9px] font-black text-background/40 dark:text-muted-foreground uppercase tracking-widest">{stat.label}</p>
                               </div>
-                              <p className="text-2xl font-black text-white group-hover/item:text-primary transition-colors tabular-nums">{stat.value}</p>
-                              <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden">
+                              <p className="text-2xl font-black text-background dark:text-foreground group-hover/item:text-primary transition-colors tabular-nums">{stat.value}</p>
+                              <div className="h-1 w-full bg-background/5 dark:bg-muted rounded-full overflow-hidden">
                                  <motion.div 
                                     initial={{ width: 0 }}
                                     animate={{ width: "70%" }}
@@ -110,11 +110,11 @@ export default function DashboardPage() {
             </div>
 
             <div className="lg:col-span-4 space-y-8">
-               <Card className="p-8 bg-white dark:bg-[#09090b] border-slate-200 dark:border-slate-800 h-full flex flex-col relative overflow-hidden group">
+               <Card className="p-8 bg-card border-border h-full flex flex-col relative overflow-hidden group">
                   <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-primary/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                   
                   <div className="flex items-center justify-between mb-10">
-                     <h3 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tight flex items-center gap-3">
+                     <h3 className="text-xl font-black text-foreground uppercase tracking-tight flex items-center gap-3">
                         <ShieldCheck className="h-5 w-5 text-primary" />
                         Core Vitals
                      </h3>
@@ -134,14 +134,14 @@ export default function DashboardPage() {
                      ].map((sys, i) => (
                         <div key={i} className="space-y-3">
                            <div className="flex justify-between text-[10px] font-black uppercase tracking-widest">
-                              <span className="text-slate-400">{sys.label}</span>
+                              <span className="text-muted-foreground">{sys.label}</span>
                               <span className={cn(
                                  sys.color === 'blue' ? "text-blue-500" : 
                                  sys.color === 'orange' ? "text-orange-500" : 
                                  "text-primary"
                               )}>{sys.status}</span>
                            </div>
-                           <div className="h-1.5 bg-slate-100 dark:bg-slate-900 rounded-full overflow-hidden">
+                           <div className="h-1.5 bg-muted rounded-full overflow-hidden">
                               <motion.div 
                                  initial={{ width: 0 }}
                                  animate={{ width: `${sys.val}%` }}
@@ -156,7 +156,7 @@ export default function DashboardPage() {
                      ))}
                   </div>
 
-                  <button className="w-full mt-12 py-4 dark:bg-slate-900 bg-slate-50 border border-slate-200 dark:border-slate-800 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 hover:text-primary hover:border-primary/30 transition-all">
+                  <button className="w-full mt-12 py-4 bg-muted border border-border rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground hover:text-primary hover:border-primary/30 transition-all">
                      System Maintenance
                   </button>
                </Card>
@@ -170,7 +170,7 @@ export default function DashboardPage() {
                { label: "Stock alerts", val: "12 Items", sub: "Critical Low", icon: Package, color: "red" },
                { label: "Global Reach", val: "2.4K", sub: "MTD Customers", icon: Users, color: "blue" },
             ].map((card, i) => (
-               <Card key={i} className="p-8 bg-white dark:bg-[#09090b] border-slate-200 dark:border-slate-800 group cursor-pointer hover:border-primary/50 transition-all overflow-hidden relative">
+               <Card key={i} className="p-8 bg-card border-border group cursor-pointer hover:border-primary/50 transition-all overflow-hidden relative">
                   <div className="flex items-center justify-between mb-8 relative z-10">
                      <div className={cn(
                         "h-14 w-14 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-110 duration-500",
@@ -179,14 +179,14 @@ export default function DashboardPage() {
                      )}>
                         <card.icon className="h-7 w-7" />
                      </div>
-                     <ChevronRight className="h-5 w-5 text-slate-300 group-hover:text-primary group-hover:translate-x-1 transition-all" />
+                     <ChevronRight className="h-5 w-5 text-muted-foreground/50 group-hover:text-primary group-hover:translate-x-1 transition-all" />
                   </div>
                   <div className="relative z-10">
-                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">{card.label}</p>
-                     <h3 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">{card.val}</h3>
+                     <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-2">{card.label}</p>
+                     <h3 className="text-3xl font-black text-foreground tracking-tight">{card.val}</h3>
                      <p className={cn(
                         "text-[10px] font-bold mt-2 uppercase tracking-wide",
-                        card.color === 'red' ? "text-red-500" : "text-slate-400"
+                        card.color === 'red' ? "text-red-500" : "text-muted-foreground"
                      )}>{card.sub}</p>
                   </div>
                   {/* Decorative element */}
@@ -198,7 +198,7 @@ export default function DashboardPage() {
                </Card>
             ))}
 
-            <div className="p-8 border-4 border-dashed border-slate-100 dark:border-slate-800 rounded-[2rem] flex flex-col items-center justify-center text-slate-400 hover:border-primary/30 hover:text-primary transition-all cursor-pointer group bg-slate-50/30 dark:bg-transparent">
+            <div className="p-8 border-4 border-dashed border-border rounded-[2rem] flex flex-col items-center justify-center text-muted-foreground hover:border-primary/30 hover:text-primary transition-all cursor-pointer group bg-muted/30">
                <Plus className="h-10 w-10 mb-4 group-hover:rotate-90 transition-transform duration-500" />
                <span className="text-[10px] font-black uppercase tracking-[0.3em]">Extend Node</span>
             </div>

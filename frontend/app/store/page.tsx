@@ -8,20 +8,26 @@ import { ProductCard } from '@/components/storefront/ui/ProductCard';
 import { Button } from '@/components/storefront/ui/Button';
 import { FadeIn, SlideUp } from '@/components/storefront/ui/MotionComponents';
 import { useAppDispatch, useAppSelector } from '@/redux/hooks';
-import { fetchProducts } from '@/redux/slices/productSlice';
+import { fetchProductsByStoreSlug } from '@/redux/slices/productSlice';
+import { fetchCategoriesByStoreId } from '@/redux/slices/categorySlice';
 import { ArrowRight, Truck, ShieldCheck, RefreshCcw, ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { motion, useScroll, useTransform } from 'framer-motion';
 
+import { fetchStoreBySlug } from '@/redux/slices/storeSlice';
+import { useAuth } from '@/context/auth-context';
+import { useParams } from 'next/navigation';
+
 export default function StoreHome() {
   const dispatch = useAppDispatch();
+  const params = useParams();
   const { items: products, status } = useAppSelector((state) => state.products);
-  const { scrollYProgress } = useScroll();
-  const parallaxY = useTransform(scrollYProgress, [0, 1], ['0%', '50%']);
-  const bannersRef = useRef<HTMLDivElement>(null);
-  const categoriesRef = useRef<HTMLDivElement>(null);
-  const [activeBanner, setActiveBanner] = useState(0);
-  const [activeCategory, setActiveCategory] = useState(0);
+  const { items: categories, status: catStatus } = useAppSelector((state) => state.categories);
+  const { currentStore, status: storeStatus } = useAppSelector((state) => state.store);
+  
+  // For the generic /store route, we might want a default or derived slug
+  // For now let's use a default if not in a [slug] route
+  const slug = (params?.slug as string) || "mana-store"; 
 
   const bannersList = [
     { id: 1, title: 'Summer Collection', sub: 'Up to 50% Off on apparel', img: 'https://images.unsplash.com/photo-1469334031218-e382a71b716b?q=80&w=2000&auto=format&fit=crop', cta: 'Shop Summer' },
@@ -29,18 +35,51 @@ export default function StoreHome() {
     { id: 3, title: 'Festive Season Sale', sub: 'Extra 10% off on premium collections', img: 'https://images.unsplash.com/photo-1445205170230-053b83016050?q=80&w=2000&auto=format&fit=crop', cta: 'Claim Offer' },
   ];
 
-  const categoriesList = [
-    { id: 'c1', name: 'Premium Clothing', desc: 'Sarees, Kurtas & more', img: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=800&auto=format&fit=crop' },
-    { id: 'c2', name: 'Fine Jewelry', desc: 'Necklaces, Earrings & Sets', img: 'https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?q=80&w=800&auto=format&fit=crop' },
-    { id: 'c3', name: 'Home Living', desc: 'Decor & Furniture', img: 'https://images.unsplash.com/photo-1513694203232-719a280e022f?q=80&w=800&auto=format&fit=crop' },
-    { id: 'c4', name: 'Accessories', desc: 'Bags, Watches & Sunglasses', img: 'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?q=80&w=800&auto=format&fit=crop' },
-  ];
+  // Use dynamic categories if available, else fallback
+  const displayCategories = categories?.length 
+    ? categories.slice(0, 4).map(c => ({ 
+        id: c._id, 
+        name: c.name, 
+        desc: c.description, 
+        img: c.image || 'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?q=80&w=800' 
+      }))
+    : [
+        { id: 'c1', name: 'Premium Clothing', desc: 'Sarees, Kurtas & more', img: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=800&auto=format&fit=crop' },
+        { id: 'c2', name: 'Fine Jewelry', desc: 'Necklaces, Earrings & Sets', img: 'https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?q=80&w=800&auto=format&fit=crop' },
+        { id: 'c3', name: 'Home Living', desc: 'Decor & Furniture', img: 'https://images.unsplash.com/photo-1513694203232-719a280e022f?q=80&w=800&auto=format&fit=crop' },
+        { id: 'c4', name: 'Accessories', desc: 'Bags, Watches & Sunglasses', img: 'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?q=80&w=800&auto=format&fit=crop' },
+      ];
 
   useEffect(() => {
-    if (status === 'idle') {
-      dispatch(fetchProducts());
+    if (storeStatus === 'idle') {
+      dispatch(fetchStoreBySlug(slug));
     }
-  }, [status, dispatch]);
+    if (status === 'idle') {
+      dispatch(fetchProductsByStoreSlug(slug));
+    }
+  }, [status, storeStatus, dispatch, slug]);
+
+  useEffect(() => {
+    if (currentStore?._id && catStatus === 'idle') {
+      dispatch(fetchCategoriesByStoreId(currentStore._id));
+    }
+  }, [currentStore, catStatus, dispatch]);
+
+  const { scrollYProgress } = useScroll();
+  const parallaxY = useTransform(scrollYProgress, [0, 1], ['0%', '50%']);
+  const bannersRef = useRef<HTMLDivElement>(null);
+  const categoriesRef = useRef<HTMLDivElement>(null);
+  const [activeBanner, setActiveBanner] = useState(0);
+  const [activeCategory, setActiveCategory] = useState(0);
+
+  // Use dynamic banners if available, else fallback
+  const displayBanners = currentStore?.corouselImages?.length 
+    ? currentStore.corouselImages.map((b, i) => ({ id: i, title: b.title, sub: b.subtitle, img: b.url, cta: 'Shop Now' }))
+    : [
+        { id: 1, title: 'Summer Collection', sub: 'Up to 50% Off on apparel', img: 'https://images.unsplash.com/photo-1469334031218-e382a71b716b?q=80&w=2000&auto=format&fit=crop', cta: 'Shop Summer' },
+        { id: 2, title: 'New Arrivals', sub: 'Discover the latest trends in jewelry', img: 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?q=80&w=2000&auto=format&fit=crop', cta: 'Explore Now' },
+        { id: 3, title: 'Festive Season Sale', sub: 'Extra 10% off on premium collections', img: 'https://images.unsplash.com/photo-1445205170230-053b83016050?q=80&w=2000&auto=format&fit=crop', cta: 'Claim Offer' },
+      ];
 
   const handleScrollUpdate = (ref: React.RefObject<HTMLDivElement | null>, setter: React.Dispatch<React.SetStateAction<number>>) => {
     if (!ref.current) return;
@@ -91,7 +130,7 @@ export default function StoreHome() {
   ];
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-screen pb-24 md:pb-0">
       {/* 1. 3D Hero Section */}
       <section className="relative flex min-h-[90vh] sm:min-h-screen w-full items-center justify-center overflow-hidden">
         <Hero3DScene />
@@ -101,12 +140,12 @@ export default function StoreHome() {
             <span className="inline-block rounded-full bg-primary/10 px-4 py-1.5 text-sm font-semibold text-primary backdrop-blur-md mb-6 border border-primary/20">
               Welcome to Mana Store
             </span>
-            <h1 className="font-display text-5xl font-extrabold tracking-tight text-foreground sm:text-7xl lg:text-8xl drop-shadow-sm">
-              Premium Shopping <br className="hidden sm:block" />
+            <h1 className="font-display text-5xl font-extrabold tracking-tight text-white sm:text-7xl lg:text-8xl drop-shadow-sm">
+              {currentStore?.name || "Premium Shopping"} <br className="hidden sm:block" />
               <span className="bg-gradient-to-r from-primary via-emerald-400 to-primary bg-clip-text text-transparent">Reimagined.</span>
             </h1>
-            <p className="mx-auto mt-6 max-w-2xl text-lg text-muted-foreground sm:text-xl drop-shadow-sm">
-              Discover curated collections of premium fashion, accessories, and home decor powered by Mana Vyapar technology.
+            <p className="mx-auto mt-6 max-w-2xl text-lg text-white/80 sm:text-xl drop-shadow-sm">
+              {currentStore?.description || "Discover curated collections of premium fashion, accessories, and home decor powered by Mana Vyapar technology."}
             </p>
           </SlideUp>
 
@@ -160,7 +199,7 @@ export default function StoreHome() {
           </div>
           
           <div ref={bannersRef} onScroll={() => handleScrollUpdate(bannersRef, setActiveBanner)} className="flex overflow-x-auto snap-x snap-mandatory gap-6 pb-4 custom-scrollbar">
-            {bannersList.map((banner, idx) => (
+            {displayBanners.map((banner, idx) => (
               <SlideUp key={banner.id} delay={idx * 0.1} className="relative min-w-[85vw] sm:min-w-[700px] h-[350px] shrink-0 snap-start overflow-hidden rounded-3xl group">
                 <Image src={banner.img} alt={banner.title} fill className="object-cover transition-transform duration-700 group-hover:scale-105" />
                 <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-transparent" />
@@ -174,7 +213,7 @@ export default function StoreHome() {
           </div>
 
           <div className="mt-4 flex items-center justify-center gap-2">
-            {bannersList.map((_, idx) => (
+            {displayBanners.map((_, idx) => (
               <button 
                 key={idx} 
                 onClick={() => scrollToIdx(bannersRef, idx)}
@@ -210,7 +249,7 @@ export default function StoreHome() {
           </div>
 
           <div ref={categoriesRef} onScroll={() => handleScrollUpdate(categoriesRef, setActiveCategory)} className="flex overflow-x-auto snap-x snap-mandatory gap-6 pb-6 custom-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0">
-            {categoriesList.map((cat) => (
+            {displayCategories.map((cat) => (
               <SlideUp key={cat.id} className="min-w-[75vw] sm:min-w-[280px] lg:min-w-[320px] shrink-0 snap-start">
                 <Link href={`/store/categories/${cat.id}`} className="group relative block h-80 w-full overflow-hidden rounded-3xl">
                   <Image src={cat.img} alt={cat.name} fill className="object-cover transition-transform duration-700 group-hover:scale-110" sizes="(max-width: 768px) 75vw, 33vw" />
@@ -225,7 +264,7 @@ export default function StoreHome() {
           </div>
 
           <div className="mt-2 flex items-center justify-center gap-2">
-            {categoriesList.map((_, idx) => (
+            {displayCategories.map((_, idx) => (
               <button 
                 key={idx} 
                 onClick={() => scrollToIdx(categoriesRef, idx)}
@@ -254,7 +293,7 @@ export default function StoreHome() {
               <div key={i} className="h-96 rounded-2xl bg-muted animate-pulse" />
             ))}
             {status === 'succeeded' && products.slice(0, 4).map((product, idx) => (
-              <SlideUp key={product.id} delay={idx * 0.1}>
+              <SlideUp key={product._id} delay={idx * 0.1}>
                 <ProductCard product={product} />
               </SlideUp>
             ))}

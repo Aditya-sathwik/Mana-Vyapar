@@ -15,17 +15,17 @@ export function BottomNav() {
   const pathname = usePathname()
 
   const navItems = [
-    { href: "/dashboard", label: "Home", icon: LayoutDashboard },
-    { href: "/scanner", label: "Scanner", icon: ScanLine },
-    { href: "/inventory", label: "Stocks", icon: Package },
-    { href: "/khata", label: "Khata", icon: Wallet },
+    { href: "/merchant/dashboard", label: "Home", icon: LayoutDashboard },
+    { href: "/merchant/scanner", label: "Scanner", icon: ScanLine },
+    { href: "/merchant/inventory", label: "Stocks", icon: Package },
+    { href: "/merchant/khata", label: "Khata", icon: Wallet },
   ]
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50 px-4 pb-4 md:hidden pointer-events-none">
-      <nav className="flex items-center justify-around h-16 bg-white/80 dark:bg-[#09090b]/80 backdrop-blur-xl border border-slate-200 dark:border-slate-800 shadow-[0_-10px_30px_-10px_rgba(0,0,0,0.1)] dark:shadow-[0_-10px_30px_-10px_rgba(0,0,0,0.5)] rounded-2xl px-2 pointer-events-auto max-w-md mx-auto">
+      <nav className="flex items-center justify-around h-16 bg-card/80 backdrop-blur-xl border border-border shadow-[0_-10px_30px_-10px_rgba(0,0,0,0.1)] dark:shadow-[0_-10px_30px_-10px_rgba(0,0,0,0.5)] rounded-2xl px-2 pointer-events-auto max-w-md mx-auto">
         {navItems.map((item) => {
-          const isActive = pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href))
+          const isActive = pathname === item.href || (item.href !== "/merchant/dashboard" && pathname.startsWith(item.href))
 
           return (
             <Link
@@ -35,7 +35,7 @@ export function BottomNav() {
                 "flex flex-col items-center justify-center w-full h-full gap-1 transition-all duration-300 relative",
                 isActive
                   ? "text-primary scale-110"
-                  : "text-slate-500 dark:text-slate-400"
+                  : "text-muted-foreground"
               )}
             >
               {isActive && (
