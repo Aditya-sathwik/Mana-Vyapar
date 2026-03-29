@@ -33,33 +33,35 @@ const sidebarSections = [
   {
     title: "Business",
     items: [
-      { href: "/dashboard", label: "Overview", icon: LayoutDashboard },
-      { href: "/khata", label: "Smart Khata", icon: Wallet },
-      { href: "/inventory", label: "Inventory", icon: Package },
+      { href: "/merchant/dashboard", label: "Overview", icon: LayoutDashboard },
+      { href: "/merchant/khata", label: "Smart Khata", icon: Wallet },
+      { href: "/merchant/inventory", label: "Inventory", icon: Package },
+      { href: "/merchant/categories", label: "Categories", icon: Box }, // 🌳 New Category Tree
     ]
   },
   {
     title: "Intelligence",
     items: [
-      { href: "/scanner", label: "AI Product Scan", icon: ScanLine },
-      { href: "/analytics", label: "Sales Data", icon: TrendingUp },
+      { href: "/merchant/scanner", label: "AI Product Scan", icon: ScanLine },
+      { href: "/merchant/analytics", label: "Sales Data", icon: TrendingUp },
     ]
   },
   {
     title: "Operations",
     items: [
-      { href: "/notifications", label: "Messages", icon: Bell },
-      { href: "/alerts", label: "System Sync", icon: AlertTriangle },
-      { href: "/subscription", label: "Billing", icon: CreditCard },
-      { href: "/delivery", label: "Orders", icon: Truck },
+      { href: "/merchant/notifications", label: "Messages", icon: Bell },
+      { href: "/merchant/alerts", label: "System Sync", icon: AlertTriangle },
+      { href: "/merchant/subscription", label: "Billing", icon: CreditCard },
+      { href: "/merchant/delivery", label: "Orders", icon: Truck },
     ]
   }
 ]
 
-const NavItem = ({ item, isCollapsed, isActive }: any) => {
+const NavItem = ({ item, isCollapsed, isActive, onSelect }: any) => {
   return (
     <Link
       href={item.href}
+      onClick={onSelect}
       className={cn(
         "group relative flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-300",
         isActive
@@ -99,10 +101,14 @@ import { COLORS } from "@/lib/colors"
 
 export function Sidebar({ className }: { className?: string }) {
   const [isCollapsed, setIsCollapsed] = useState(false)
+  const [isHovered, setIsHovered] = useState(false) // 🖱️ Hover state
   const [searchQuery, setSearchQuery] = useState("")
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false)
   const pathname = usePathname()
   const { logout } = useAuth()
+
+  // Business logic: We expand if (isCollapsed is false) OR (isHovered is true)
+  const isActuallyCollapsed = isCollapsed && !isHovered;
 
   useEffect(() => {
     const handleResize = () => {
@@ -123,7 +129,9 @@ export function Sidebar({ className }: { className?: string }) {
     <>
       <motion.aside
         initial={false}
-        animate={{ width: isCollapsed ? 80 : 280 }}
+        onMouseEnter={() => isCollapsed && setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+        animate={{ width: isActuallyCollapsed ? 80 : 280 }}
         transition={{ type: "spring", stiffness: 300, damping: 30 }}
         className={cn(
           "relative bg-white/95 dark:bg-[#09090b]/90 backdrop-blur-2xl border-r border-slate-200 dark:border-slate-800/50 flex flex-col z-40 h-screen sticky top-0 shadow-2xl overflow-visible group/sidebar",
@@ -141,7 +149,7 @@ export function Sidebar({ className }: { className?: string }) {
         {/* Header / Logo */}
         <div className={cn(
           "h-20 flex items-center border-b border-slate-200 dark:border-slate-800/50 transition-all duration-300",
-          isCollapsed ? "px-4 justify-center" : "px-6"
+          isActuallyCollapsed ? "px-4 justify-center" : "px-6"
         )}>
           <div className="flex items-center gap-3">
             <div className="relative">
@@ -156,7 +164,7 @@ export function Sidebar({ className }: { className?: string }) {
               </div>
               <div className="absolute -top-1 -right-1 h-3 w-3 bg-primary rounded-full border-2 border-white dark:border-[#09090b] shadow-[0_0_5px_rgba(5,148,103,1)]" />
             </div>
-            {!isCollapsed && (
+            {!isActuallyCollapsed && (
               <motion.div 
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -173,7 +181,7 @@ export function Sidebar({ className }: { className?: string }) {
         </div>
 
         {/* Search Bar */}
-        {!isCollapsed && (
+        {!isActuallyCollapsed && (
           <div className="px-6 py-4">
             <div className="relative group">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500 group-focus-within:text-primary transition-colors" />
@@ -192,7 +200,7 @@ export function Sidebar({ className }: { className?: string }) {
         <nav className="flex-1 overflow-y-auto py-4 px-4 space-y-6 custom-scrollbar">
           {sidebarSections.map((section) => (
             <div key={section.title} className="space-y-1">
-              {!isCollapsed && (
+              {!isActuallyCollapsed && (
                 <p className="text-[10px] font-bold text-slate-400 dark:text-slate-600 uppercase tracking-[0.3em] mb-3 ml-2 flex items-center gap-2">
                   <span className="h-px flex-1 bg-slate-200 dark:bg-slate-800" />
                   {section.title}
@@ -203,8 +211,9 @@ export function Sidebar({ className }: { className?: string }) {
                   <NavItem
                     key={item.href}
                     item={item}
-                    isCollapsed={isCollapsed}
+                    isCollapsed={isActuallyCollapsed}
                     isActive={pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href))}
+                    onSelect={() => setIsHovered(false)} // 🚪 Close on click
                   />
                 ))}
               </div>
@@ -213,7 +222,7 @@ export function Sidebar({ className }: { className?: string }) {
         </nav>
 
         {/* Support Card */}
-        {!isCollapsed && (
+        {!isActuallyCollapsed && (
           <div className="px-4 mb-4">
             <div className="bg-slate-50 dark:bg-primary/10 rounded-2xl p-4 border border-slate-100 dark:border-primary/10 group relative overflow-hidden">
                <div className="relative z-10">
@@ -233,24 +242,24 @@ export function Sidebar({ className }: { className?: string }) {
         {/* Footer / Settings */}
         <div className={cn(
           "p-4 border-t border-slate-200 dark:border-slate-800/50 bg-white/50 dark:bg-[#09090b]/50 backdrop-blur-md",
-          isCollapsed ? "flex flex-col items-center gap-4" : ""
+          isActuallyCollapsed ? "flex flex-col items-center gap-4" : ""
         )}>
           <div className="flex items-center justify-between gap-2 px-1">
              <ThemeToggle />
-             {!isCollapsed && (
+              {!isActuallyCollapsed && (
                <Link
-                href="/store-settings"
+                href="/merchant/store-settings"
                 className={cn(
                   "flex-1 flex items-center justify-center gap-2 px-3 py-2 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-primary rounded-xl font-bold transition-all text-[10px] uppercase tracking-widest border border-transparent hover:border-slate-200 dark:hover:border-slate-700",
-                  pathname === "/store-settings" && "text-primary bg-primary/10 border-primary/20"
+                  pathname === "/merchant/store-settings" && "text-primary bg-primary/10 border-primary/20"
                 )}
               >
                 <Settings className="h-4 w-4 shrink-0" />
                 <span>Settings</span>
               </Link>
              )}
-             {isCollapsed && (
-                <Link href="/store-settings" className="h-8 w-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-primary transition-colors">
+             {isActuallyCollapsed && (
+                <Link href="/merchant/store-settings" className="h-8 w-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-primary transition-colors">
                     <Settings className="h-5 w-5" />
                 </Link>
              )}
@@ -261,7 +270,7 @@ export function Sidebar({ className }: { className?: string }) {
             className="w-full mt-2 flex items-center gap-3 px-3 py-2.5 rounded-xl text-red-500 hover:bg-red-500/10 transition-all group relative border border-transparent hover:border-red-500/10"
           >
             <LogOut className="h-5 w-5 shrink-0 transition-transform group-hover:-translate-x-1" />
-            {!isCollapsed && <span className="font-bold text-[10px] uppercase tracking-widest">End Session</span>}
+            {!isActuallyCollapsed && <span className="font-bold text-[10px] uppercase tracking-widest">End Session</span>}
           </button>
         </div>
       </motion.aside>

@@ -15,15 +15,15 @@ export default function DashboardLayout({
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
   return (
-    <div className="flex min-h-screen bg-slate-50 dark:bg-[#09090b] text-slate-900 dark:text-slate-100 font-body relative overflow-hidden">
+    <div className="flex h-screen bg-slate-50 dark:bg-[#09090b] text-slate-900 dark:text-slate-100 font-body relative overflow-hidden">
       {/* Background Mesh Gradient (Subtle for Merchant) */}
       <div className="absolute inset-0 pointer-events-none opacity-[0.03] dark:opacity-[0.15]">
         <div className="absolute top-[-5%] left-[-5%] w-[40%] h-[40%] bg-primary rounded-full blur-[100px]" />
         <div className="absolute bottom-[5%] right-[-5%] w-[30%] h-[30%] bg-blue-500 rounded-full blur-[80px]" />
       </div>
 
-      {/* Desktop Sidebar */}
-      <Sidebar className="hidden md:flex" />
+      {/* Desktop Sidebar: Locked height and no scroll */}
+      <Sidebar className="hidden md:flex h-screen shrink-0 border-r border-slate-200 dark:border-slate-800/50" />
 
       {/* Mobile Sidebar Overlay */}
       <AnimatePresence>
@@ -59,8 +59,8 @@ export default function DashboardLayout({
         )}
       </AnimatePresence>
 
-      {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0 relative z-10">
+      {/* Main Content Area: Constrained to screen height */}
+      <div className="flex-1 flex flex-col h-screen min-w-0 relative z-10 overflow-hidden">
         <MerchantHeader onMenuClick={() => setIsMobileMenuOpen(true)} />
         
         <main className="flex-1 overflow-y-auto p-4 md:p-8 lg:p-10 pb-24 md:pb-12 bg-transparent">
