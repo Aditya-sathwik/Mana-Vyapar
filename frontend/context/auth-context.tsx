@@ -73,9 +73,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           storage.clearAuth();
           setUser(null);
         }
-      } catch (err) {
-        // If the API call fails, we rely on the storage until the user manually logs out 
-        // OR we clear it if the error is 401/403
+      } catch (err: any) {
+        // If the API call fails with 401, clear storage
+        if (err.message?.includes("401") || err.message?.includes("Unauthorized")) {
+          storage.clearAuth();
+          setUser(null);
+        }
         console.error("Session refresh failed:", err);
       } finally {
         setLoading(false);
@@ -123,10 +126,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (response.success) {
         const { user: userData, accessToken, refreshToken } = response.data;
+        const persist = credentials.remember !== false; // Default to true if not specified
         
         setUser(userData);
-        storage.setUser(userData);
-        storage.setTokens(accessToken, refreshToken);
+        storage.setUser(userData, persist);
+        storage.setTokens(accessToken, refreshToken, persist);
         
         toast.success(`Welcome back, ${userData.fullname}!`);
         
@@ -139,6 +143,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           router.push("/store");
         }
       }
+
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : "Login failed");
       throw err;

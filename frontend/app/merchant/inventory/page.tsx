@@ -16,29 +16,23 @@ import {
   Edit,
   AlertCircle,
   IndianRupee,
-  ChevronDown,
-  Upload,
-  Link as LinkIcon,
-  X,
-  ImageIcon
+  Tag
 } from "lucide-react"
 import { Card } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
 import { apiFetch } from "@/lib/api-client"
-import { Modal } from "@/components/ui/modal"
+import { ProductModal } from "@/components/merchant/product-modal"
 import toast from "react-hot-toast"
 
 function InventoryContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const initialCategory = searchParams.get("category")
-  const fileInputRef = useRef<HTMLInputElement>(null)
   
   const [products, setProducts] = useState<any[]>([])
   const [categories, setCategories] = useState<any[]>([])
   const [pagination, setPagination] = useState<any>({ page: 1, total: 0, pages: 1 })
   const [isLoading, setIsLoading] = useState(true)
-  const [isActionLoading, setIsActionLoading] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
   const [categoryFilter, setCategoryFilter] = useState(initialCategory || "")
   
@@ -46,23 +40,6 @@ function InventoryContent() {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingProduct, setEditingProduct] = useState<any>(null)
   
-  // Image handling
-  const [imageType, setImageType] = useState<"upload" | "url">("upload")
-  const [selectedFile, setSelectedFile] = useState<File | null>(null)
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
-
-  const initialFormState = {
-    name: "",
-    description: "",
-    price: "",
-    stock: "0",
-    unit: "piece",
-    imageUrl: "",
-    categoryIds: initialCategory ? [initialCategory] : [] as string[]
-  }
-
-  const [productFormData, setProductFormData] = useState(initialFormState)
-
   const [stats, setStats] = useState({
     totalItems: 0,
     totalValue: 0,
@@ -93,7 +70,7 @@ function InventoryContent() {
         setProducts(res.data.products)
         setPagination(res.data.pagination)
         
-        const totalValue = res.data.products.reduce((acc: number, p: any) => acc + (p.price * p.stock), 0)
+        const totalValue = res.data.products.reduce((acc: number, p: any) => acc + ((p.sellingPrice || p.price || 0) * p.stock), 0)
         const lowStock = res.data.products.filter((p: any) => p.stock <= (p.lowStockThreshold || 10)).length
         
         setStats({
@@ -115,91 +92,8 @@ function InventoryContent() {
   }, [fetchInventory, fetchCategories])
 
   const handleOpenModal = (product: any = null) => {
-    if (product) {
-      setEditingProduct(product)
-      setProductFormData({
-        name: product.name,
-        description: product.description || "",
-        price: product.price.toString(),
-        stock: product.stock.toString(),
-        unit: product.unit || "piece",
-        imageUrl: product.images?.[0]?.url || "",
-        categoryIds: product.category?.map((c: any) => c._id) || []
-      })
-      setPreviewUrl(product.images?.[0]?.url || null)
-      setImageType(product.images?.[0]?.url ? "url" : "upload")
-    } else {
-      setEditingProduct(null)
-      setProductFormData(initialFormState)
-      setPreviewUrl(null)
-      setSelectedFile(null)
-      setImageType("upload")
-    }
+    setEditingProduct(product)
     setIsModalOpen(true)
-  }
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (file) {
-      setSelectedFile(file)
-      const reader = new FileReader()
-      reader.onloadend = () => setPreviewUrl(reader.result as string)
-      reader.readAsDataURL(file)
-    }
-  }
-
-  const handleSaveProduct = async () => {
-    if (!productFormData.name || !productFormData.price || productFormData.categoryIds.length === 0) {
-      toast.error("Required: Name, Price, and Category")
-      return
-    }
-
-    try {
-      setIsActionLoading(true)
-      
-      // Use FormData for BOTH Post and Patch now as both support multer
-      const data = new FormData()
-      data.append("name", productFormData.name)
-      data.append("description", productFormData.description)
-      data.append("price", productFormData.price)
-      data.append("stock", productFormData.stock)
-      data.append("unit", productFormData.unit)
-      productFormData.categoryIds.forEach(id => data.append("category", id))
-
-      if (imageType === "upload" && selectedFile) {
-        data.append("images", selectedFile)
-      } else if (imageType === "url" && productFormData.imageUrl) {
-        data.append("imageUrl", productFormData.imageUrl)
-      }
-
-      let res;
-      if (editingProduct) {
-        res = await apiFetch(`/products/${editingProduct._id}`, {
-          method: "PATCH",
-          body: data,
-          isMultipart: true
-        })
-      } else {
-        res = await apiFetch("/products", {
-          method: "POST",
-          body: data,
-          isMultipart: true
-        })
-      }
-
-      if (res.success) {
-        toast.success(editingProduct ? "Updated successfully" : "Added to inventory")
-        setIsModalOpen(false)
-        setProductFormData(initialFormState)
-        setSelectedFile(null)
-        setPreviewUrl(null)
-        fetchInventory(pagination.page)
-      }
-    } catch (error: any) {
-      toast.error(error.message || "Failed to save")
-    } finally {
-      setIsActionLoading(false)
-    }
   }
 
   const handleDelete = async (id: string) => {
@@ -279,13 +173,13 @@ function InventoryContent() {
       </div>
 
       <Card className="bg-card border-border overflow-hidden shadow-2xl rounded-[1.5rem] md:rounded-[2.5rem]">
-         {/* Search/Filter Bar: Proper inline sync for mobile */}
+         {/* Search/Filter Bar */}
          <div className="p-4 md:p-8 border-b border-border flex items-center justify-between gap-3 text-left bg-muted/30">
             <div className="relative flex-1 group">
                <Search className="absolute left-4 md:left-5 top-1/2 -translate-y-1/2 h-4 md:h-5 w-4 md:w-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
                <input 
                 type="text" 
-                placeholder="Quick search..." 
+                placeholder="Search catalog..." 
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-11 md:pl-14 pr-6 h-11 md:h-14 bg-background/50 border border-border rounded-xl md:rounded-2xl text-xs md:text-sm font-bold focus:ring-2 focus:ring-primary/20 focus:border-primary focus:outline-none transition-all shadow-inner"
@@ -328,7 +222,12 @@ function InventoryContent() {
                          </div>
                       </div>
                       <div className="flex-1 min-w-0">
-                         <h4 className="text-base md:text-xl font-black text-foreground tracking-tighter uppercase truncate leading-none mb-2">{product.name}</h4>
+                         <div className="flex items-center gap-2 mb-1">
+                            <h4 className="text-base md:text-xl font-black text-foreground tracking-tighter uppercase truncate leading-none">{product.name}</h4>
+                            {product.discount > 0 && (
+                               <span className="text-[7px] font-black px-1 py-0.5 bg-emerald-500 text-white rounded uppercase tracking-widest">-{product.discount}%</span>
+                            )}
+                         </div>
                          <div className="flex flex-wrap items-center gap-1.5">
                             {product.category?.slice(0, 1).map((c: any) => (
                               <span key={c._id} className="text-[8px] md:text-[9px] font-black px-1.5 py-0.5 bg-primary/10 text-primary rounded border border-primary/20 uppercase tracking-widest">
@@ -341,7 +240,12 @@ function InventoryContent() {
                          <div className="flex md:hidden items-center gap-4 mt-3 pt-3 border-t border-border/10">
                             <div>
                                <p className="text-[7px] font-black text-muted-foreground uppercase mb-0.5 tracking-widest">Price</p>
-                               <span className="text-sm font-black text-primary leading-none">₹{product.price}</span>
+                               <div className="flex items-center gap-2">
+                                  <span className="text-sm font-black text-primary leading-none">₹{product.sellingPrice || product.price}</span>
+                                  {(product.originalPrice || 0) > (product.sellingPrice || 0) && (
+                                    <span className="text-[9px] font-bold text-muted-foreground line-through opacity-50">₹{product.originalPrice}</span>
+                                  )}
+                               </div>
                             </div>
                             <div>
                                <p className="text-[7px] font-black text-muted-foreground uppercase mb-0.5 tracking-widest">Stock</p>
@@ -354,12 +258,17 @@ function InventoryContent() {
                    {/* Stats & Actions (Desktop & Tablet) */}
                    <div className="w-full md:w-auto flex items-center justify-between md:justify-end gap-6 md:gap-12 mt-2 md:mt-0 border-t md:border-t-0 border-border/10 pt-4 md:pt-0">
                       <div className="hidden md:flex flex-col items-center">
-                          <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest mb-1.5">Stock</p>
+                          <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest mb-1.5 flex items-center gap-1"><RefreshCw className="h-2 w-2" /> Stock</p>
                           <span className="text-lg font-black text-foreground tracking-tighter leading-none">{product.stock}U</span>
                       </div>
-                      <div className="hidden md:flex flex-col items-center">
-                          <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest mb-1.5">Mkt Price</p>
-                          <span className="text-2xl font-black text-primary tracking-tighter leading-none">₹{product.price}</span>
+                      <div className="hidden md:flex flex-col items-end min-w-[100px]">
+                          <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest mb-1.5 flex items-center gap-1"><Tag className="h-2 w-2" /> Price</p>
+                          <div className="flex flex-col items-end leading-none gap-1">
+                             <span className="text-2xl font-black text-primary tracking-tighter">₹{product.sellingPrice || product.price}</span>
+                             {product.originalPrice > 0 && (
+                                <span className="text-[10px] font-bold text-muted-foreground line-through opacity-40">₹{product.originalPrice}</span>
+                             )}
+                          </div>
                       </div>
                       
                       <div className="flex items-center gap-2 w-full md:w-auto">
@@ -413,198 +322,13 @@ function InventoryContent() {
          </div>
       </Card>
 
-      {/* --- ADD/EDIT MODAL --- */}
-      <Modal
+      <ProductModal 
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        title={editingProduct ? `Update ${editingProduct.name}` : "Product Registration"}
-        description={editingProduct ? "Revise your catalog details below." : "Register a new item into your digital catalog."}
-        confirmLabel={editingProduct ? "Update Changes" : "Register Product"}
-        onConfirm={handleSaveProduct}
-        isLoading={isActionLoading}
-      >
-        <div className="space-y-6 py-4 text-left">
-          {/* Image Selection Section */}
-          <div className="space-y-4">
-            <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1">Product Visual</label>
-            
-            <div className="flex bg-muted/50 p-1.5 rounded-2xl gap-1.5 h-14">
-                <button 
-                    onClick={() => setImageType("upload")}
-                    className={cn(
-                        "flex-1 flex items-center justify-center gap-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
-                        imageType === "upload" ? "bg-card text-primary shadow-lg" : "text-muted-foreground hover:text-foreground"
-                    )}
-                >
-                    <Upload className="h-4 w-4" />
-                    File Upload
-                </button>
-                <button 
-                    onClick={() => setImageType("url")}
-                    className={cn(
-                        "flex-1 flex items-center justify-center gap-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
-                        imageType === "url" ? "bg-card text-primary shadow-lg" : "text-muted-foreground hover:text-foreground"
-                    )}
-                >
-                    <LinkIcon className="h-4 w-4" />
-                    Image URL
-                </button>
-            </div>
-
-            <div className="flex gap-4 items-center">
-                <div className="h-32 w-32 rounded-[2rem] bg-muted border-2 border-dashed border-border flex items-center justify-center overflow-hidden flex-shrink-0 group hover:border-primary/50 transition-all cursor-pointer relative"
-                    onClick={() => imageType === "upload" && fileInputRef.current?.click()}
-                >
-                    {previewUrl ? (
-                        <img src={previewUrl} className="h-full w-full object-cover" alt="Preview" />
-                    ) : (
-                        <div className="flex flex-col items-center gap-2 text-muted-foreground group-hover:text-primary transition-colors">
-                            <ImageIcon className="h-8 w-8 opacity-20" />
-                            <span className="text-[8px] font-black uppercase tracking-tighter">No Preview</span>
-                        </div>
-                    )}
-                    {previewUrl && (
-                        <button 
-                            onClick={(e) => { e.stopPropagation(); setPreviewUrl(null); setSelectedFile(null); }}
-                            className="absolute top-2 right-2 h-6 w-6 bg-red-500 text-white rounded-full flex items-center justify-center shadow-lg hover:scale-110 transition-transform"
-                        >
-                            <X className="h-3 w-3" />
-                        </button>
-                    )}
-                </div>
-
-                <div className="flex-1 space-y-3">
-                    {imageType === "upload" ? (
-                        <div className="space-y-2">
-                             <p className="text-[9px] font-black text-muted-foreground uppercase opacity-50 tracking-widest">Selection Criteria: JPG/PNG, MAX 2MB</p>
-                             <button 
-                                onClick={() => fileInputRef.current?.click()}
-                                className="w-full h-12 bg-muted border border-border rounded-xl flex items-center justify-center gap-3 text-[10px] font-black uppercase tracking-widest hover:bg-primary/5 hover:border-primary/40 transition-all active:scale-95"
-                            >
-                                <Upload className="h-4 w-4" />
-                                Choose Local File
-                             </button>
-                             <input ref={fileInputRef} type="file" className="hidden" accept="image/*" onChange={handleFileChange} />
-                        </div>
-                    ) : (
-                        <div className="space-y-2">
-                            <p className="text-[9px] font-black text-muted-foreground uppercase opacity-50 tracking-widest">Public Web Link (CDN/HTTPS)</p>
-                            <div className="relative group">
-                                <LinkIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
-                                <input
-                                    type="text"
-                                    placeholder="https://images.com/product.jpg"
-                                    value={productFormData.imageUrl}
-                                    onChange={(e) => {
-                                        setProductFormData({ ...productFormData, imageUrl: e.target.value })
-                                        setPreviewUrl(e.target.value)
-                                    }}
-                                    className="w-full pl-11 pr-4 h-12 bg-muted/30 border border-border rounded-xl text-[10px] font-bold focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
-                                />
-                            </div>
-                        </div>
-                    )}
-                </div>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-6">
-            {/* Identity - Full width on grid */}
-            <div className="space-y-2 md:col-span-2">
-                <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1">Identity</label>
-                <div className="relative group">
-                <Box className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
-                <input
-                    type="text"
-                    placeholder="Product Name"
-                    value={productFormData.name}
-                    onChange={(e) => setProductFormData({ ...productFormData, name: e.target.value })}
-                    className="w-full pl-11 pr-4 h-12 bg-muted/30 border border-border rounded-xl text-sm font-bold focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
-                />
-                </div>
-            </div>
-
-            {/* Description - Full width */}
-            <div className="space-y-2 md:col-span-2">
-                <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1">Context & Details (Optional)</label>
-                <textarea
-                    placeholder="Describe your product's unique selling points..."
-                    value={productFormData.description}
-                    onChange={(e) => setProductFormData({ ...productFormData, description: e.target.value })}
-                    className="w-full p-4 h-24 bg-muted/30 border border-border rounded-xl text-sm font-medium focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all resize-none"
-                />
-            </div>
-
-            {/* Classification - Full width on grid */}
-            <div className="col-span-2 space-y-2">
-                <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1">Classification</label>
-                <div className="relative group">
-                <Layers className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
-                <select
-                    value={productFormData.categoryIds[0] || ""}
-                    onChange={(e) => setProductFormData({ ...productFormData, categoryIds: [e.target.value] })}
-                    className="w-full pl-11 pr-10 h-12 bg-muted/30 border border-border rounded-xl text-sm font-bold focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none appearance-none cursor-pointer"
-                >
-                    <option value="" disabled>Select Department...</option>
-                    {categories.map((cat) => (
-                    <option key={cat._id} value={cat._id}>{cat.name}</option>
-                    ))}
-                </select>
-                <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-                </div>
-            </div>
-            
-            <div className="space-y-2">
-                <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1">Mkt Price / {productFormData.unit}</label>
-                <div className="relative group">
-                <IndianRupee className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary" />
-                <input
-                    type="number"
-                    placeholder="0.00"
-                    value={productFormData.price}
-                    onChange={(e) => setProductFormData({ ...productFormData, price: e.target.value })}
-                    className="w-full pl-11 pr-4 h-12 bg-muted/30 border border-border rounded-xl text-sm font-bold focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none"
-                />
-                </div>
-            </div>
-
-            <div className="space-y-2">
-                <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1">Measurement Unit</label>
-                <div className="relative group">
-                <Layers className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <select
-                    value={productFormData.unit}
-                    onChange={(e) => setProductFormData({ ...productFormData, unit: e.target.value })}
-                    className="w-full pl-11 pr-10 h-12 bg-muted/30 border border-border rounded-xl text-[10px] font-black uppercase tracking-widest focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none cursor-pointer appearance-none"
-                >
-                    <option value="piece">piece</option>
-                    <option value="kg">kg</option>
-                    <option value="gm">gm</option>
-                    <option value="litre">litre</option>
-                    <option value="ml">ml</option>
-                    <option value="packet">packet</option>
-                    <option value="box">box</option>
-                </select>
-                <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-                </div>
-            </div>
-
-            <div className="space-y-2 md:col-span-2">
-                <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1">Current Inventory ({productFormData.unit})</label>
-                <div className="relative group">
-                    <RefreshCw className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary" />
-                    <input
-                        type="number"
-                        placeholder="Current Stock Count"
-                        value={productFormData.stock}
-                        onChange={(e) => setProductFormData({ ...productFormData, stock: e.target.value })}
-                        className="w-full pl-11 pr-4 h-12 bg-muted/30 border border-border rounded-xl text-sm font-bold focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none"
-                    />
-                </div>
-            </div>
-          </div>
-        </div>
-      </Modal>
+        onSuccess={() => fetchInventory(pagination.page)}
+        editingProduct={editingProduct}
+        categories={categories}
+      />
     </div>
   )
 }

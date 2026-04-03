@@ -22,13 +22,22 @@ const productSchema = new Schema(
     },
 
     // Pricing
-    price: {
-      type: Number,
+    originalPrice: {
+      type: Number, // The "Compare at" price (strikethrough)
+      min: 0,
+    },
+    sellingPrice: {
+      type: Number, // The actual price the customer pays
       required: true,
       min: 0,
     },
     costPrice: {
-      type: Number, // For profit calculation
+      type: Number, // For profit calculation (merchant cost)
+      min: 0,
+    },
+    discount: {
+      type: Number, // Percentage or fixed? User said "discount same like shopify". I'll assume percentage but user can choose.
+      default: 0,
       min: 0,
     },
     currency: {

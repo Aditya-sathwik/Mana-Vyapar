@@ -8,10 +8,23 @@ import { uploadOnCloudinary } from "../utlis/cloudinary.js";
  */
 
 export const createProduct = async (merchantId, productData, imageLocalPaths = []) => {
-    const { name, price, stock, category, unit, sku, description, lowStockThreshold, brand } = productData;
+    const { 
+        name, 
+        originalPrice, 
+        sellingPrice, 
+        costPrice, 
+        discount, 
+        stock, 
+        category, 
+        unit, 
+        sku, 
+        description, 
+        lowStockThreshold, 
+        brand 
+    } = productData;
 
-    if (!name || !price || !category) {
-        throw new ApiError(400, "Name, price and category are required");
+    if (!name || !sellingPrice || !category) {
+        throw new ApiError(400, "Name, Selling Price, and Category are required");
     }
 
     // Check if SKU is unique if provided for this merchant
@@ -43,7 +56,10 @@ export const createProduct = async (merchantId, productData, imageLocalPaths = [
 
     const product = await Product.create({
         name,
-        price,
+        originalPrice,
+        sellingPrice,
+        costPrice,
+        discount,
         stock: stock || 0,
         category,
         unit: unit || "piece",
@@ -114,9 +130,9 @@ export const getProductsByStoreSlug = async (slug, query = {}) => {
     }
 
     if (minPrice || maxPrice) {
-        filter.price = {};
-        if (minPrice) filter.price.$gte = Number(minPrice);
-        if (maxPrice) filter.price.$lte = Number(maxPrice);
+        filter.sellingPrice = {};
+        if (minPrice) filter.sellingPrice.$gte = Number(minPrice);
+        if (maxPrice) filter.sellingPrice.$lte = Number(maxPrice);
     }
 
     return await Product.find(filter)

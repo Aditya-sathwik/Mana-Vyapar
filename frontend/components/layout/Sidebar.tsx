@@ -37,7 +37,6 @@ const sidebarSections = [
     items: [
       { href: "/merchant/dashboard", label: "Overview", icon: LayoutDashboard },
       { href: "/merchant/khata", label: "Smart Khata", icon: Wallet },
-      { href: "/merchant/inventory", label: "Inventory Management", icon: Package },
       { href: "/merchant/categories", label: "Categories", icon: Box },
       { href: "/merchant/website", label: "Website Control", icon: Store },
     ]

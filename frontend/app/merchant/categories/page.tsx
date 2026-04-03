@@ -24,6 +24,7 @@ import {
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Modal } from "@/components/ui/modal"
+import { ProductModal } from "@/components/merchant/product-modal"
 import { apiFetch } from "@/lib/api-client"
 import { cn } from "@/lib/utils"
 import toast from "react-hot-toast"
@@ -51,7 +52,7 @@ const CategoryNode = ({
       <div
         className={cn(
           "flex items-center justify-between p-4 hover:bg-primary/5 transition-all group border-b border-border",
-          level > 0 && "ml-8 border-l-2 border-primary/10"
+          level > 0 && "ml-10 border-l-2 border-primary/20 my-2 shadow-sm bg-muted/5"
         )}
       >
         <div className="flex items-center gap-4">
@@ -140,7 +141,7 @@ const CategoryNode = ({
       </div>
 
       {isOpen && hasChildren && (
-        <div className="animate-in slide-in-from-top-1 duration-300">
+        <div className="animate-in slide-in-from-top-1 duration-300 pl-8 pb-2">
           {category.children.map((child: any) => (
             <CategoryNode
               key={child._id}
@@ -169,19 +170,12 @@ export default function CategoriesPage() {
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<any>(null);
+  const [categoriesList, setCategoriesList] = useState<any[]>([]); // To pass to ProductModal
   const [parentCategory, setParentCategory] = useState<any>(null);
 
   const [formData, setFormData] = useState({
     name: "",
     image: ""
-  });
-
-  const [productFormData, setProductFormData] = useState({
-    name: "",
-    description: "",
-    price: "",
-    stock: "0",
-    unit: "piece"
   });
 
   const fetchTree = useCallback(async (sid: string) => {
@@ -190,6 +184,14 @@ export default function CategoriesPage() {
       const res = await apiFetch(`/categories/tree/${sid}`);
       if (res.success) {
         setTree(res.data);
+
+        // Flatten tree for ProductModal dropdown
+        const flatten = (cats: any[]): any[] => {
+          return cats.reduce((acc, cat) => {
+            return [...acc, cat, ...flatten(cat.children || [])];
+          }, []);
+        };
+        setCategoriesList(flatten(res.data));
       }
     } catch (error: any) {
       toast.error(error.message || "Failed to fetch categories");
@@ -232,42 +234,9 @@ export default function CategoriesPage() {
 
   const handleOpenProductForm = (category: any) => {
     setSelectedCategory(category);
-    setProductFormData({ name: "", description: "", price: "", stock: "0", unit: "piece" });
     setIsProductModalOpen(true);
   };
 
-  const handleAddProduct = async () => {
-    if (!productFormData.name || !productFormData.price) {
-      toast.error("Please fill in basic product details");
-      return;
-    }
-
-    try {
-      setIsActionLoading(true);
-      const data = new FormData();
-      data.append("name", productFormData.name);
-      data.append("description", productFormData.description);
-      data.append("price", productFormData.price);
-      data.append("stock", productFormData.stock);
-      data.append("unit", productFormData.unit);
-      data.append("category", selectedCategory._id);
-
-      const res = await apiFetch("/products", {
-        method: "POST",
-        body: data,
-        isMultipart: true
-      });
-
-      if (res.success) {
-        toast.success(`Success! Added ${productFormData.name}`);
-        setIsProductModalOpen(false);
-      }
-    } catch (error: any) {
-      toast.error(error.message || "Operation failed");
-    } finally {
-      setIsActionLoading(false);
-    }
-  };
 
   const handleSubmit = async () => {
     if (!formData.name) {
@@ -280,7 +249,7 @@ export default function CategoriesPage() {
     try {
       setIsActionLoading(true);
       const payload = { ...formData, parentCategory: parentCategory?._id || null };
-      
+
       let res;
       if (selectedCategory && !isProductModalOpen) {
         res = await apiFetch(`/categories/${storeId}/${selectedCategory._id}`, {
@@ -345,14 +314,14 @@ export default function CategoriesPage() {
         <div className="flex items-center gap-3">
           <Button
             onClick={() => storeId && fetchTree(storeId)}
-            className="h-14 px-8 bg-muted border border-border rounded-full font-black text-[10px] tracking-widest uppercase hover:bg-foreground hover:text-white transition-all shadow-sm group"
+            className="h-14 px-8 bg-muted text-muted-foreground border border-border rounded-full font-black text-[10px] tracking-widest uppercase hover:bg-primary hover:text-primary-foreground transition-all shadow-sm group"
           >
             <RefreshCw className={cn("h-4 w-4 mr-2", isLoading && "animate-spin")} />
             Sync Tree
           </Button>
           <Button
             onClick={() => handleOpenForm()}
-            className="h-14 px-10 bg-primary hover:bg-emerald-600 text-white rounded-full font-black text-[10px] tracking-widest uppercase shadow-xl shadow-primary/20 transition-all hover:scale-105"
+            className="h-14 px-10 bg-primary hover:bg-primary/90 text-primary-foreground rounded-full font-black text-[10px] tracking-widest uppercase shadow-xl shadow-primary/20 transition-all hover:scale-105"
           >
             <Plus className="h-4 w-4 mr-3 stroke-[3]" />
             New Category
@@ -376,7 +345,7 @@ export default function CategoriesPage() {
             </div>
           </div>
 
-          <div className="divide-y divide-border min-h-[400px]">
+          <div className="max-h-[600px] overflow-y-auto divide-y divide-border scrollbar-thin scrollbar-thumb-muted-foreground/20">
             {isLoading ? (
               <div className="h-[400px] flex flex-col items-center justify-center gap-4">
                 <Loader2 className="h-12 w-12 text-primary animate-spin" />
@@ -422,95 +391,34 @@ export default function CategoriesPage() {
         </div>
       </div>
 
-      {/* Quick Add Product Modal */}
-      <Modal
+      <ProductModal
         isOpen={isProductModalOpen}
         onClose={() => setIsProductModalOpen(false)}
-        title="Quick Product Entry"
-        description={`Registering new product under ${selectedCategory?.name}`}
-        confirmLabel="Save Product"
-        onConfirm={handleAddProduct}
-        isLoading={isActionLoading}
-      >
-        <div className="space-y-6 py-4 text-left">
-          <div className="space-y-2">
-            <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1">Identity</label>
-            <div className="relative group">
-               <Box className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
-               <input
-                type="text"
-                placeholder="Product Name"
-                value={productFormData.name}
-                onChange={(e) => setProductFormData({ ...productFormData, name: e.target.value })}
-                className="w-full pl-11 pr-4 h-12 bg-muted/30 border border-border rounded-xl text-sm font-bold focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
-              />
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1">Product Description</label>
-            <textarea
-              placeholder="Short description for customers..."
-              value={productFormData.description}
-              onChange={(e) => setProductFormData({ ...productFormData, description: e.target.value })}
-              className="w-full p-4 h-24 bg-muted/30 border border-border rounded-xl text-xs font-bold focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all resize-none"
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1">Mkt Price</label>
-            <div className="relative group">
-              <IndianRupee className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary" />
-              <input
-                type="number"
-                placeholder="0.00"
-                value={productFormData.price}
-                onChange={(e) => setProductFormData({ ...productFormData, price: e.target.value })}
-                className="w-full pl-11 pr-4 h-12 bg-muted/30 border border-border rounded-xl text-sm font-bold focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none"
-              />
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1">Initial Stock</label>
-            <div className="flex gap-2">
-              <div className="relative group flex-[2]">
-                <RefreshCw className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <input
-                  type="number"
-                  placeholder="Count"
-                  value={productFormData.stock}
-                  onChange={(e) => setProductFormData({ ...productFormData, stock: e.target.value })}
-                  className="w-full pl-11 pr-4 h-12 bg-muted/30 border border-border rounded-xl text-sm font-bold focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none"
-                />
-              </div>
-              <select
-                value={productFormData.unit}
-                onChange={(e) => setProductFormData({ ...productFormData, unit: e.target.value })}
-                className="flex-1 h-12 bg-muted/30 border border-border rounded-xl px-4 text-[10px] font-black uppercase focus:ring-2 focus:ring-primary/20 outline-none cursor-pointer"
-              >
-                <option value="piece">piece</option>
-                <option value="kg">kg</option>
-                <option value="gm">gm</option>
-                <option value="litre">litre</option>
-                <option value="packet">packet</option>
-              </select>
-            </div>
-          </div>
-        </div>
-      </Modal>
+        onSuccess={() => fetchTree(storeId!)}
+        initialCategoryId={selectedCategory?._id}
+        categories={categoriesList}
+      />
 
       {/* Category Modal */}
       <Modal
         isOpen={isFormOpen}
         onClose={() => setIsFormOpen(false)}
-        title={selectedCategory ? "Update Classification" : "New Classification"}
-        description="Categories help structure your digital storefront."
+        title={selectedCategory ? "Update Classification" : (parentCategory ? `New Sub-category in ${parentCategory.name}` : "New Classification")}
+        description={parentCategory ? `Adding a nested category under ${parentCategory.name}` : "Categories help structure your digital storefront."}
         confirmLabel={selectedCategory ? "Update" : "Create"}
         onConfirm={handleSubmit}
         isLoading={isActionLoading}
       >
         <div className="space-y-6 py-4 text-left">
+          {parentCategory && !selectedCategory && (
+            <div className="p-4 bg-primary/10 border border-primary/20 flex items-center gap-3">
+              <FolderTree className="h-4 w-4 text-primary" />
+              <div>
+                <p className="text-[10px] font-black text-primary uppercase tracking-widest leading-none">Adding Nested To:</p>
+                <p className="text-sm font-bold text-foreground mt-1">{parentCategory.name}</p>
+              </div>
+            </div>
+          )}
           <div className="space-y-2">
             <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest pl-1">Name</label>
             <input
@@ -525,11 +433,11 @@ export default function CategoriesPage() {
           <div className="space-y-2">
             <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest pl-1">Visual Reference (URL)</label>
             <input
-                type="text"
-                placeholder="https://..."
-                value={formData.image}
-                onChange={(e) => setFormData({ ...formData, image: e.target.value })}
-                className="w-full h-14 bg-muted border border-border rounded-2xl px-6 text-sm font-bold focus:ring-2 focus:ring-primary/20 outline-none"
+              type="text"
+              placeholder="https://..."
+              value={formData.image}
+              onChange={(e) => setFormData({ ...formData, image: e.target.value })}
+              className="w-full h-14 bg-muted border border-border rounded-2xl px-6 text-sm font-bold focus:ring-2 focus:ring-primary/20 outline-none"
             />
           </div>
         </div>

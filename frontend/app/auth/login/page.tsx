@@ -5,12 +5,9 @@ import React, { useState, useEffect } from "react"
 import { useAuth } from "@/context/auth-context"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Loader2, Store } from "lucide-react"
+import { Loader2 } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { AuthInput } from "@/components/ui/auth-input"
-import { apiFetch } from "@/lib/api-client"
-import { Modal } from "@/components/ui/modal"
-import toast from "react-hot-toast"
 
 export default function LoginPage() {
   const { login, user, loading } = useAuth()
@@ -19,37 +16,20 @@ export default function LoginPage() {
   const [password, setPassword] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
+  const [rememberMe, setRememberMe] = useState(true)
 
-  // Store Setup Modal State
-  const [showStoreSetup, setShowStoreSetup] = useState(false)
-  const [storeName, setStoreName] = useState("")
-  const [storeLoading, setStoreLoading] = useState(false)
-
-  // AUTH GUARD: If user is already logged in, they shouldn't be here.
+  // Redirect if already logged in
   useEffect(() => {
     if (!loading && user) {
-      checkStoreAndRedirect(user)
-    }
-  }, [user, loading])
-
-  const checkStoreAndRedirect = async (userData: any) => {
-    if (userData.role === "Merchant") {
-      try {
-        const res = await apiFetch("/stores/me")
-        if (res.success && res.data) {
-          router.replace("/merchant/dashboard")
-        } else {
-          setShowStoreSetup(true)
-        }
-      } catch (err) {
-        setShowStoreSetup(true)
+      if (user.role === "Merchant") {
+        router.replace("/merchant/dashboard")
+      } else if (user.role === "Super Admin" || user.role === "admin") {
+        router.replace("/admin/dashboard")
+      } else {
+        router.replace("/store")
       }
-    } else if (userData.role === "Super Admin" || userData.role === "admin") {
-      router.replace("/admin/dashboard")
-    } else {
-      router.replace("/store")
     }
-  }
+  }, [user, loading, router])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -57,8 +37,7 @@ export default function LoginPage() {
     setError("")
 
     try {
-      await login({ identifier, password })
-      // Redirect logic is handled by the useEffect watching the 'user' object
+      await login({ identifier, password, remember: rememberMe })
     } catch (err: unknown) {
       if (err instanceof Error) {
         setError(err.message)
@@ -69,32 +48,7 @@ export default function LoginPage() {
     }
   }
 
-  const handleCreateStore = async () => {
-    if (!storeName.trim()) {
-      toast.error("Store name is required")
-      return
-    }
-
-    try {
-      setStoreLoading(true)
-      const res = await apiFetch("/stores", {
-        method: "POST",
-        body: JSON.stringify({ name: storeName.trim() })
-      })
-
-      if (res.success) {
-        toast.success("Store created successfully!")
-        router.replace("/merchant/dashboard")
-      }
-    } catch (err: any) {
-      toast.error(err.message || "Failed to create store")
-    } finally {
-      setStoreLoading(false)
-    }
-  }
-
-  // Prevent flicker before redirect
-  if (loading || (user && !showStoreSetup)) {
+  if (loading || user) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <Loader2 className="h-12 w-12 text-primary animate-spin" />
@@ -142,6 +96,24 @@ export default function LoginPage() {
               placeholder="••••••••"
             />
 
+            <div className="flex items-center justify-between px-1">
+              <label className="flex items-center gap-2 cursor-pointer group">
+                <div className={`w-10 h-5 rounded-full flex items-center p-1 transition-all ${rememberMe ? 'bg-primary' : 'bg-muted border border-border'}`}>
+                    <div className={`w-3 h-3 rounded-full bg-white transition-all transform ${rememberMe ? 'translate-x-5' : 'translate-x-0'}`} />
+                </div>
+                <input 
+                  type="checkbox" 
+                  checked={rememberMe} 
+                  onChange={(e) => setRememberMe(e.target.checked)} 
+                  className="hidden"
+                />
+                <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground group-hover:text-primary transition-colors">Remember Me</span>
+              </label>
+              <Link href="/auth/forgot-password" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground hover:text-primary transition-colors">
+                Forgot?
+              </Link>
+            </div>
+
             {error && (
               <div className="p-4 rounded-2xl bg-destructive/10 border border-destructive/20 text-xs font-bold text-center text-destructive uppercase tracking-widest animate-in fade-in zoom-in-95">
                 {error}
@@ -169,37 +141,6 @@ export default function LoginPage() {
           </div>
         </CardContent>
       </Card>
-
-      {/* Store Creation Modal */}
-      <Modal
-        isOpen={showStoreSetup}
-        onClose={() => { }} // User must create a store
-        title="Create Your Store"
-        description="Give your business a name to start selling."
-        confirmLabel="Create Store"
-        onConfirm={handleCreateStore}
-        isLoading={storeLoading}
-      >
-        <div className="space-y-6">
-          <div className="p-4 rounded-2xl bg-primary/5 border border-primary/10 flex items-start gap-3">
-            <Store className="h-5 w-5 text-primary mt-0.5" />
-            <p className="text-[10px] font-bold text-muted-foreground leading-relaxed uppercase tracking-tight">
-              A store identifies your business on the Mana-Vyapar network. You can change the colors and logo after setup.
-            </p>
-          </div>
-
-          <div className="space-y-2">
-            <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest pl-1">Business Name</label>
-            <input
-              type="text"
-              placeholder="e.g. Skyline Electronics"
-              value={storeName}
-              onChange={(e) => setStoreName(e.target.value)}
-              className="w-full h-14 bg-muted border border-border rounded-2xl px-6 text-sm font-bold text-foreground focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
-            />
-          </div>
-        </div>
-      </Modal>
     </div>
   )
 }
