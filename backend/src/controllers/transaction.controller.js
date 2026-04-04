@@ -34,6 +34,17 @@ const getHistory = asyncHandler(async (req, res) => {
         .json(new ApiResponse(200, history, "Transaction history fetched successfully"));
 });
 
+const getCustomerHistory = asyncHandler(async (req, res) => {
+    const customerId = req.user?._id;
+    const filters = req.query; // page, limit, type, startDate, endDate, merchantId
+
+    const history = await TransactionService.getCustomerHistory(customerId, filters);
+
+    return res
+        .status(200)
+        .json(new ApiResponse(200, history, "Customer purchase history fetched successfully"));
+});
+
 /**
  * @controller voidSale
  * @description DELETE/POST endpoint to cancel/void a sale and reverse stock.
@@ -67,6 +78,7 @@ const updateMetadata = asyncHandler(async (req, res) => {
 export {
     executeSale,
     getHistory,
+    getCustomerHistory,
     voidSale,
     updateMetadata
 };

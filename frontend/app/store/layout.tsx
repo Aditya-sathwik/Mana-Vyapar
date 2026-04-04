@@ -1,13 +1,14 @@
+"use client"
+
 import { StoreProvider } from '@/components/storefront/StoreProvider';
 import { StoreNavbar } from '@/components/storefront/StoreNavbar';
 import { StoreFooter } from '@/components/storefront/StoreFooter';
-
-export const metadata = {
-  title: 'Mana Store | Premium Shopping Experience',
-  description: 'Shop the best products powered by Mana Vyapar.',
-};
+import { usePathname } from 'next/navigation';
 
 export default function StoreLayout({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+  const isAuthPage = pathname?.includes('/login') || pathname?.includes('/register');
+
   return (
     <StoreProvider>
       <div className="min-h-screen flex bg-background text-foreground font-body relative overflow-hidden">
@@ -18,10 +19,10 @@ export default function StoreLayout({ children }: { children: React.ReactNode })
           <div className="absolute top-[40%] right-[-10%] w-[30%] h-[30%] bg-primary/20 rounded-full blur-[100px] pointer-events-none" />
         </div>
 
-        <StoreNavbar /> {/* This now contains both Mobile Topbar & Desktop Sidebar */}
-        <div className="flex-1 flex flex-col h-screen pt-20 md:pt-0 w-full overflow-y-auto relative z-10 max-w-full">
+        {!isAuthPage && <StoreNavbar />} 
+        <div className={isAuthPage ? "flex-1 flex flex-col h-screen w-full overflow-y-auto relative z-10 max-w-full" : "flex-1 flex flex-col h-screen pt-20 md:pt-0 w-full overflow-y-auto relative z-10 max-w-full"}>
           <main className="flex-1 w-full flex flex-col relative">{children}</main>
-          <StoreFooter />
+          {!isAuthPage && <StoreFooter />}
         </div>
       </div>
     </StoreProvider>

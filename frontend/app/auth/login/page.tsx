@@ -6,7 +6,7 @@ import { useAuth } from "@/context/auth-context"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Loader2 } from "lucide-react"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { AuthInput } from "@/components/ui/auth-input"
 
 export default function LoginPage() {
@@ -14,13 +14,21 @@ export default function LoginPage() {
   const router = useRouter()
   const [identifier, setIdentifier] = useState("")
   const [password, setPassword] = useState("")
+  const [rememberMe, setRememberMe] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
-  const [rememberMe, setRememberMe] = useState(true)
+
+  const searchParams = useSearchParams()
+  const redirect = searchParams.get("redirect")
 
   // Redirect if already logged in
   useEffect(() => {
     if (!loading && user) {
+      if (redirect) {
+        router.replace(redirect)
+        return
+      }
+
       if (user.role === "Merchant") {
         router.replace("/merchant/dashboard")
       } else if (user.role === "Super Admin" || user.role === "admin") {
@@ -29,7 +37,7 @@ export default function LoginPage() {
         router.replace("/store")
       }
     }
-  }, [user, loading, router])
+  }, [user, loading, router, redirect])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()

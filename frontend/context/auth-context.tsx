@@ -40,6 +40,7 @@ interface RegisterData {
   password: string;
   businessName: string;
   role?: string;
+  merchantId?: string;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);

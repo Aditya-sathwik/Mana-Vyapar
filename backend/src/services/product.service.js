@@ -111,11 +111,12 @@ export const getAllProducts = async (merchantId, query = {}) => {
 
 /** 🌐 Public API for a specific store */
 export const getProductsByStoreSlug = async (slug, query = {}) => {
-    const { categoryId, search, minPrice, maxPrice, sort = "-createdAt" } = query;
+    const { categoryId, search, minPrice, maxPrice, sort = "-createdAt", page = 1, limit = 20 } = query;
 
     const store = await Store.findOne({ slug, isActive: true });
     if (!store) throw new ApiError(404, "Store not found");
 
+    const skip = (page - 1) * limit;
     const filter = {
         merchantId: store.owner,
         isActive: true
@@ -135,10 +136,25 @@ export const getProductsByStoreSlug = async (slug, query = {}) => {
         if (maxPrice) filter.sellingPrice.$lte = Number(maxPrice);
     }
 
-    return await Product.find(filter)
+    const products = await Product.find(filter)
         .populate("category", "name slug image")
-        .sort(sort);
+        .sort(sort)
+        .skip(skip)
+        .limit(Number(limit));
+
+    const total = await Product.countDocuments(filter);
+
+    return {
+        products,
+        pagination: {
+            total,
+            page: Number(page),
+            limit: Number(limit),
+            pages: Math.ceil(total / limit)
+        }
+    };
 };
+
 
 export const getProductById = async (merchantId, productId) => {
     const product = await Product.findOne({ _id: productId, merchantId }).populate("category", "name slug image");

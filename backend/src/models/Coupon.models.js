@@ -40,6 +40,17 @@ const couponSchema = new Schema(
       type: Number, // Cap for PERCENTAGE coupons
       default: 0,
     },
+    // Targeted Rewards (Optional)
+    targetCustomerId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Customer",
+      default: null,
+    },
+    // Limit per unique customer
+    perCustomerLimit: {
+      type: Number,
+      default: 1, // Default to once per customer if not specified
+    },
     usageLimit: {
       type: Number, // Overall limit for this coupon across all customers
       default: null,

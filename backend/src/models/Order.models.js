@@ -17,7 +17,17 @@ const orderSchema = new Schema(
       index: true,
     },
 
-    // Customer information
+    // Customer association (replaces raw strings where possible)
+    customerId: {
+      type: Schema.Types.ObjectId,
+      refPath: "customerModel",
+      index: true,
+    },
+    customerModel: {
+      type: String,
+      enum: ["Customer", "User"],
+    },
+
     customerName: {
       type: String,
       required: true,
@@ -43,6 +53,14 @@ const orderSchema = new Schema(
     },
 
     // Order source tracking
+    trackingNumber: {
+      type: String,
+      trim: true
+    },
+    returnReason: {
+      type: String,
+      trim: true
+    },
     source: {
       type: String,
       enum: ["WhatsApp", "Vision AI Scan", "Manual"],
@@ -130,8 +148,17 @@ const orderSchema = new Schema(
     // Order status
     status: {
       type: String,
-      enum: ["Pending", "Confirmed", "Processing", "Shipped", "Delivered", "Cancelled"],
-      default: "Pending",
+      enum: [
+        "PLACED", 
+        "CONFIRMED", 
+        "PROCESSING", 
+        "SHIPPED", 
+        "DELIVERED", 
+        "CANCELLED",
+        "RETURN_REQUESTED", // 🔄 New
+        "RETURNED"        // 🔄 New
+      ],
+      default: "PLACED",
       index: true,
     },
     statusHistory: [
@@ -148,13 +175,13 @@ const orderSchema = new Schema(
     // Payment
     paymentMethod: {
       type: String,
-      enum: ["Cash", "UPI", "Card", "Credit", "Other"],
-      default: "Cash",
+      enum: ["CASH", "UPI", "CARD", "KHATA", "OTHER"],
+      default: "CASH",
     },
     paymentStatus: {
       type: String,
-      enum: ["Pending", "Paid", "Partial", "Refunded"],
-      default: "Pending",
+      enum: ["PENDING", "PAID", "PARTIAL", "FAILED", "REFUNDED"],
+      default: "PENDING",
     },
     paidAmount: {
       type: Number,
@@ -176,6 +203,12 @@ const orderSchema = new Schema(
     internalNotes: {
       type: String,
     },
+
+    // Finalized Transaction Reference
+    transactionId: {
+      type: Schema.Types.ObjectId,
+      ref: "Transaction",
+    },
   },
   {
     timestamps: true,
@@ -185,8 +218,6 @@ const orderSchema = new Schema(
 // Indexes for efficient queries
 orderSchema.index({ merchantId: 1, status: 1 });
 orderSchema.index({ merchantId: 1, createdAt: -1 });
-orderSchema.index({ customerPhoneNumber: 1 });
-orderSchema.index({ orderNumber: 1 });
 
 // Pre-save hook to generate order number
 orderSchema.pre("save", async function (next) {

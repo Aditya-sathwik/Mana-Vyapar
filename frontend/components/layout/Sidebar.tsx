@@ -25,7 +25,9 @@ import {
   Box,
   Truck,
   TrendingUp,
-  User
+  User,
+  Tag,
+  FileText
 } from "lucide-react"
 import { ThemeToggle } from "@/components/ui/theme-toggle"
 import { useAuth } from "@/context/auth-context"
@@ -38,6 +40,7 @@ const sidebarSections = [
       { href: "/merchant/dashboard", label: "Overview", icon: LayoutDashboard },
       { href: "/merchant/khata", label: "Smart Khata", icon: Wallet },
       { href: "/merchant/categories", label: "Categories", icon: Box },
+      { href: "/merchant/coupons", label: "Promotions", icon: Tag },
       { href: "/merchant/website", label: "Website Control", icon: Store },
     ]
   },
@@ -45,7 +48,8 @@ const sidebarSections = [
     title: "Intelligence",
     items: [
       { href: "/merchant/scanner", label: "AI Product Scan", icon: ScanLine },
-      { href: "/merchant/analytics", label: "Sales Data", icon: TrendingUp },
+      { href: "/merchant/insights", label: "Advanced Insights", icon: TrendingUp },
+      { href: "/merchant/forms/list", label: "Customer Forms", icon: FileText },
     ]
   },
   {
@@ -242,7 +246,7 @@ export function Sidebar({ className }: { className?: string }) {
          <div className="relative z-10">
             <div className="flex items-center gap-2 mb-2">
                 <HeadphonesIcon className="h-4 w-4 text-primary" />
-                <span className="text-[10px] font-black uppercase text-muted-foreground">Node Support</span>
+                <span className="text-[10px] font-black uppercase text-muted-foreground">Shop Support</span>
             </div>
             <button className="w-full py-2 bg-primary text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:scale-105 transition-all shadow-lg shadow-primary/20">Get AI Assistance</button>
          </div>

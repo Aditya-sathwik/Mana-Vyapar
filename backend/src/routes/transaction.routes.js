@@ -19,6 +19,7 @@ router.post("/sale", validateSaleItems, TransactionController.executeSale);
  * @description Fetches logs of all sales for the merchant.
  */
 router.get("/history", TransactionController.getHistory);
+router.get("/customer-history", TransactionController.getCustomerHistory);
 
 /**
  * @route PATCH /v1/transactions/update/:transactionId

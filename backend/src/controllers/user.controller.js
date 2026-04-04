@@ -2,12 +2,14 @@ import { asyncHandler } from "../utlis/asynchandler.js";
 import { ApiError } from '../utlis/apierror.js'
 import { ApiResponse } from "../utlis/apiresponse.js";
 import * as userService from "../services/user.service.js";
+import { createAuditLog } from "../services/audit.service.js";
+import { getResolvedConfig } from "../services/config.service.js";
 
 /**
  * Controller to handle user registration.
  */
 const registerUser = asyncHandler(async (req, res) => {
-    const { fullname, username, email, password, phone, businessName, role } = req.body;
+    const { fullname, username, email, password, phone, businessName, role, merchantId } = req.body;
 
     if ([fullname, username, email, password].some((field) => field?.trim() === "")) {
         throw new ApiError(400, "All fields are required");
@@ -28,6 +30,8 @@ const registerUser = asyncHandler(async (req, res) => {
         password,
         phone,
         businessName,
+        role: role || "Merchant",
+        merchantId,
         avatarlocalpath,
         coverimagelocalpath
     });
@@ -55,6 +59,17 @@ const loginUser = asyncHandler(async (req, res) => {
         secure: process.env.NODE_ENV === "production"
     };
 
+    // 📜 Audit Log (Non-await)
+    createAuditLog({
+        userId: user._id,
+        merchantId: user.merchantId || user._id,
+        action: "USER_LOGIN",
+        req
+    });
+
+    // ⚙️ Resolve Dynamic Config (Features/UI)
+    const config = await getResolvedConfig(user.tier, user._id);
+
     return res
         .status(200)
         .cookie("accessToken", accessToken, options)
@@ -62,7 +77,7 @@ const loginUser = asyncHandler(async (req, res) => {
         .json(
             new ApiResponse(
                 200,
-                { user, accessToken, refreshToken },
+                { user, config, accessToken, refreshToken },
                 "User logged in successfully"
             )
         );
@@ -124,6 +139,14 @@ const changeCurrentPassword = asyncHandler(async (req, res) => {
 
     await userService.changeCurrentPassword(req.user, { oldPassword, newPassword });
 
+    // 📜 Audit Log (Non-await)
+    createAuditLog({
+        userId: req.user._id,
+        merchantId: req.user.merchantId || req.user._id,
+        action: "PASSWORD_CHANGED",
+        req
+    });
+
     return res
         .status(200)
         .json(new ApiResponse(200, {}, "Password changed successfully"));
@@ -133,9 +156,12 @@ const changeCurrentPassword = asyncHandler(async (req, res) => {
  * Controller to get current user details.
  */
 const getCurrentUser = asyncHandler(async (req, res) => {
+    // ⚙️ Resolve Dynamic Config for current session
+    const config = await getResolvedConfig(req.user.tier, req.user._id);
+
     return res
         .status(200)
-        .json(new ApiResponse(200, req.user, "Current user fetched successfully"));
+        .json(new ApiResponse(200, { user: req.user, config }, "Current user fetched successfully"));
 });
 
 /**
@@ -186,6 +212,13 @@ const getAllUsers = asyncHandler(async (req, res) => {
         .json(new ApiResponse(200, { users, totalCount }, "All users fetched successfully"));
 });
 
+const getMerchantCustomers = asyncHandler(async (req, res) => {
+    const { customers, totalCount } = await userService.getMerchantCustomers(req.user._id);
+    return res
+        .status(200)
+        .json(new ApiResponse(200, { customers, totalCount }, "Merchant customers fetched successfully"));
+});
+
 export {
     registerUser,
     loginUser,
@@ -196,5 +229,6 @@ export {
     updateAccountDetails,
     updateUserAvatar,
     updateUserCoverImage,
-    getAllUsers
+    getAllUsers,
+    getMerchantCustomers
 };

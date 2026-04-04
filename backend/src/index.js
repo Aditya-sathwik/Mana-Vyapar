@@ -2,6 +2,8 @@
 import dotenv from "dotenv"
 import connectDB from "./db/index.js";
 import {app}from "./app.js"
+import { setupCronJobs } from "./queues/index.js";
+
 dotenv.config({
     path: './.env'
 })
@@ -10,6 +12,9 @@ dotenv.config({
 
 connectDB()
 .then(() => {
+    // ⏰ Initialize Background Maintenance
+    setupCronJobs().catch(err => console.error("❌ Cron Setup Failed:", err));
+
     app.listen(process.env.PORT || 8000, () => {
         console.log(`⚙️ Server is running at port : ${process.env.PORT}`);
     })

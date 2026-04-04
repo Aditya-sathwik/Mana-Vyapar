@@ -1,8 +1,13 @@
 import { Transaction } from "../models/Transaction.models.js";
 import { Product } from "../models/Product.models.js";
 import { Customer } from "../models/Customer.models.js";
+import { User } from "../models/User.models.js";
 import { Coupon } from "../models/Coupon.models.js";
 import { ApiError } from "../utlis/apierror.js";
+import { sendLowStockAlert } from "./notification.service.js";
+import { addInsightJob } from "../queues/index.js";
+import { createAuditLog } from "./audit.service.js";
+import { clearCache } from "../middlewares/cache.middleware.js";
 import mongoose from "mongoose";
 
 /**
@@ -31,6 +36,25 @@ const createSale = async (merchantId, saleData) => {
 
         if (!items || items.length === 0) {
             throw new ApiError(400, "Transaction must have at least one item");
+        }
+
+        // 🟢 Validation: Ensure Customer belongs to this Merchant
+        let customerType = "Customer"; // Default to manual Customer model
+        if (customerId) {
+            // Check manual Customer ledger first
+            let customer = await Customer.findOne({ _id: customerId, merchantId });
+            
+            if (!customer) {
+                // If not in manual ledger, check registered Users
+                customer = await User.findOne({ _id: customerId, merchantId, role: "Customer" });
+                if (customer) {
+                    customerType = "User";
+                }
+            }
+
+            if (!customer) {
+                throw new ApiError(404, "Customer not found or unauthorized access attempt");
+            }
         }
 
         // 1. Fetch products and verify merchant ownership
@@ -85,6 +109,11 @@ const createSale = async (merchantId, saleData) => {
             // 3. Atomically Update Product Stock
             product.stock -= item.quantity;
             await product.save({ session });
+
+            // ⚠️ Trigger Low Stock Alert
+            if (product.stock <= product.lowStockThreshold) {
+                 sendLowStockAlert(product);
+            }
         }
 
         // 4. DYNAMIC COUPON ENGINE
@@ -102,9 +131,27 @@ const createSale = async (merchantId, saleData) => {
                 throw new ApiError(400, "Invalid or expired coupon code");
             }
 
-            // Centralized Validation Logic (Checks expiry, min amount, usage limits)
+            // Centralized Validation Logic (Checks expiry, min amount, overall usage)
             if (!coupon.isValid(calculatedSubtotal)) {
-                throw new ApiError(400, "Coupon constraints not met (Min amount or Usage limit)");
+                throw new ApiError(400, "Coupon constraints not met (Min amount or Overall usage limit)");
+            }
+
+            // ⛔ Customer-Specific Restrictions
+            if (coupon.targetCustomerId && coupon.targetCustomerId.toString() !== customerId?.toString()) {
+                throw new ApiError(400, "This coupon is targeted to a specific customer and is not valid for this sale");
+            }
+
+            if (customerId) {
+                // Count historical usage for this specific customer
+                const usageCount = await Transaction.countDocuments({
+                    customerId,
+                    "financials.couponId": coupon._id,
+                    type: { $ne: "VOID" } // Don't count voided transactions
+                }).session(session);
+
+                if (usageCount >= coupon.perCustomerLimit) {
+                    throw new ApiError(400, `You have already used this coupon ${usageCount} time(s). Limit: ${coupon.perCustomerLimit}`);
+                }
             }
 
             couponDiscount = coupon.calculateDiscount(calculatedSubtotal);
@@ -128,6 +175,7 @@ const createSale = async (merchantId, saleData) => {
         const newTransaction = new Transaction({
             merchantId,
             customerId,
+            customerModel: customerType,
             items: transactionItems,
             financials: {
                 subtotal: calculatedSubtotal, // This holds the pre-coupon/shipping total
@@ -158,7 +206,8 @@ const createSale = async (merchantId, saleData) => {
 
         // 7. Update Customer Insights / Sales Stats
         if (customerId) {
-            await Customer.findByIdAndUpdate(customerId, {
+            const ModelToUpdate = customerType === "User" ? User : Customer;
+            await ModelToUpdate.findByIdAndUpdate(customerId, {
                 $inc: { 
                     "stats.totalOrders": 1, 
                     "stats.totalSpent": grandTotal 
@@ -170,6 +219,20 @@ const createSale = async (merchantId, saleData) => {
         // 🏁 Finish Transactions
         await session.commitTransaction();
         session.endSession();
+
+        // 📊 Live Insight Refresh (Moved to Background Queue)
+        addInsightJob(merchantId);
+        clearCache("dashboard", merchantId);
+
+        // 📜 Audit Log (Non-await)
+        createAuditLog({
+            userId: merchantId,
+            merchantId,
+            action: "SALE_COMPLETED",
+            resourceId: newTransaction._id,
+            resourceType: "Transaction",
+            metadata: { total: grandTotal, method: newTransaction.payment.method }
+        });
 
         return newTransaction;
 
@@ -201,6 +264,28 @@ const getMerchantHistory = async (merchantId, filters = {}) => {
 
     return await Transaction.find(query)
         .populate("customerId", "name phone")
+        .sort({ createdAt: -1 })
+        .limit(limit * 1)
+        .skip((page - 1) * limit)
+        .exec();
+};
+
+const getCustomerHistory = async (customerId, filters = {}) => {
+    const { page = 1, limit = 20, type = "SALE", startDate, endDate, merchantId } = filters;
+
+    const query = { customerId };
+    
+    if (type) query.type = type;
+    if (merchantId) query.merchantId = merchantId;
+    if (startDate && endDate) {
+        query.createdAt = { 
+            $gte: new Date(startDate), 
+            $lte: new Date(endDate) 
+        };
+    }
+
+    return await Transaction.find(query)
+        .populate("merchantId", "businessName fullname phone")
         .sort({ createdAt: -1 })
         .limit(limit * 1)
         .skip((page - 1) * limit)
@@ -253,7 +338,8 @@ const deleteTransaction = async (merchantId, transactionId) => {
 
         // 2. Revert Customer Stats
         if (transaction.customerId) {
-            await Customer.findByIdAndUpdate(transaction.customerId, {
+            const ModelToUpdate = transaction.customerModel === "User" ? User : Customer;
+            await ModelToUpdate.findByIdAndUpdate(transaction.customerId, {
                 $inc: { 
                     "stats.totalOrders": -1, 
                     "stats.totalSpent": -transaction.financials.grandTotal 
@@ -276,7 +362,100 @@ const deleteTransaction = async (merchantId, transactionId) => {
 
         await session.commitTransaction();
         session.endSession();
+
+        // 📊 Live Insight Refresh (Non-await)
+        addInsightJob(merchantId);
+        clearCache("dashboard", merchantId);
+
+        // 📜 Audit Log (Non-await)
+        createAuditLog({
+            userId: merchantId,
+            merchantId,
+            action: "TRANSACTION_VOIDED",
+            resourceId: transaction._id,
+            resourceType: "Transaction"
+        });
+
         return transaction;
+
+    } catch (error) {
+        await session.abortTransaction();
+        session.endSession();
+        throw error;
+    }
+};
+
+/**
+ * processRefund: Creates a new REFUND transaction and restores product stock.
+ * Linked to an Order ID for full traceability.
+ */
+const processRefund = async (merchantId, orderId, refundItems, refundAmount = 0) => {
+    const session = await mongoose.startSession();
+    session.startTransaction();
+
+    try {
+        const mId = new mongoose.Types.ObjectId(merchantId);
+        
+        // 1. Create a Refund Transaction
+        const refundTransaction = new Transaction({
+            merchantId: mId,
+            orderId,
+            type: "REFUND",
+            items: refundItems.map(item => ({
+                productId: item.productId,
+                name: item.name,
+                quantity: item.quantity,
+                price: item.price,
+                subtotal: item.subtotal
+            })),
+            financials: {
+                subtotal: refundAmount,
+                totalDiscount: 0,
+                totalTax: 0,
+                grandTotal: refundAmount,
+                roundOff: 0
+            },
+            payment: {
+                method: "OTHER", // Original payment method can be passed too
+                status: "PAID",
+                paidAmount: refundAmount,
+                balanceAmount: 0
+            },
+            notes: `System Refund for Order: ${orderId}`
+        });
+
+        await refundTransaction.save({ session });
+
+        // 2. Restore Inventory
+        for (const item of refundItems) {
+            await Product.findByIdAndUpdate(
+                item.productId,
+                { $inc: { stock: item.quantity } },
+                { session }
+            );
+        }
+
+        // 3. Optional: Deduct from customer Lifetime stats
+        // await deductFromCustomerStats(customerId, refundAmount);
+
+        await session.commitTransaction();
+        session.endSession();
+
+        // 📊 Live Insight Refresh (Non-await)
+        addInsightJob(merchantId);
+        clearCache("dashboard", merchantId);
+
+        // 📜 Audit Log (Non-await)
+        createAuditLog({
+            userId: merchantId,
+            merchantId,
+            action: "REFUND_PROCESSED",
+            resourceId: refundTransaction._id,
+            resourceType: "Transaction",
+            metadata: { orderId, amount: refundAmount }
+        });
+
+        return refundTransaction;
 
     } catch (error) {
         await session.abortTransaction();
@@ -288,7 +467,9 @@ const deleteTransaction = async (merchantId, transactionId) => {
 export {
     createSale,
     getMerchantHistory,
+    getCustomerHistory,
     updateTransaction,
     deleteTransaction,
-    deleteTransaction as voidTransaction 
+    deleteTransaction as voidTransaction,
+    processRefund
 };

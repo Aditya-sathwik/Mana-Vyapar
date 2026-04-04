@@ -25,7 +25,29 @@ export const generateAccessAndRefreshToken = async (userId) => {
     }
 };
 
-export const registerUser = async ({ fullname, username, email, password, phone, businessName, avatarlocalpath, coverimagelocalpath }) => {
+export const registerUser = async ({ 
+    fullname, 
+    username, 
+    email, 
+    password, 
+    phone, 
+    businessName, 
+    role = "Merchant", 
+    merchantId, 
+    avatarlocalpath, 
+    coverimagelocalpath 
+}) => {
+    // If registering as a Customer, merchantId is REQUIRED and must be a valid Merchant
+    if (role === "Customer") {
+        if (!merchantId) {
+            throw new ApiError(400, "Merchant ID is required for customer registration");
+        }
+        const merchant = await User.findOne({ _id: merchantId, role: "Merchant" });
+        if (!merchant) {
+            throw new ApiError(404, "Invalid Merchant ID provided");
+        }
+    }
+
     // Check if user already exists
     const existedUser = await User.findOne({
         $or: [{ username }, { email }]
@@ -55,6 +77,8 @@ export const registerUser = async ({ fullname, username, email, password, phone,
         phone: phone || "",
         businessName: businessName || "",
         password,
+        role,
+        merchantId: role === "Customer" ? merchantId : null,
         username: username.toLowerCase()
     });
 
@@ -231,4 +255,12 @@ export const getAllUsers = async () => {
     const users = await User.find({}).select("-password -refreshToken");
     const totalCount = await User.countDocuments();
     return { users, totalCount };
+}
+
+export const getMerchantCustomers = async (merchantId) => {
+    const customers = await User.find({ merchantId, role: "Customer" }).select("-password -refreshToken");
+    return { 
+        customers,
+        totalCount: customers.length
+    };
 }

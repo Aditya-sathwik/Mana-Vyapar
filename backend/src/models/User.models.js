@@ -92,6 +92,36 @@ const userSchema = new Schema(
       },
     },
 
+    // 🎨 Branding & Customization (For SaaS support)
+    branding: {
+        primaryColor: { type: String, default: "#6366f1" }, // Default Indigo
+        secondaryColor: { type: String, default: "#f43f5e" }, // Default Rose
+        logo: { type: String }, // Shop Logo URL
+        fontFamily: { type: String, default: "Inter, sans-serif" },
+        socialLinks: {
+            website: String,
+            instagram: String,
+            facebook: String,
+        }
+    },
+
+    // ⚙️ Shop Settings
+    settings: {
+        currency: { type: String, default: "INR" },
+        invoicePrefix: { type: String, default: "MV" },
+        taxRate: { type: Number, default: 0 },
+        lowStockAlert: { type: Boolean, default: true },
+    },
+
+
+    // Subscription & Tiering (For Dynamic Config)
+    tier: {
+      type: String,
+      enum: ["FREE", "PRO", "ENTERPRISE"],
+      default: "FREE",
+      index: true,
+    },
+
     // Subscription reference
     subscription: {
       type: Schema.Types.ObjectId,
@@ -107,6 +137,36 @@ const userSchema = new Schema(
       type: Boolean,
       default: false,
     },
+
+    // Customer association (only for Customer role)
+    merchantId: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      index: true,
+    },
+
+    // CRM / Insights tracking for customers
+    stats: {
+      totalOrders: {
+        type: Number,
+        default: 0,
+      },
+      totalSpent: {
+        type: Number,
+        default: 0,
+      },
+      lastVisitDate: {
+        type: Date,
+      },
+      averageOrderValue: {
+        type: Number,
+        default: 0,
+      },
+      preferredPaymentMethod: {
+        type: String,
+        enum: ["CASH", "UPI", "CARD", "KHATA"],
+      },
+    }
   },
   {
     timestamps: true,

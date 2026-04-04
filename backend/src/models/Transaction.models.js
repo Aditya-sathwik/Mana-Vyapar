@@ -6,6 +6,11 @@ const transactionSchema = new Schema(
     transactionNumber: {
       type: String,
       unique: true,
+      default: function() {
+        const random = Math.floor(1000 + Math.random() * 9000);
+        const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+        return `TRX-${dateStr}-${random}`;
+      },
       required: true,
       index: true,
     },
@@ -22,14 +27,27 @@ const transactionSchema = new Schema(
     // Direct link to the merchant's customer list
     customerId: {
       type: Schema.Types.ObjectId,
-      ref: "Customer",
+      refPath: "customerModel",
       index: true,
+    },
+    customerModel: {
+      type: String,
+      required: true,
+      enum: ["Customer", "User"],
+      default: "Customer"
     },
 
     // Link to Khata for credit/debit tracking, or stays null for anonymous walk-ins
     khataId: {
       type: Schema.Types.ObjectId,
       ref: "Khata",
+      index: true,
+    },
+
+    // 💡 Link back to the original order (if any)
+    orderId: {
+      type: Schema.Types.ObjectId,
+      ref: "Order",
       index: true,
     },
 
@@ -153,7 +171,7 @@ const transactionSchema = new Schema(
     // Transaction lifecycle
     type: {
       type: String,
-      enum: ["SALE", "RETURN", "EXCHANGE", "ADJUSTMENT", "VOID"],
+      enum: ["SALE", "RETURN", "EXCHANGE", "ADJUSTMENT", "VOID", "REFUND"],
       default: "SALE",
       index: true,
     },
@@ -186,15 +204,7 @@ transactionSchema.index({ merchantId: 1, createdAt: -1 });
 transactionSchema.index({ merchantId: 1, type: 1 });
 transactionSchema.index({ "payment.method": 1 });
 
-// Helper to generate a unique readable transaction ID
-transactionSchema.pre("save", async function (next) {
-  if (this.isNew && !this.transactionNumber) {
-    const random = Math.floor(1000 + Math.random() * 9000);
-    const dateStr = new Date().toISOString().slice(0,10).replace(/-/g, '');
-    this.transactionNumber = `TRX-${dateStr}-${random}`;
-  }
-  next();
-});
+
 
 // Auto-calculate financial summaries before saving
 transactionSchema.pre("save", function (next) {
