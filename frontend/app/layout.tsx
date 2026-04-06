@@ -39,6 +39,7 @@ export default function RootLayout({
             defaultTheme="dark"
             enableSystem
             disableTransitionOnChange
+            storageKey="merchant-theme"
           >
             <LanguageProvider>
               <AuthProvider>

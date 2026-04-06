@@ -77,7 +77,13 @@ export const getStoreBySlug = async (slug) => {
     if (!slug) {
         throw new ApiError(400, "Slug is required");
     }
-    const store = await Store.findOne({ slug });
+
+    // Normalize slug (must match pre-save hook logic: lowercase, alphanumeric/hyphens)
+    const normalizedSlug = slug
+        .toLowerCase()
+        .replace(/[^\w-]+/g, "");
+
+    const store = await Store.findOne({ slug: normalizedSlug });
 
     if (!store) {
         throw new ApiError(404, "Store not found");
@@ -226,3 +232,173 @@ export const updateStoreLogo = async (ownerId, logoLocalPath) => {
     await store.save();
     return store;
 }
+
+
+// ============ WEBSITE BUILDER SERVICES ============
+
+/**
+ * Get the full website builder data for a merchant
+ */
+export const getWebsiteConfig = async (ownerId) => {
+    const store = await Store.findOne({ owner: ownerId });
+    if (!store) {
+        throw new ApiError(404, "Store not found");
+    }
+    return {
+        _id: store._id,
+        name: store.name,
+        slug: store.slug,
+        description: store.description,
+        logo: store.logo,
+        theme: store.theme,
+        sections: (store.sections || []).sort((a, b) => a.order - b.order),
+        announcementBar: store.announcementBar || {},
+        footerConfig: store.footerConfig || {},
+        seoConfig: store.seoConfig || {},
+        customPages: store.customPages || [],
+        popupConfig: store.popupConfig || {},
+        socialLinks: store.socialLinks || {},
+        contactInfo: store.contactInfo || {},
+        corouselImages: store.corouselImages || [],
+    };
+};
+
+/**
+ * Update the entire website configuration
+ */
+export const updateWebsiteConfig = async (ownerId, websiteData) => {
+    const store = await Store.findOne({ owner: ownerId });
+    if (!store) {
+        throw new ApiError(404, "Store not found");
+    }
+
+    const {
+        sections,
+        announcementBar,
+        footerConfig,
+        seoConfig,
+        customPages,
+        popupConfig,
+        theme,
+        name,
+        description,
+    } = websiteData;
+
+    if (sections !== undefined) store.sections = sections;
+    if (announcementBar !== undefined) store.announcementBar = announcementBar;
+    if (footerConfig !== undefined) store.footerConfig = footerConfig;
+    if (seoConfig !== undefined) store.seoConfig = seoConfig;
+    if (customPages !== undefined) store.customPages = customPages;
+    if (popupConfig !== undefined) store.popupConfig = popupConfig;
+    if (theme !== undefined) store.theme = { ...store.theme?.toObject?.() || store.theme || {}, ...theme };
+    if (name !== undefined) store.name = name;
+    if (description !== undefined) store.description = description;
+
+    await store.save();
+    return store;
+};
+
+/**
+ * Add a new section to the website
+ */
+export const addSection = async (ownerId, sectionData) => {
+    const store = await Store.findOne({ owner: ownerId });
+    if (!store) {
+        throw new ApiError(404, "Store not found");
+    }
+
+    // Set the order to be the last in the list
+    sectionData.order = store.sections ? store.sections.length : 0;
+    store.sections.push(sectionData);
+    await store.save();
+    return store;
+};
+
+/**
+ * Update a specific section
+ */
+export const updateSection = async (ownerId, sectionId, sectionData) => {
+    const store = await Store.findOne({ owner: ownerId });
+    if (!store) {
+        throw new ApiError(404, "Store not found");
+    }
+
+    const sectionIndex = store.sections.findIndex(
+        (s) => s._id.toString() === sectionId
+    );
+
+    if (sectionIndex === -1) {
+        throw new ApiError(404, "Section not found");
+    }
+
+    // Merge the updates
+    Object.keys(sectionData).forEach((key) => {
+        store.sections[sectionIndex][key] = sectionData[key];
+    });
+
+    await store.save();
+    return store;
+};
+
+/**
+ * Delete a section
+ */
+export const deleteSection = async (ownerId, sectionId) => {
+    const store = await Store.findOne({ owner: ownerId });
+    if (!store) {
+        throw new ApiError(404, "Store not found");
+    }
+
+    store.sections = store.sections.filter(
+        (s) => s._id.toString() !== sectionId
+    );
+
+    // Re-order remaining sections
+    store.sections.forEach((s, i) => {
+        s.order = i;
+    });
+
+    await store.save();
+    return store;
+};
+
+/**
+ * Reorder sections via array of { id, order }
+ */
+export const reorderSections = async (ownerId, orderMap) => {
+    const store = await Store.findOne({ owner: ownerId });
+    if (!store) {
+        throw new ApiError(404, "Store not found");
+    }
+
+    orderMap.forEach(({ id, order }) => {
+        const section = store.sections.find((s) => s._id.toString() === id);
+        if (section) {
+            section.order = order;
+        }
+    });
+
+    store.sections.sort((a, b) => a.order - b.order);
+    await store.save();
+    return store;
+};
+
+/**
+ * Toggle section visibility
+ */
+export const toggleSectionVisibility = async (ownerId, sectionId) => {
+    const store = await Store.findOne({ owner: ownerId });
+    if (!store) {
+        throw new ApiError(404, "Store not found");
+    }
+
+    const section = store.sections.find((s) => s._id.toString() === sectionId);
+    if (!section) {
+        throw new ApiError(404, "Section not found");
+    }
+
+    section.isVisible = !section.isVisible;
+    await store.save();
+    return store;
+};
+

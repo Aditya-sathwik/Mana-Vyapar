@@ -43,6 +43,7 @@ app.use('/api/v1/users', userRouter);
 app.use('/api/v1/products', productRouter);
 app.use('/api/v1/khata', khataRouter);
 app.use('/api/v1/stores', storeRouter);
+app.use('/api/v1/store', storeRouter);
 app.use('/api/v1/categories', categoryRouter);
 app.use('/api/v1/transactions', transactionRouter);
 app.use('/api/v1/coupons', couponRouter);

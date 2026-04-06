@@ -1,25 +1,19 @@
 import { configureStore } from '@reduxjs/toolkit';
-import authReducer from './slices/authSlice';
 import cartReducer from './slices/cartSlice';
 import productReducer from './slices/productSlice';
+import authReducer from './slices/authSlice';
 import orderReducer from './slices/orderSlice';
 import storeReducer from './slices/storeSlice';
-import categoryReducer from './slices/categorySlice';
 
-export const store = configureStore({
+export const storefrontStore = configureStore({
   reducer: {
-    auth: authReducer,
     cart: cartReducer,
-    products: productReducer,
-    orders: orderReducer,
+    product: productReducer,
+    auth: authReducer,
+    order: orderReducer,
     store: storeReducer,
-    categories: categoryReducer,
   },
-  middleware: (getDefaultMiddleware) =>
-    getDefaultMiddleware({
-      serializableCheck: false,
-    }),
 });
 
-export type RootState = ReturnType<typeof store.getState>;
-export type AppDispatch = typeof store.dispatch;
+export type StorefrontRootState = ReturnType<typeof storefrontStore.getState>;
+export type StorefrontAppDispatch = typeof storefrontStore.dispatch;

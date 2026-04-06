@@ -70,7 +70,7 @@
   /* Vibrant Emerald */
   --primary-foreground: #003824;
   --secondary: #171f33;
-  --secondary_foreground: #dee5ff;
+  --secondary-foreground: #dee5ff;
   --muted: #141f38;
   --muted-foreground: #a3aac4;
   --accent: #141f38;
@@ -213,4 +213,78 @@
 
 ::-webkit-scrollbar-thumb {
   @apply bg-slate-400/20 rounded-full hover:bg-slate-400/40 transition-colors;
+}
+
+/* ============================================================ */
+/* PREMIUM STOREFRONT UI SYSTEM - SCOPED TO AVOID MERCHANT UI CONFLICTS */
+/* ============================================================ */
+
+.storefront-ui {
+  /* Premium Colors */
+  --sf-bg: #0b101b;
+  --sf-bg-alt: #0e1422;
+  --sf-card: #111827;
+  --sf-card-border: rgba(255, 255, 255, 0.08);
+  --sf-text: #f1f5f9;
+  --sf-text-muted: #94a3b8;
+  --sf-accent: #10b981; /* Emerald */
+  --sf-accent-alt: #f59e0b; /* Amber */
+  
+  /* Spacing Scale */
+  --sf-s-xs: 8px;
+  --sf-s-sm: 16px;
+  --sf-s-md: 24px;
+  --sf-s-lg: 32px;
+  --sf-s-xl: 48px;
+  --sf-s-xxl: 64px;
+}
+
+.storefront-ui.light {
+  --sf-bg: #f8fafc;
+  --sf-bg-alt: #f1f5f9;
+  --sf-card: #ffffff;
+  --sf-card-border: rgba(0, 0, 0, 0.05);
+  --sf-text: #0f172a;
+  --sf-text-muted: #64748b;
+}
+
+@layer components {
+  /* Scoped Premium Components */
+  .sf-container {
+    @apply max-w-[1400px] mx-auto w-full px-4 md:px-10;
+  }
+
+  .sf-section {
+    @apply py-[60px] md:py-[80px] px-2 md:px-[40px];
+  }
+
+  .sf-card {
+    background-color: var(--sf-card);
+    border: 1px solid var(--sf-card-border);
+    @apply rounded-[16px] p-4 shadow-[0_10px_30px_rgba(0,0,0,0.4)] transition-all duration-300 overflow-hidden relative;
+  }
+
+  .sf-card:hover {
+    @apply -translate-y-[6px] shadow-[0_20px_40px_rgba(0,0,0,0.5)];
+    border-color: rgba(255, 255, 255, 0.15);
+  }
+
+  .sf-glass {
+    @apply bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl;
+  }
+
+  .sf-btn-premium {
+    @apply px-8 py-4 rounded-full font-bold text-white transition-all duration-300 hover:scale-[1.05] active:scale-[0.95] shadow-lg flex items-center justify-center gap-3 overflow-hidden relative;
+  }
+
+  .sf-hero-overlay {
+    background: linear-gradient(to bottom, rgba(0,0,0,0.6), rgba(0,0,0,0.8));
+    @apply absolute inset-0 z-0;
+  }
+}
+
+@layer utilities {
+  .sf-text-shadow {
+    text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+  }
 }

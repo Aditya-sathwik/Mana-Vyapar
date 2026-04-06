@@ -9,7 +9,7 @@ let isRefreshing = false;
 export async function apiFetch(endpoint: string, options: ApiOptions = {}): Promise<any> {
   const url = `${BASE_URL}${endpoint}`;
   const retryCount = (options as any)._retryCount || 0;
-  
+
   const headers: HeadersInit = {
     ...options.headers,
   };
@@ -30,12 +30,12 @@ export async function apiFetch(endpoint: string, options: ApiOptions = {}): Prom
 
   try {
     const response = await fetch(url, fetchOptions);
-    
+
     // Handle 401 Unauthorized - Attempt Token Refresh
     if (
-      response.status === 401 && 
-      !url.includes("/users/refresh-token") && 
-      !url.includes("/users/login") && 
+      response.status === 401 &&
+      !url.includes("/users/refresh-token") &&
+      !url.includes("/users/login") &&
       retryCount < 1
     ) {
       if (!isRefreshing) {

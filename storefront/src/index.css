@@ -1,0 +1,86 @@
+@import "tailwindcss";
+
+:root {
+  /* Mana Vyapar Design System Tokens - LIGHT */
+  --sf-background: #f9f9fa;
+  --sf-primary: #0058cd;
+  --sf-primary-container: #4784fd;
+  --sf-on-primary: #f9f8ff;
+  --sf-surface: #ffffff;
+  --sf-surface-low: #f2f4f5;
+  --sf-text: #2f3335;
+  --sf-text-muted: #5b6062;
+  --sf-outline: rgba(174, 178, 181, 0.2);
+  --sf-accent: #005BD3;
+  
+  --sf-radius-sm: 0.25rem;
+  --sf-radius-md: 0.5rem;
+  --sf-radius-lg: 1rem;
+  --sf-radius-xl: 1.5rem;
+}
+
+.dark {
+  /* Mana Vyapar Design System Tokens - DARK (Atelier Noir) */
+  --sf-background: #0a0a0b;
+  --sf-primary: #3d8bff;
+  --sf-primary-container: #1e3a8a;
+  --sf-on-primary: #ffffff;
+  --sf-surface: #141416;
+  --sf-surface-low: #1c1c1e;
+  --sf-text: #f0f2f5;
+  --sf-text-muted: #9ca3af;
+  --sf-outline: rgba(255, 255, 255, 0.08);
+  --sf-accent: #60a5fa;
+}
+
+@theme {
+  --color-sf-background: var(--sf-background);
+  --color-sf-primary: var(--sf-primary);
+  --color-sf-primary-container: var(--sf-primary-container);
+  --color-sf-on-primary: var(--sf-on-primary);
+  --color-sf-surface: var(--sf-surface);
+  --color-sf-surface-low: var(--sf-surface-low);
+  --color-sf-text: var(--sf-text);
+  --color-sf-text-muted: var(--sf-text-muted);
+  --color-sf-outline: var(--sf-outline);
+  --color-sf-accent: var(--sf-accent);
+}
+
+@layer base {
+  body {
+    @apply bg-sf-background text-sf-text antialiased;
+    font-family: 'Inter', system-ui, sans-serif;
+    transition: background-color 0.4s cubic-bezier(0.4, 0, 0.2, 1), 
+                color 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply text-sf-text;
+    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  }
+}
+
+/* Glassmorphism utility - Theme Aware */
+.glass {
+  @apply backdrop-blur-xl border;
+  background-color: var(--sf-surface);
+  border-color: var(--sf-outline);
+  opacity: 0.85;
+}
+
+/* Gradient utility */
+.sf-gradient {
+  background: linear-gradient(135deg, var(--sf-primary) 0%, var(--sf-primary-container) 100%);
+}
+
+/* Custom Scrollbar for Dark Mode */
+.dark ::-webkit-scrollbar {
+  width: 8px;
+}
+.dark ::-webkit-scrollbar-track {
+  background: var(--sf-background);
+}
+.dark ::-webkit-scrollbar-thumb {
+  background: var(--sf-surface-low);
+  border-radius: 4px;
+}

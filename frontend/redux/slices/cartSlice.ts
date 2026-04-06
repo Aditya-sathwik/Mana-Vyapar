@@ -6,71 +6,72 @@ export interface CartItem {
   price: number;
   quantity: number;
   image: string;
+  merchantId: string;
+  variant?: string;
 }
 
 interface CartState {
   items: CartItem[];
-  totalQuantity: number;
   totalAmount: number;
+  totalQuantity: number;
 }
 
 const initialState: CartState = {
-  items: [],
-  totalQuantity: 0,
+  items: typeof window !== 'undefined' ? JSON.parse(localStorage.getItem('cartItems') || '[]') : [],
   totalAmount: 0,
+  totalQuantity: 0,
+};
+
+// Helper function to calculate totals
+const calculateTotals = (state: CartState) => {
+  state.totalQuantity = state.items.reduce((total, item) => total + item.quantity, 0);
+  state.totalAmount = state.items.reduce((total, item) => total + (item.price * item.quantity), 0);
+  if (typeof window !== 'undefined') {
+    localStorage.setItem('cartItems', JSON.stringify(state.items));
+  }
 };
 
 const cartSlice = createSlice({
   name: 'cart',
   initialState,
   reducers: {
-    addToCart(state, action: PayloadAction<Omit<CartItem, 'quantity'> & { quantity?: number }>) {
-      const newItem = action.payload;
-      const existingItem = state.items.find(item => item.id === newItem.id);
-      const addQuantity = newItem.quantity || 1;
-      
-      state.totalQuantity += addQuantity;
-      state.totalAmount += newItem.price * addQuantity;
-      
-      if (!existingItem) {
-        state.items.push({
-          ...newItem,
-          quantity: addQuantity,
-        });
+    addToCart: (state, action: PayloadAction<CartItem>) => {
+      const existingItem = state.items.find(item => item.id === action.payload.id);
+      if (existingItem) {
+        existingItem.quantity += action.payload.quantity;
       } else {
-        existingItem.quantity += addQuantity;
+        state.items.push(action.payload);
       }
+      calculateTotals(state);
     },
-    removeFromCart(state, action: PayloadAction<string>) {
-      const id = action.payload;
-      const existingItem = state.items.find(item => item.id === id);
-      if (existingItem) {
-        state.totalQuantity -= existingItem.quantity;
-        state.totalAmount -= existingItem.price * existingItem.quantity;
-        state.items = state.items.filter(item => item.id !== id);
-      }
+    removeFromCart: (state, action: PayloadAction<string>) => {
+      state.items = state.items.filter(item => item.id !== action.payload);
+      calculateTotals(state);
     },
-    updateQuantity(state, action: PayloadAction<{ id: string; quantity: number }>) {
-      const { id, quantity } = action.payload;
-      const existingItem = state.items.find(item => item.id === id);
-      if (existingItem) {
-        const quantityDiff = quantity - existingItem.quantity;
-        state.totalQuantity += quantityDiff;
-        state.totalAmount += existingItem.price * quantityDiff;
-        existingItem.quantity = quantity;
-        
-        if (existingItem.quantity <= 0) {
-          state.items = state.items.filter(item => item.id !== id);
+    updateQuantity: (state, action: PayloadAction<{ id: string; quantity: number }>) => {
+      const item = state.items.find(item => item.id === action.payload.id);
+      if (item) {
+        item.quantity = action.payload.quantity;
+        if (item.quantity <= 0) {
+          state.items = state.items.filter(i => i.id !== action.payload.id);
         }
       }
+      calculateTotals(state);
     },
-    clearCart(state) {
+    clearCart: (state) => {
       state.items = [];
-      state.totalQuantity = 0;
       state.totalAmount = 0;
+      state.totalQuantity = 0;
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('cartItems');
+      }
     },
+    // Initialize or sync with localStorage (sometimes needed for SSR)
+    syncCart: (state) => {
+        calculateTotals(state);
+    }
   },
 });
 
-export const { addToCart, removeFromCart, updateQuantity, clearCart } = cartSlice.actions;
+export const { addToCart, removeFromCart, updateQuantity, clearCart, syncCart } = cartSlice.actions;
 export default cartSlice.reducer;

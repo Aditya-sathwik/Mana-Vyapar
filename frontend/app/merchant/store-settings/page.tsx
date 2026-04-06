@@ -18,7 +18,8 @@ import {
    Plus,
    Loader2,
    X,
-   CalendarClock
+   CalendarClock,
+   RefreshCcw
 } from "lucide-react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -166,7 +167,13 @@ export default function StoreSettingsPage() {
             fetchStore()
          }
       } catch (error: any) {
-         toast.error(error.message || "Failed to create store")
+         if (error.message.includes("409") || error.message.includes("exists")) {
+            toast.error("You already have a store! Refreshing...")
+            setIsCreateModalOpen(false)
+            fetchStore()
+         } else {
+            toast.error(error.message || "Failed to create store")
+         }
       } finally {
          setIsCreating(false)
       }
@@ -240,18 +247,27 @@ export default function StoreSettingsPage() {
                   Manage your store identity, contact details, and business profile.
                </p>
             </div>
-            <Button
-               onClick={handleSave}
-               disabled={isSaving}
-               className="h-14 px-8 bg-primary hover:bg-emerald-600 text-white rounded-2xl font-black transition-all hover:scale-105 active:scale-95 shadow-2xl shadow-primary/20 uppercase tracking-widest text-xs"
-            >
-               {isSaving ? (
-                  <Loader2 className="h-5 w-5 mr-3 animate-spin" />
-               ) : (
-                  <Save className="h-5 w-5 mr-3 stroke-[3] text-white" />
-               )}
-               Save All Changes
-            </Button>
+            <div className="flex items-center gap-3">
+               <Button
+                  onClick={fetchStore}
+                  variant="outline"
+                  className="h-14 px-6 border-border text-foreground rounded-2xl font-black bg-muted/20 hover:bg-muted transition-all active:scale-95"
+               >
+                  <RefreshCcw className={cn("h-5 w-5", isLoading && "animate-spin")} />
+               </Button>
+               <Button
+                  onClick={handleSave}
+                  disabled={isSaving}
+                  className="h-14 px-8 bg-primary hover:bg-emerald-600 text-white rounded-2xl font-black transition-all hover:scale-105 active:scale-95 shadow-2xl shadow-primary/20 uppercase tracking-widest text-xs"
+               >
+                  {isSaving ? (
+                     <Loader2 className="h-5 w-5 mr-3 animate-spin" />
+                  ) : (
+                     <Save className="h-5 w-5 mr-3 stroke-[3] text-white" />
+                  )}
+                  Save All Changes
+               </Button>
+            </div>
          </div>
 
          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">

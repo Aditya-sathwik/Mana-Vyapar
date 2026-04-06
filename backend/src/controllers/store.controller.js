@@ -118,6 +118,83 @@ const updateStoreLogo = asyncHandler(async (req, res) => {
     );
 });
 
+
+// ============ WEBSITE BUILDER CONTROLLERS ============
+
+/**
+ * Get the full website builder config for the authenticated merchant
+ */
+const getWebsiteConfig = asyncHandler(async (req, res) => {
+    const data = await storeService.getWebsiteConfig(req.user._id);
+    return res.status(200).json(
+        new ApiResponse(200, data, "Website config fetched successfully")
+    );
+});
+
+/**
+ * Update the website configuration (sections, theme, SEO, etc.)
+ */
+const updateWebsiteConfig = asyncHandler(async (req, res) => {
+    const store = await storeService.updateWebsiteConfig(req.user._id, req.body);
+    return res.status(200).json(
+        new ApiResponse(200, store, "Website configuration saved successfully")
+    );
+});
+
+/**
+ * Add a new section to the website
+ */
+const addSection = asyncHandler(async (req, res) => {
+    const store = await storeService.addSection(req.user._id, req.body);
+    return res.status(201).json(
+        new ApiResponse(201, store, "Section added successfully")
+    );
+});
+
+/**
+ * Update a specific section
+ */
+const updateSectionById = asyncHandler(async (req, res) => {
+    const { sectionId } = req.params;
+    const store = await storeService.updateSection(req.user._id, sectionId, req.body);
+    return res.status(200).json(
+        new ApiResponse(200, store, "Section updated successfully")
+    );
+});
+
+/**
+ * Delete a section
+ */
+const deleteSectionById = asyncHandler(async (req, res) => {
+    const { sectionId } = req.params;
+    const store = await storeService.deleteSection(req.user._id, sectionId);
+    return res.status(200).json(
+        new ApiResponse(200, store, "Section removed successfully")
+    );
+});
+
+/**
+ * Reorder sections
+ */
+const reorderSections = asyncHandler(async (req, res) => {
+    const { orderMap } = req.body; // [{ id, order }, ...]
+    const store = await storeService.reorderSections(req.user._id, orderMap);
+    return res.status(200).json(
+        new ApiResponse(200, store, "Sections reordered successfully")
+    );
+});
+
+/**
+ * Toggle section visibility
+ */
+const toggleSectionVisibility = asyncHandler(async (req, res) => {
+    const { sectionId } = req.params;
+    const store = await storeService.toggleSectionVisibility(req.user._id, sectionId);
+    return res.status(200).json(
+        new ApiResponse(200, store, "Section visibility toggled")
+    );
+});
+
 export {
     createStore,
     updateStore,
@@ -127,5 +204,13 @@ export {
     deleteStore,
     uploadCarousel,
     deleteCarouselImage,
-    updateStoreLogo
+    updateStoreLogo,
+    getWebsiteConfig,
+    updateWebsiteConfig,
+    addSection,
+    updateSectionById,
+    deleteSectionById,
+    reorderSections,
+    toggleSectionVisibility
 };
+

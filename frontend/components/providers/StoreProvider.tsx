@@ -1,21 +1,29 @@
-'use client'
+'use client';
 
-import { useRef } from 'react'
-import { Provider } from 'react-redux'
-import { makeStore, AppStore } from '../../lib/store'
+import { useRef } from 'react';
+import { Provider } from 'react-redux';
+import { storefrontStore } from '../../redux/store';
+import { usePathname } from 'next/navigation';
+import { makeStore } from '../../lib/store';
 
 export default function StoreProvider({
   children,
 }: {
-  children: React.ReactNode
+  children: React.ReactNode;
 }) {
-  const storeRef = useRef<AppStore>(null)
+  const pathname = usePathname();
+  const isStorefront = pathname.startsWith('/store/');
+  
+  const merchantStoreRef = useRef<any>(null);
 
-  // eslint-disable-next-line react-hooks/rules-of-hooks
-  if (!storeRef.current) {
-    // Create the store instance the first time this renders
-    storeRef.current = makeStore()
+  if (!isStorefront && !merchantStoreRef.current) {
+    merchantStoreRef.current = makeStore();
   }
 
-  return <Provider store={storeRef.current}>{children}</Provider>
+  // Use storefrontStore singleton for /store paths, else per-request merchantStore
+  const store = isStorefront ? storefrontStore : merchantStoreRef.current;
+
+  if (!store) return <>{children}</>;
+
+  return <Provider store={store}>{children}</Provider>;
 }

@@ -4,7 +4,14 @@ import {
     getStoreBySlug, 
     updateStoreSettings, 
     getMyStore,
-    updateStoreLogo
+    updateStoreLogo,
+    getWebsiteConfig,
+    updateWebsiteConfig,
+    addSection,
+    updateSectionById,
+    deleteSectionById,
+    reorderSections,
+    toggleSectionVisibility
 } from "../controllers/store.controller.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 import { upload } from "../middlewares/multer.middleware.js";
@@ -12,14 +19,22 @@ import { upload } from "../middlewares/multer.middleware.js";
 const router = express.Router();
 
 // Private routes (require authentication)
-router.use(verifyJWT);
+router.route("/me").get(verifyJWT, getMyStore);
+router.route("/").post(verifyJWT, createStore);
+router.route("/update").patch(verifyJWT, updateStoreSettings);
+router.route("/logo").patch(verifyJWT, upload.single("logo"), updateStoreLogo);
 
-router.route("/").post(createStore);
-router.route("/me").get(getMyStore);
-router.route("/update").patch(updateStoreSettings);
-router.route("/logo").patch(upload.single("logo"), updateStoreLogo);
+// ===== Website Builder Routes =====
+router.route("/website").get(verifyJWT, getWebsiteConfig);
+router.route("/website").patch(verifyJWT, updateWebsiteConfig);
+router.route("/website/sections").post(verifyJWT, addSection);
+router.route("/website/sections/reorder").patch(verifyJWT, reorderSections);
+router.route("/website/sections/:sectionId").patch(verifyJWT, updateSectionById);
+router.route("/website/sections/:sectionId").delete(verifyJWT, deleteSectionById);
+router.route("/website/sections/:sectionId/toggle").patch(verifyJWT, toggleSectionVisibility);
 
-// Public route to fetch store details using slug (Place after specific routes)
+// Public route to fetch store details using slug 
+// Must be PLACED AT THE VERY END so it acts as a dynamic fallback and doesn't intercept specific routes like /website
 router.route("/:slug").get(getStoreBySlug);
 
 export default router;
