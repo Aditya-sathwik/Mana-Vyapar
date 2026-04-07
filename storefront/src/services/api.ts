@@ -4,8 +4,11 @@ import axios from 'axios';
  * Base Axios instance for the Mana Vyapar storefront.
  * Configured for multi-tenant merchant queries and centralized error handling.
  */
+const baseURL = import.meta.env.VITE_API_BASE_URL || 'https://api.manavyapar.com/v1';
+console.log(`📡 [API]: Initializing with Base URL -> ${baseURL}`);
+
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'https://api.manavyapar.com/v1',
+  baseURL,
   headers: {
     'Content-Type': 'application/json',
   }

@@ -12,11 +12,16 @@
   --sf-text-muted: #5b6062;
   --sf-outline: rgba(174, 178, 181, 0.2);
   --sf-accent: #005BD3;
+  --sf-secondary: #0f172a;
   
-  --sf-radius-sm: 0.25rem;
-  --sf-radius-md: 0.5rem;
-  --sf-radius-lg: 1rem;
-  --sf-radius-xl: 1.5rem;
+  /* Dynamic Tokens (Overridden by useStoreConfig) */
+  --sf-radius: 12px;
+  --sf-font-family: 'Inter', system-ui, sans-serif;
+  
+  --sf-radius-sm: calc(var(--sf-radius) * 0.25);
+  --sf-radius-md: calc(var(--sf-radius) * 0.5);
+  --sf-radius-lg: var(--sf-radius);
+  --sf-radius-xl: calc(var(--sf-radius) * 1.5);
 }
 
 .dark {
@@ -49,14 +54,14 @@
 @layer base {
   body {
     @apply bg-sf-background text-sf-text antialiased;
-    font-family: 'Inter', system-ui, sans-serif;
+    font-family: var(--sf-font-family);
     transition: background-color 0.4s cubic-bezier(0.4, 0, 0.2, 1), 
                 color 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   }
   
   h1, h2, h3, h4, h5, h6 {
     @apply text-sf-text;
-    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+    font-family: var(--sf-font-family);
   }
 }
 
@@ -83,4 +88,12 @@
 .dark ::-webkit-scrollbar-thumb {
   background: var(--sf-surface-low);
   border-radius: 4px;
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }

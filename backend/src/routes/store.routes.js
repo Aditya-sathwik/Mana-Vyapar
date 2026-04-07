@@ -11,7 +11,8 @@ import {
     updateSectionById,
     deleteSectionById,
     reorderSections,
-    toggleSectionVisibility
+    toggleSectionVisibility,
+    deployWebsite
 } from "../controllers/store.controller.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 import { upload } from "../middlewares/multer.middleware.js";
@@ -32,6 +33,7 @@ router.route("/website/sections/reorder").patch(verifyJWT, reorderSections);
 router.route("/website/sections/:sectionId").patch(verifyJWT, updateSectionById);
 router.route("/website/sections/:sectionId").delete(verifyJWT, deleteSectionById);
 router.route("/website/sections/:sectionId/toggle").patch(verifyJWT, toggleSectionVisibility);
+router.route("/website/deploy").post(verifyJWT, deployWebsite);
 
 // Public route to fetch store details using slug 
 // Must be PLACED AT THE VERY END so it acts as a dynamic fallback and doesn't intercept specific routes like /website

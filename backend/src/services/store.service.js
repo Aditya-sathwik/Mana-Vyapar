@@ -244,19 +244,33 @@ export const getWebsiteConfig = async (ownerId) => {
     if (!store) {
         throw new ApiError(404, "Store not found");
     }
+
+    // Initialize draftConfig if it's missing (for existing stores)
+    if (!store.draftConfig || !store.draftConfig.sections || store.draftConfig.sections.length === 0) {
+        store.draftConfig = {
+            sections: store.sections || [],
+            theme: store.theme || {},
+            announcementBar: store.announcementBar || {},
+            footerConfig: store.footerConfig || {},
+            seoConfig: store.seoConfig || {},
+            lastSaved: new Date()
+        };
+        await store.save();
+    }
+
+    const draft = store.draftConfig;
+
     return {
         _id: store._id,
         name: store.name,
         slug: store.slug,
         description: store.description,
         logo: store.logo,
-        theme: store.theme,
-        sections: (store.sections || []).sort((a, b) => a.order - b.order),
-        announcementBar: store.announcementBar || {},
-        footerConfig: store.footerConfig || {},
-        seoConfig: store.seoConfig || {},
-        customPages: store.customPages || [],
-        popupConfig: store.popupConfig || {},
+        theme: draft.theme || store.theme || {},
+        sections: (draft.sections || []).sort((a, b) => a.order - b.order),
+        announcementBar: draft.announcementBar || store.announcementBar || {},
+        footerConfig: draft.footerConfig || store.footerConfig || {},
+        seoConfig: draft.seoConfig || store.seoConfig || {},
         socialLinks: store.socialLinks || {},
         contactInfo: store.contactInfo || {},
         corouselImages: store.corouselImages || [],
@@ -277,23 +291,30 @@ export const updateWebsiteConfig = async (ownerId, websiteData) => {
         announcementBar,
         footerConfig,
         seoConfig,
-        customPages,
-        popupConfig,
         theme,
         name,
         description,
     } = websiteData;
 
-    if (sections !== undefined) store.sections = sections;
-    if (announcementBar !== undefined) store.announcementBar = announcementBar;
-    if (footerConfig !== undefined) store.footerConfig = footerConfig;
-    if (seoConfig !== undefined) store.seoConfig = seoConfig;
-    if (customPages !== undefined) store.customPages = customPages;
-    if (popupConfig !== undefined) store.popupConfig = popupConfig;
-    if (theme !== undefined) store.theme = { ...store.theme?.toObject?.() || store.theme || {}, ...theme };
+    // Ensure draftConfig exists
+    if (!store.draftConfig) store.draftConfig = {};
+
+    if (sections !== undefined) store.draftConfig.sections = sections;
+    if (announcementBar !== undefined) store.draftConfig.announcementBar = announcementBar;
+    if (footerConfig !== undefined) store.draftConfig.footerConfig = footerConfig;
+    if (seoConfig !== undefined) store.draftConfig.seoConfig = seoConfig;
+    
+    if (theme !== undefined) {
+        store.draftConfig.theme = { 
+            ...store.draftConfig.theme?.toObject?.() || store.draftConfig.theme || {}, 
+            ...theme 
+        };
+    }
+
     if (name !== undefined) store.name = name;
     if (description !== undefined) store.description = description;
 
+    store.draftConfig.lastSaved = new Date();
     await store.save();
     return store;
 };
@@ -307,9 +328,12 @@ export const addSection = async (ownerId, sectionData) => {
         throw new ApiError(404, "Store not found");
     }
 
+    if (!store.draftConfig) store.draftConfig = { sections: [] };
+
     // Set the order to be the last in the list
-    sectionData.order = store.sections ? store.sections.length : 0;
-    store.sections.push(sectionData);
+    sectionData.order = store.draftConfig.sections ? store.draftConfig.sections.length : 0;
+    store.draftConfig.sections.push(sectionData);
+    store.draftConfig.lastSaved = new Date();
     await store.save();
     return store;
 };
@@ -323,19 +347,20 @@ export const updateSection = async (ownerId, sectionId, sectionData) => {
         throw new ApiError(404, "Store not found");
     }
 
-    const sectionIndex = store.sections.findIndex(
+    const sectionIndex = store.draftConfig.sections.findIndex(
         (s) => s._id.toString() === sectionId
     );
 
     if (sectionIndex === -1) {
-        throw new ApiError(404, "Section not found");
+        throw new ApiError(404, "Section not found in draft");
     }
 
     // Merge the updates
     Object.keys(sectionData).forEach((key) => {
-        store.sections[sectionIndex][key] = sectionData[key];
+        store.draftConfig.sections[sectionIndex][key] = sectionData[key];
     });
 
+    store.draftConfig.lastSaved = new Date();
     await store.save();
     return store;
 };
@@ -349,15 +374,16 @@ export const deleteSection = async (ownerId, sectionId) => {
         throw new ApiError(404, "Store not found");
     }
 
-    store.sections = store.sections.filter(
+    store.draftConfig.sections = store.draftConfig.sections.filter(
         (s) => s._id.toString() !== sectionId
     );
 
     // Re-order remaining sections
-    store.sections.forEach((s, i) => {
+    store.draftConfig.sections.forEach((s, i) => {
         s.order = i;
     });
 
+    store.draftConfig.lastSaved = new Date();
     await store.save();
     return store;
 };
@@ -372,13 +398,14 @@ export const reorderSections = async (ownerId, orderMap) => {
     }
 
     orderMap.forEach(({ id, order }) => {
-        const section = store.sections.find((s) => s._id.toString() === id);
+        const section = store.draftConfig.sections.find((s) => s._id.toString() === id);
         if (section) {
             section.order = order;
         }
     });
 
-    store.sections.sort((a, b) => a.order - b.order);
+    store.draftConfig.sections.sort((a, b) => a.order - b.order);
+    store.draftConfig.lastSaved = new Date();
     await store.save();
     return store;
 };
@@ -392,13 +419,39 @@ export const toggleSectionVisibility = async (ownerId, sectionId) => {
         throw new ApiError(404, "Store not found");
     }
 
-    const section = store.sections.find((s) => s._id.toString() === sectionId);
+    const section = store.draftConfig.sections.find((s) => s._id.toString() === sectionId);
     if (!section) {
         throw new ApiError(404, "Section not found");
     }
 
     section.isVisible = !section.isVisible;
+    store.draftConfig.lastSaved = new Date();
     await store.save();
     return store;
 };
 
+/**
+ * Deploy the draft website configuration to the live storefront
+ */
+export const deployWebsite = async (ownerId) => {
+    const store = await Store.findOne({ owner: ownerId });
+    if (!store) {
+        throw new ApiError(404, "Store not found");
+    }
+
+    if (!store.draftConfig) {
+        throw new ApiError(400, "No draft configuration found to deploy");
+    }
+
+    // Atomic deployment: Copy draft fields to live fields
+    const { sections, theme, announcementBar, footerConfig, seoConfig } = store.draftConfig;
+
+    if (sections !== undefined) store.sections = sections;
+    if (theme !== undefined) store.theme = theme;
+    if (announcementBar !== undefined) store.announcementBar = announcementBar;
+    if (footerConfig !== undefined) store.footerConfig = footerConfig;
+    if (seoConfig !== undefined) store.seoConfig = seoConfig;
+
+    await store.save();
+    return store;
+};

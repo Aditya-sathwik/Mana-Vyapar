@@ -201,12 +201,8 @@ const storeSchema = new Schema(
       }
     ],
 
-    // ============ WEBSITE BUILDER FIELDS ============
-
-    // Ordered sections for the homepage
+    // ============ WEBSITE BUILDER FIELDS (LIVE) ============
     sections: [sectionSchema],
-
-    // Top announcement bar
     announcementBar: {
       isActive: { type: Boolean, default: false },
       text: { type: String, default: "" },
@@ -214,8 +210,6 @@ const storeSchema = new Schema(
       backgroundColor: { type: String, default: "#059467" },
       textColor: { type: String, default: "#ffffff" },
     },
-
-    // Footer configuration
     footerConfig: {
       copyrightText: { type: String, default: "" },
       showSocialLinks: { type: Boolean, default: true },
@@ -232,8 +226,6 @@ const storeSchema = new Schema(
         },
       ],
     },
-
-    // SEO Configuration
     seoConfig: {
       metaTitle: { type: String, default: "" },
       metaDescription: { type: String, default: "" },
@@ -242,18 +234,39 @@ const storeSchema = new Schema(
       favicon: { type: String, default: "" },
     },
 
-    // Merchant-created custom pages (About, Contact, etc.)
-    customPages: [customPageSchema],
-
-    // Popup/Notification Config
-    popupConfig: {
-      isActive: { type: Boolean, default: false },
-      title: { type: String, default: "" },
-      description: { type: String, default: "" },
-      imageUrl: { type: String, default: "" },
-      buttonText: { type: String, default: "" },
-      buttonLink: { type: String, default: "" },
-      showOnce: { type: Boolean, default: true },
+    // ============ WEBSITE BUILDER DRAFT CONFIG ============
+    draftConfig: {
+      sections: [sectionSchema],
+      theme: {
+        primaryColor: { type: String, default: "#059467" },
+        secondaryColor: { type: String, default: "#0f172a" },
+        accentColor: { type: String, default: "#f59e0b" },
+        fontFamily: { type: String, default: "Inter" },
+        headingFont: { type: String, default: "Manrope" },
+        borderRadius: { type: String, default: "rounded" },
+        darkMode: { type: Boolean, default: false },
+      },
+      announcementBar: {
+        isActive: { type: Boolean, default: false },
+        text: { type: String, default: "" },
+        link: { type: String, default: "" },
+        backgroundColor: { type: String, default: "#059467" },
+        textColor: { type: String, default: "#ffffff" },
+      },
+      footerConfig: {
+        copyrightText: { type: String, default: "" },
+        showSocialLinks: { type: Boolean, default: true },
+        showContactInfo: { type: Boolean, default: true },
+        columns: [{ title: { type: String }, links: [{ label: { type: String }, url: { type: String } }] }],
+      },
+      seoConfig: {
+        metaTitle: { type: String, default: "" },
+        metaDescription: { type: String, default: "" },
+        keywords: [{ type: String }],
+        ogImage: { type: String, default: "" },
+        favicon: { type: String, default: "" },
+      },
+      lastSaved: { type: Date, default: Date.now }
     },
 
     isActive: {

@@ -35,7 +35,10 @@ import {
   ArrowDown,
   Power,
   Sparkles,
-  Zap
+  Zap,
+  Cloud,
+  CheckCircle,
+  Clock
 } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/context/auth-context"
@@ -46,17 +49,22 @@ import { cn } from "@/lib/utils"
 // @ts-ignore
 import * as Vibrant from "node-vibrant/browser"
 import Image from "next/image"
+import { useRef } from "react"
+
 
 export default function WebsiteBuilderPage() {
   const { user } = useAuth()
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
+  const [isSyncing, setIsSyncing] = useState(false)
   const [store, setStore] = useState<any>(null)
 
   // Tabs: sections, theme, branding, seo, footer
   const [activeTab, setActiveTab] = useState<"sections" | "theme" | "branding" | "seo" | "footer">("sections")
   const [previewMode, setPreviewMode] = useState<"mobile" | "desktop">("mobile")
+  const previewRef = useRef<HTMLIFrameElement>(null)
+  const syncTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   // For sections: which one is actively being edited
   const [editingSectionId, setEditingSectionId] = useState<string | null>(null)
@@ -94,10 +102,26 @@ export default function WebsiteBuilderPage() {
         body: JSON.stringify(payload)
       })
       if (res.success) {
-        toast.success("Website saved successfully!")
+        toast.success("Website configuration saved to draft!")
       }
     } catch (error: any) {
       toast.error(error.message || "Failed to save changes")
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  const handleDeploy = async () => {
+    try {
+      setIsSaving(true)
+      const res = await apiFetch("/stores/website/deploy", {
+        method: "POST"
+      })
+      if (res.success) {
+        toast.success("Website deployed successfully! Your changes are now live.")
+      }
+    } catch (error: any) {
+      toast.error(error.message || "Failed to deploy website")
     } finally {
       setIsSaving(false)
     }
@@ -118,21 +142,49 @@ export default function WebsiteBuilderPage() {
     }
   }
 
-  const handleUpdateSection = async (sectionId: string, updates: any) => {
-    try {
-      // Optimistic update locally
-      const updatedSections = store.sections.map((s: any) => s._id === sectionId ? { ...s, ...updates } : s)
-      setStore({ ...store, sections: updatedSections })
+  useEffect(() => {
+    const sendPreviewData = () => {
+      if (previewRef.current?.contentWindow) {
+        previewRef.current.contentWindow.postMessage({
+          type: 'MANA_VYAPAR_WEBSITE_PREVIEW',
+          config: store
+        }, '*');
+      }
+    };
 
-      // Send to server
-      await apiFetch(`/stores/website/sections/${sectionId}`, {
-        method: "PATCH",
-        body: JSON.stringify(updates)
-      })
-    } catch (error: any) {
-      toast.error("Failed to update section")
-      fetchStoreData() // revert
-    }
+    const timer = setTimeout(sendPreviewData, 100);
+    return () => clearTimeout(timer);
+  }, [store]);
+
+  const handleUpdateSection = async (sectionId: string, updates: any) => {
+    // 1. Instant Local Update (Optimistic UI)
+    const currentSection = store.sections.find((s: any) => s._id === sectionId)
+    
+    // Check if anything actually changed
+    const isDifferent = Object.entries(updates).some(([key, value]) => currentSection[key] !== value)
+    if (!isDifferent) return
+
+    const updatedSections = store.sections.map((s: any) => s._id === sectionId ? { ...s, ...updates } : s)
+    setStore({ ...store, sections: updatedSections })
+
+    // 2. Debounced Sync to Backend
+    if (syncTimeoutRef.current) clearTimeout(syncTimeoutRef.current)
+    
+    setIsSyncing(true)
+    syncTimeoutRef.current = setTimeout(async () => {
+      try {
+        await apiFetch(`/stores/website/sections/${sectionId}`, {
+          method: "PATCH",
+          body: JSON.stringify(updates)
+        })
+        setIsSyncing(false)
+      } catch (error: any) {
+        console.error("Sync failed:", error)
+        setIsSyncing(false)
+        // Optionally fetch fresh data if sync fails to stay in sync
+        fetchStoreData()
+      }
+    }, 500)
   }
 
   const handleDeleteSection = async (sectionId: string) => {
@@ -373,32 +425,57 @@ export default function WebsiteBuilderPage() {
           <h1 className="text-4xl md:text-5xl lg:text-7xl font-black text-foreground tracking-tight uppercase leading-none">
             Website <span className="text-primary italic">Builder</span>
           </h1>
-          <div className="flex items-center justify-center lg:justify-start gap-3 mt-2">
+          <div className="flex items-center justify-center lg:justify-start gap-4 mt-2">
             <span className="h-px w-6 md:w-16 bg-primary/30 hidden sm:block" />
             <p className="text-muted-foreground text-[10px] font-black uppercase tracking-[0.4em]">
               {store.sections?.length || 0} Blocks Active • Live Edits
             </p>
+            <div className={cn(
+              "flex items-center gap-2 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest transition-all duration-500 border",
+              isSyncing 
+                ? "bg-blue-500/10 text-blue-500 border-blue-500/20 animate-pulse" 
+                : "bg-emerald-500/10 text-emerald-500 border-emerald-500/20"
+            )}>
+              {isSyncing ? (
+                <>
+                  <RefreshCw className="h-3 w-3 animate-spin" />
+                  Syncing Changes
+                </>
+              ) : (
+                <>
+                  <CheckCircle className="h-3 w-3" />
+                  Draft Saved
+                </>
+              )}
+            </div>
           </div>
         </div>
         <div className="flex items-center justify-center gap-3">
           <button
             onClick={() => {
-              // Not deployed yet, strictly using relative local path with slug
-              const url = `/store/${store.slug}`;
+              const url = `http://${store.slug}.lvh.me:5173`;
               window.open(url, "_blank");
             }}
             className="h-14 flex items-center gap-3 px-8 bg-muted border border-border rounded-2xl font-black text-[10px] tracking-widest uppercase hover:bg-foreground hover:text-white transition-all shadow-lg group"
           >
             <ExternalLink className="h-4 w-4 transition-transform group-hover:translate-x-1 group-hover:-translate-y-1" />
-            Live Site
+            Store Preview
           </button>
           <button
             onClick={handleUpdateWebsite}
             disabled={isSaving}
-            className="h-14 flex items-center gap-3 px-10 bg-primary hover:bg-emerald-600 text-white rounded-2xl font-black text-[10px] tracking-widest uppercase shadow-2xl shadow-primary/20 transition-all active:scale-95 disabled:opacity-50"
+            className="h-14 flex items-center gap-3 px-8 bg-muted border border-border rounded-2xl font-black text-[10px] tracking-widest uppercase hover:bg-slate-100 transition-all shadow-lg group"
           >
-            {isSaving ? <RefreshCw className="h-5 w-5 animate-spin" /> : <Save className="h-5 w-5" />}
-            Save Website
+            {isSaving ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+            Save Draft
+          </button>
+          <button
+            onClick={handleDeploy}
+            disabled={isSaving}
+            className="h-14 flex items-center gap-3 px-10 bg-primary hover:bg-emerald-600 text-white rounded-2xl font-black text-[10px] tracking-widest uppercase shadow-2xl shadow-primary/20 transition-all active:scale-95 disabled:opacity-50 group"
+          >
+             {isSaving ? <RefreshCw className="h-5 w-5 animate-spin" /> : <Sparkles className="h-5 w-5 group-hover:animate-pulse" />}
+            Publish to Live
           </button>
         </div>
       </div>
@@ -440,27 +517,7 @@ export default function WebsiteBuilderPage() {
                     <Layout className="text-primary h-6 w-6" /> Home Page Blocks
                   </h3>
                   <div className="flex gap-2">
-                    <button
-                      onClick={handleApplyDefaultTemplate}
-                      disabled={isSaving}
-                      className="px-4 py-2 border border-border text-foreground hover:bg-muted/50 rounded-xl text-[10px] font-black uppercase tracking-widest disabled:opacity-50"
-                    >
-                      Magic Template
-                    </button>
-                    <select
-                      className="px-4 py-2 bg-muted/50 border border-border rounded-xl text-xs font-bold outline-none focus:border-primary"
-                      onChange={(e) => {
-                        if (e.target.value) handleAddSection(e.target.value);
-                        e.target.value = "";
-                      }}
-                    >
-                      <option value="">+ Add Block</option>
-                      <option value="hero">Hero Banner</option>
-                      <option value="text_block">Text / Info Box</option>
-                      <option value="featured_products">Trending Products</option>
-                      <option value="categories_grid">Shop by Category</option>
-                      <option value="cta">Big Button (CTA)</option>
-                    </select>
+                    {/* Block adding options removed per user request */}
                   </div>
                 </div>
 
@@ -491,22 +548,14 @@ export default function WebsiteBuilderPage() {
                         <button onClick={() => setEditingSectionId(section._id)} className="p-2 rounded-lg hover:bg-muted text-blue-500 transition-all" title="Edit Content">
                           <Edit className="h-5 w-5" />
                         </button>
-                        <button onClick={() => handleDeleteSection(section._id)} className="p-2 rounded-lg hover:bg-red-500/10 text-red-500 transition-all" title="Delete">
-                          <Trash2 className="h-5 w-5" />
-                        </button>
                       </div>
                     </div>
                   )) : (
                     <div className="p-12 border-2 border-dashed border-border rounded-3xl flex flex-col items-center justify-center text-center">
                       <Layers className="h-12 w-12 text-muted-foreground/30 mb-4" />
-                      <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest">No Blocks Yet</p>
-                      <p className="text-[10px] text-muted-foreground mt-2 max-w-sm mb-6">Build your homepage by adding blocks like banners, text, or products, or use our Magic Template to get started instantly.</p>
-                      <button
-                        onClick={handleApplyDefaultTemplate}
-                        className="px-6 py-3 bg-primary text-white hover:bg-emerald-600 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2 shadow-lg shadow-primary/20 transition-all active:scale-95"
-                      >
-                        <PlusCircle className="h-4 w-4" /> Apply Magic Template
-                      </button>
+                      <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest">No Blocks Found</p>
+                      <p className="text-[10px] text-muted-foreground mt-2 max-w-sm mb-6">If your homepage is empty, please contact support or wait for the system to initialize your default layout.</p>
+                      {/* Removed Apply Magic Template button per request */}
                     </div>
                   )}
                 </div>
@@ -730,7 +779,7 @@ export default function WebsiteBuilderPage() {
                         ))}
                       </div>
                     </div>
-                    
+
                     <div className="space-y-3 pt-4 border-t border-border">
                       <label className="text-xs font-bold flex items-center justify-between">
                         <span>Storefront Dark Mode</span>
@@ -741,10 +790,10 @@ export default function WebsiteBuilderPage() {
                             store.theme?.darkMode ? "bg-primary" : "bg-slate-300 dark:bg-slate-700"
                           )}
                         >
-                           <div className={cn(
-                             "absolute top-1 left-1 w-4 h-4 rounded-full bg-white transition-transform duration-300 shadow-md",
-                             store.theme?.darkMode ? "translate-x-6" : "translate-x-0"
-                           )} />
+                          <div className={cn(
+                            "absolute top-1 left-1 w-4 h-4 rounded-full bg-white transition-transform duration-300 shadow-md",
+                            store.theme?.darkMode ? "translate-x-6" : "translate-x-0"
+                          )} />
                         </button>
                       </label>
                       <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-black">When enabled, your store automatically wears a sleek dark theme.</p>
@@ -853,7 +902,7 @@ export default function WebsiteBuilderPage() {
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
               <Eye className="h-5 w-5 text-primary" />
-              <h3 className="text-[10px] font-black uppercase tracking-widest text-foreground">Reality Engine™</h3>
+              <h3 className="text-[10px] font-black uppercase tracking-widest text-foreground">Live Preview Only</h3>
             </div>
             <div className="flex bg-muted/50 p-1 rounded-xl">
               <button
@@ -880,131 +929,23 @@ export default function WebsiteBuilderPage() {
               <div className="h-1.5 w-10 bg-slate-700 rounded-full" />
             </div>
 
-            <div
-              className="flex-1 overflow-y-auto overflow-x-hidden scrollbar-hide relative"
-              style={{
-                backgroundColor: store.theme?.darkMode ? '#0f172a' : '#ffffff',
-                color: store.theme?.darkMode ? '#f8fafc' : '#0f172a',
-                fontFamily: store.theme?.fontFamily || 'sans-serif'
-              }}
-            >
-              {/* Mock Header */}
-              <div className="sticky top-0 p-4 border-b border-border/50 flex items-center justify-between z-10" style={{ backgroundColor: store.theme?.darkMode ? '#0f172a' : '#ffffff' }}>
-                <span className="font-bold text-sm tracking-tight">{store.name}</span>
-                <div className="flex gap-2">
-                  <div className="h-4 w-4 rounded-full bg-slate-200 dark:bg-slate-700" />
-                  <div className="h-4 w-4 rounded-full bg-slate-200 dark:bg-slate-700" />
-                </div>
-              </div>
-
-              {/* Render Sections Simplified for Preview */}
-              {store.sections?.filter((s: any) => s.isVisible).length > 0 ? (
-                store.sections.filter((s: any) => s.isVisible).map((section: any) => (
-                  <div key={section._id} className="relative w-full border-b border-border/10">
-
-                    {section.type === "hero" && (
-                      <div className="relative h-[250px] w-full bg-slate-200 overflow-hidden flex items-center justify-center">
-                        {section.backgroundImage ? (
-                          <>
-                            <img src={section.backgroundImage} className="absolute inset-0 w-full h-full object-cover" alt="Hero" />
-                            <div className="absolute inset-0 bg-black/40" />
-                          </>
-                        ) : (
-                          <ImageIcon className="h-10 w-10 text-slate-400 absolute" />
-                        )}
-                        <div className="relative z-10 text-center p-6 text-white w-full">
-                          <h2 className="text-xl font-bold leading-tight mb-2 text-balance drop-shadow-md">{section.title || "Epic Hero Headline"}</h2>
-                          {section.subtitle && <p className="text-xs opacity-90 mb-4 line-clamp-2">{section.subtitle}</p>}
-                          {section.buttonText && (
-                            <div
-                              className="mx-auto px-4 py-2 text-[10px] font-bold uppercase tracking-widest inline-block transition-all shadow-lg"
-                              style={{
-                                backgroundColor: store.theme?.accentColor || '#f59e0b',
-                                borderRadius: store.theme?.borderRadius === 'pill' ? '9999px' : store.theme?.borderRadius === 'sharp' ? '0px' : '0.5rem'
-                              }}
-                            >
-                              {section.buttonText}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    )}
-
-                    {section.type === "text_block" && (
-                      <div className="p-6 text-center">
-                        <h3 className="text-lg font-bold mb-2">{section.title || "Important Notice"}</h3>
-                        <p className="text-xs opacity-80">{section.textContent || "Add your text content here to engage customers."}</p>
-                      </div>
-                    )}
-
-                    {section.type === "featured_products" && (
-                      <div className="p-6">
-                        <h3 className="text-md font-bold mb-4">{section.title || "Our Products"}</h3>
-                        <div className="grid grid-cols-2 gap-3">
-                          <div className="aspect-square bg-slate-100 dark:bg-slate-800 rounded-xl flex flex-col p-2">
-                            <div className="flex-1 bg-slate-200 dark:bg-slate-700 rounded-lg mb-2" />
-                            <div className="h-2 w-1/2 bg-slate-300 dark:bg-slate-600 rounded mb-1" />
-                            <div className="h-2 w-1/4 bg-primary/50 rounded" />
-                          </div>
-                          <div className="aspect-square bg-slate-100 dark:bg-slate-800 rounded-xl flex flex-col p-2">
-                            <div className="flex-1 bg-slate-200 dark:bg-slate-700 rounded-lg mb-2" />
-                            <div className="h-2 w-1/2 bg-slate-300 dark:bg-slate-600 rounded mb-1" />
-                            <div className="h-2 w-1/4 bg-primary/50 rounded" />
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
-                    {section.type === "categories_grid" && (
-                      <div className="p-6 bg-slate-50 dark:bg-slate-900">
-                        <h3 className="text-md font-bold mb-4 text-center">{section.title || "Shop By Category"}</h3>
-                        <div className="flex gap-3 overflow-hidden">
-                          <div className="h-16 w-16 shrink-0 rounded-full bg-slate-200 dark:bg-slate-700 border-2 border-primary/20" />
-                          <div className="h-16 w-16 shrink-0 rounded-full bg-slate-200 dark:bg-slate-700" />
-                          <div className="h-16 w-16 shrink-0 rounded-full bg-slate-200 dark:bg-slate-700" />
-                          <div className="h-16 w-16 shrink-0 rounded-full bg-slate-200 dark:bg-slate-700" />
-                        </div>
-                      </div>
-                    )}
-
-                    {section.type === "cta" && (
-                      <div className="p-8 text-center bg-slate-100 dark:bg-slate-800 m-4 rounded-3xl" style={{ backgroundColor: `${store.theme?.primaryColor}15` }}>
-                        <h3 className="text-xl font-bold mb-4" style={{ color: store.theme?.primaryColor }}>{section.title || "Ready to shop?"}</h3>
-                        <div
-                          className="w-full inline-block text-center px-4 py-3 text-xs font-bold uppercase tracking-widest text-white shadow-lg"
-                          style={{
-                            backgroundColor: store.theme?.accentColor || '#f59e0b',
-                            borderRadius: store.theme?.borderRadius === 'pill' ? '9999px' : store.theme?.borderRadius === 'sharp' ? '0px' : '0.5rem'
-                          }}
-                        >
-                          {section.buttonText || "Click Here"}
-                        </div>
-                      </div>
-                    )}
-
-                  </div>
-                ))
-              ) : (
-                <div className="h-[400px] flex items-center justify-center text-slate-400">
-                  <p className="text-xs uppercase font-bold tracking-widest">No visible blocks</p>
-                </div>
-              )}
-
-              {/* Mock Footer */}
-              <div className="p-6 text-center border-t border-border/20 mt-10" style={{ backgroundColor: store.theme?.darkMode ? '#0b1120' : '#f8fafc' }}>
-                <p className="text-[9px] opacity-50 font-medium">
-                  {store.footerConfig?.copyrightText || `© ${new Date().getFullYear()} ${store.name}.`}
-                </p>
-                {store.footerConfig?.showSocialLinks && (
-                  <div className="flex justify-center gap-3 mt-3">
-                    <div className="h-4 w-4 bg-slate-300 dark:bg-slate-600 rounded" />
-                    <div className="h-4 w-4 bg-slate-300 dark:bg-slate-600 rounded" />
-                    <div className="h-4 w-4 bg-slate-300 dark:bg-slate-600 rounded" />
-                  </div>
-                )}
-              </div>
-
+            <div className="flex-1 overflow-hidden relative flex flex-col bg-slate-900">
+              <iframe
+                ref={previewRef}
+                src={`http://${store?.slug || 'default'}.lvh.me:5173/`}
+                className="w-full h-full border-none"
+                title="Live Storefront Preview"
+                onLoad={() => {
+                   if (previewRef.current?.contentWindow) {
+                     previewRef.current.contentWindow.postMessage({
+                       type: 'MANA_VYAPAR_WEBSITE_PREVIEW',
+                       config: store
+                     }, '*');
+                   }
+                }}
+              />
             </div>
+
 
             {/* Bottom Notch Area */}
             <div className="h-8 bg-slate-900 flex items-center justify-center shrink-0 z-20">

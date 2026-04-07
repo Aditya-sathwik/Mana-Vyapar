@@ -195,6 +195,16 @@ const toggleSectionVisibility = asyncHandler(async (req, res) => {
     );
 });
 
+/**
+ * Deploy the draft config to live storefront
+ */
+const deployWebsite = asyncHandler(async (req, res) => {
+    const store = await storeService.deployWebsite(req.user._id);
+    return res.status(200).json(
+        new ApiResponse(200, store, "Website deployed successfully. Your changes are now live!")
+    );
+});
+
 export {
     createStore,
     updateStore,
@@ -211,6 +221,7 @@ export {
     updateSectionById,
     deleteSectionById,
     reorderSections,
-    toggleSectionVisibility
+    toggleSectionVisibility,
+    deployWebsite
 };
 

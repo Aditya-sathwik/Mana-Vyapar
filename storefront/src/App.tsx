@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Provider } from 'react-redux';
 import { store } from './store';
 import './index.css';
+import PreviewListener from './components/PreviewListener';
 
 // Lazy load pages for performance
 const Home = lazy(() => import('./pages/Home'));
@@ -31,6 +32,7 @@ const LoadingScreen = () => (
 const App: React.FC = () => {
   return (
     <Provider store={store}>
+      <PreviewListener />
       <Router>
         <Suspense fallback={<LoadingScreen />}>
           <Routes>

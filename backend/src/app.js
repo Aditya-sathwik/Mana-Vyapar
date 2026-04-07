@@ -7,8 +7,27 @@ import { apiLimiter } from "./middlewares/ratelimit.middleware.js";
 const app = express();
 
 // Middlewares
+// Dynamic CORS to support multi-tenant local subdomains (*.lvh.me)
 app.use(cors({
-    origin: process.env.CORS_ORIGIN,
+    origin: function (origin, callback) {
+        // Allow requests with no origin (like mobile apps/curl)
+        if (!origin) return callback(null, true);
+        
+        const allowedPatterns = [
+            /^http:\/\/localhost:\d+$/,
+            /^http:\/\/.*\.lvh\.me:\d+$/
+        ];
+
+        const isAllowed = allowedPatterns.some(pattern => pattern.test(origin)) || 
+                         origin === process.env.CORS_ORIGIN;
+        
+        if (isAllowed) {
+            callback(null, true);
+        } else {
+            console.warn(`🚫 [CORS]: Blocked Origin -> ${origin}`);
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
     credentials: true
 }));
 
