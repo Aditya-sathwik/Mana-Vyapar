@@ -1,6 +1,6 @@
-import { asyncHandler } from "../utlis/asynchandler.js";
-import { ApiError } from "../utlis/apierror.js";
-import { ApiResponse } from "../utlis/apiresponse.js";
+import { asyncHandler } from "../utils/asyncHandler.js";
+import { ApiError } from "../utils/ApiError.js";
+import { ApiResponse } from "../utils/ApiResponse.js";
 import * as storeService from "../services/store.service.js";
 
 /**

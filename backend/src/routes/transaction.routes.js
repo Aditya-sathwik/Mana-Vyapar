@@ -33,4 +33,6 @@ router.patch("/update/:transactionId", verifyTransactionOwnership, TransactionCo
  */
 router.post("/void/:transactionId", verifyTransactionOwnership, TransactionController.voidSale);
 
+router.get("/coupon/validate/:code", TransactionController.checkCoupon);
+
 export default router;

@@ -9,6 +9,7 @@ export const registerSchema = Joi.object({
     password: Joi.string().required().min(6),
     phone: Joi.string().required().regex(/^[0-9]{10}$/).message("Phone number must be exactly 10 digits"),
     role: Joi.string().valid("Merchant", "Customer", "Admin").default("Customer"),
+    businessCategory: Joi.string().optional().default("General"),
     storeName: Joi.string().when("role", { 
         is: "Merchant", 
         then: Joi.required(), 

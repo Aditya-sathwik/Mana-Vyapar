@@ -139,7 +139,7 @@ const transactionSchema = new Schema(
     payment: {
       method: {
         type: String,
-        enum: ["CASH", "UPI", "CARD", "KHATA", "MULTIPLE"],
+        enum: ["CASH", "UPI", "CARD", "KHATA", "WHATSAPP", "MULTIPLE"],
         required: true,
         default: "CASH",
       },

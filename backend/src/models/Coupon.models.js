@@ -90,7 +90,6 @@ couponSchema.methods.isValid = function (orderAmount) {
   
   if (!this.isActive) return false;
   if (this.expiryDate && this.expiryDate < now) return false;
-  if (this.usageLimit !== null && this.usedCount >= this.usageLimit) return false;
   if (orderAmount < this.minOrderAmount) return false;
 
   return true;

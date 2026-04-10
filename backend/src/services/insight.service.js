@@ -85,11 +85,15 @@ const refreshMerchantSnapshot = async (merchantId) => {
         if (daysLeft < 7) status = "CRITICAL";
         else if (daysLeft < 20) status = "RESTOCK_SOON";
 
+        const projectedDate = new Date(now.getTime() + daysLeft * 24 * 60 * 60 * 1000);
+
         return {
             productId: p._id,
             name: p.name,
             currentStock: p.stock,
-            predictedOutDate: new Date(now.getTime() + daysLeft * 24 * 60 * 60 * 1000),
+            velocity: vel,
+            predictedOutDate: projectedDate,
+            projectedRunOutDate: projectedDate,
             status
         };
     }).sort((a,b) => a.predictedOutDate - b.predictedOutDate).slice(0, 5);
@@ -155,28 +159,7 @@ const getMerchantDashboardInsights = async (merchantId) => {
     }
 
     // 🐢 Fallback: Real-time calculation (Only if snapshot missing)
-    const [financialStats, lowStockItems, fastMovingProducts, highProfitItems, topRegisteredUsers, topManualCustomers] = await Promise.all([
-        Transaction.aggregate([
-            { $match: { merchantId: mId, type: "SALE" } },
-            { $group: { _id: null, totalRevenue: { $sum: "$financials.grandTotal" }, totalOrders: { $sum: 1 }, averageOrderValue: { $avg: "$financials.grandTotal" } } }
-        ]),
-        Product.find({ merchantId: mId, $expr: { $lte: ["$stock", "$lowStockThreshold"] }, isActive: true }).select("name stock lowStockThreshold unit").limit(10),
-        Transaction.aggregate([
-            { $match: { merchantId: mId, type: "SALE" } }, { $unwind: "$items" },
-            { $group: { _id: "$items.productId", name: { $first: "$items.name" }, totalSold: { $sum: "$items.quantity" }, totalRevenue: { $sum: "$items.subtotal" } } },
-            { $sort: { totalSold: -1 } }, { $limit: 5 }
-        ]),
-        Product.find({ merchantId: mId, costPrice: { $gt: 0 } }).sort({ sellingPrice: -1 }).select("name sellingPrice costPrice stock").limit(5),
-        User.find({ merchantId: mId, role: "Customer" }).sort({ "stats.totalSpent": -1 }).select("fullname stats.totalSpent stats.totalOrders phone").limit(5),
-        Customer.find({ merchantId: mId }).sort({ "stats.totalSpent": -1 }).select("name stats.totalSpent stats.totalOrders phone").limit(5)
-    ]);
-
-    return {
-        financials: financialStats[0] || { totalRevenue: 0, totalOrders: 0, averageOrderValue: 0 },
-        inventory: { lowStockCount: lowStockItems.length, lowStockItems },
-        products: { fastMoving: fastMovingProducts, highProfitPotential: highProfitItems },
-        customers: { topRegistered: topRegisteredUsers, topManual: topManualCustomers }
-    };
+    return await refreshMerchantSnapshot(merchantId);
 };
 
 export {

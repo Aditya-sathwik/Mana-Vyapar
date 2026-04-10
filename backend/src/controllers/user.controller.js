@@ -1,6 +1,6 @@
-import { asyncHandler } from "../utlis/asynchandler.js";
-import { ApiError } from '../utlis/apierror.js'
-import { ApiResponse } from "../utlis/apiresponse.js";
+import { asyncHandler } from "../utils/asyncHandler.js";
+import { ApiError } from '../utils/ApiError.js'
+import { ApiResponse } from "../utils/ApiResponse.js";
 import * as userService from "../services/user.service.js";
 import { createAuditLog } from "../services/audit.service.js";
 import { getResolvedConfig } from "../services/config.service.js";
@@ -9,7 +9,7 @@ import { getResolvedConfig } from "../services/config.service.js";
  * Controller to handle user registration.
  */
 const registerUser = asyncHandler(async (req, res) => {
-    const { fullname, username, email, password, phone, businessName, role, merchantId } = req.body;
+    const { fullname, username, email, password, phone, businessName, businessCategory, role, merchantId } = req.body;
 
     if ([fullname, username, email, password].some((field) => field?.trim() === "")) {
         throw new ApiError(400, "All fields are required");
@@ -30,6 +30,7 @@ const registerUser = asyncHandler(async (req, res) => {
         password,
         phone,
         businessName,
+        businessCategory,
         role: role || "Merchant",
         merchantId,
         avatarlocalpath,
@@ -168,9 +169,9 @@ const getCurrentUser = asyncHandler(async (req, res) => {
  * Controller to update account details (excluding images).
  */
 const updateAccountDetails = asyncHandler(async (req, res) => {
-    const { fullname, email } = req.body;
+    const { fullname, email, businessCategory } = req.body;
 
-    const user = await userService.updateAccountDetails(req.user._id, { fullname, email });
+    const user = await userService.updateAccountDetails(req.user._id, { fullname, email, businessCategory });
 
     return res
         .status(200)

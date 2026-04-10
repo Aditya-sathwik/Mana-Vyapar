@@ -8,6 +8,7 @@ export interface User {
   role: string;
   avatar?: string;
   avatarUrl?: string;
+  businessCategory?: string;
 }
 
 interface AuthState {

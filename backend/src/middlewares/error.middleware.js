@@ -1,4 +1,4 @@
-import { ApiError } from "../utlis/apierror.js";
+import { ApiError } from "../utils/ApiError.js";
 
 /**
  * Central error handling middleware.
@@ -10,8 +10,9 @@ const errorHandler = (err, req, res, next) => {
     if (checkStatusCode >= 500) {
         console.error("🔥 Server Error caught in middleware:", err);
     } else if (checkStatusCode === 404) {
-        // Log 404s subtly as they are often route misses or missing assets
+        // Log 404s with trace for debugging
         console.log(`ℹ️  Resource not found [404]: ${req.originalUrl}`);
+        console.error("🔍 404 Trace:", err);
     } else {
         console.warn(`⚠️  Client Warning [${checkStatusCode}]: ${err.message}`);
     }

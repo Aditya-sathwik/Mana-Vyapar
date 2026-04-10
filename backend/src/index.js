@@ -10,14 +10,48 @@ dotenv.config({
 
 
 
+import { createServer } from "http";
+import { Server } from "socket.io";
+
+const httpServer = createServer(app);
+const io = new Server(httpServer, {
+    cors: {
+        origin: process.env.CORS_ORIGIN || "*",
+        credentials: true
+    }
+});
+
+// Attach io to app for use in controllers
+app.set("io", io);
+
 connectDB()
 .then(() => {
     // ⏰ Initialize Background Maintenance
     setupCronJobs().catch(err => console.error("❌ Cron Setup Failed:", err));
 
-    app.listen(process.env.PORT || 8000, () => {
-        console.log(`⚙️ Server is running at port : ${process.env.PORT}`);
+    httpServer.listen(process.env.PORT || 8000, () => {
+        console.log(`⚙️ Server is running at port : ${process.env.PORT || 8000}`);
+        console.log(`🚀 Socket.io initialized and ready`);
     })
+
+    // Socket.io Logic
+    io.on("connection", (socket) => {
+        console.log("🟢 User connected:", socket.id);
+
+        socket.on("join_room", (roomId) => {
+            socket.join(roomId);
+            console.log(`👥 User ${socket.id} joined room: ${roomId}`);
+        });
+
+        socket.on("send_message", (data) => {
+            // Broadcast to the specifically joined room (ticket ID)
+            io.to(data.roomId).emit("receive_message", data);
+        });
+
+        socket.on("disconnect", () => {
+            console.log("🔴 User disconnected:", socket.id);
+        });
+    });
 })
 .catch((err) => {
     console.log("MONGO db connection failed !!! ", err);

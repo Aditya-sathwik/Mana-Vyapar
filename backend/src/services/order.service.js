@@ -2,8 +2,8 @@ import { Order } from "../models/Order.models.js";
 import { Product } from "../models/Product.models.js";
 import { User } from "../models/User.models.js";
 import { Customer } from "../models/Customer.models.js";
-import { createSale, processRefund } from "./transaction.service.js";
-import { ApiError } from "../utlis/apierror.js";
+import { createSale, processRefund, validateCoupon } from "./transaction.service.js";
+import { ApiError } from "../utils/ApiError.js";
 import { sendOrderNotification } from "./notification.service.js";
 import { addInsightJob } from "../queues/index.js";
 import { createAuditLog } from "./audit.service.js";
@@ -35,14 +35,45 @@ const createOrder = async (orderData) => {
 
         // 1. Validate Merchant & Customer
         const merchant = await User.findOne({ _id: merchantId, role: "Merchant" });
-        if (!merchant) throw new ApiError(404, "Target merchant not found");
+        if (!merchant) throw new ApiError(404, `Target merchant not found for ID: ${merchantId}`);
 
-        if (customerId) {
-            const customer = customerModel === "User" 
-                ? await User.findOne({ _id: customerId, role: "Customer" })
-                : await Customer.findById(customerId);
+        let resolvedCustomerId = customerId;
+        let resolvedCustomerModel = customerModel || "Customer";
+
+        // Logic Upgrade: If no customerId provided but we have phone/name (Manual Entry via Merchant)
+        if (!resolvedCustomerId && orderData.customerPhoneNumber && (source === "Manual" || !source)) {
+            // Check if this merchant already has this customer in their ledger
+            let customerRecord = await Customer.findOne({ 
+                merchantId, 
+                phone: orderData.customerPhoneNumber 
+            }).session(session);
+
+            if (!customerRecord) {
+                // Auto-create a CRM profile for this new customer
+                customerRecord = await Customer.create([{
+                    merchantId,
+                    name: orderData.customerName || "Walk-in Customer",
+                    phone: orderData.customerPhoneNumber,
+                    email: orderData.customerEmail,
+                    stats: { totalOrders: 0, totalSpent: 0 }
+                }], { session });
+                customerRecord = customerRecord[0];
+            }
             
-            if (!customer) throw new ApiError(404, "Customer profile not found");
+            resolvedCustomerId = customerRecord._id;
+            resolvedCustomerModel = "Customer";
+        }
+
+        if (resolvedCustomerId) {
+            let customer;
+            if (resolvedCustomerModel === "User") {
+                customer = await User.findOne({ _id: resolvedCustomerId, role: "Customer" });
+            } else {
+                // Unification: Both 'Khata' and 'Customer' now refer to the Customer collection
+                customer = await Customer.findOne({ _id: resolvedCustomerId, merchantId });
+            }
+            
+            if (!customer) throw new ApiError(404, `Customer profile not found [ID: ${resolvedCustomerId}]`);
         }
 
         // 2. Fetch and Validate Products
@@ -64,38 +95,77 @@ const createOrder = async (orderData) => {
                 throw new ApiError(400, `Insufficient stock for ${dbProduct.name}. Requested: ${item.quantity}, Available: ${dbProduct.stock}`);
             }
 
-            const itemSubtotal = dbProduct.sellingPrice * item.quantity;
+            const unit = item.unit || dbProduct.unit;
+            const price = item.price !== undefined ? item.price : dbProduct.sellingPrice;
+            const itemSubtotal = price * item.quantity;
             calculatedSubtotal += itemSubtotal;
 
             return {
                 product: dbProduct._id,
                 productName: dbProduct.name,
                 quantity: item.quantity,
-                unit: dbProduct.unit,
-                price: dbProduct.sellingPrice,
+                unit: unit,
+                price: price,
                 subtotal: itemSubtotal
             };
         });
 
-        // 3. Create the Order
+        // 3. APPLY COUPON IF EXISTS
+        let discountAmount = 0;
+        if (orderData.couponCode) {
+            try {
+                const couponResult = await validateCoupon(
+                    merchantId, 
+                    orderData.couponCode, 
+                    calculatedSubtotal, 
+                    resolvedCustomerId
+                );
+                discountAmount = couponResult.discount;
+            } catch (err) {
+                // If coupon is invalid, we proceed with 0 discount but log it
+                console.warn(`Coupon ${orderData.couponCode} validation failed during creation:`, err.message);
+            }
+        }
+
+        // 4. Create the Order
         const newOrder = new Order({
             merchantId,
-            customerId,
-            customerModel: customerModel || "User",
+            customerId: resolvedCustomerId,
+            customerModel: resolvedCustomerModel,
             customerName: orderData.customerName,
             customerPhoneNumber: orderData.customerPhoneNumber,
             customerEmail: orderData.customerEmail,
             items: processedItems,
             subtotal: calculatedSubtotal,
-            totalAmount: calculatedSubtotal, // Simplified: Add tax/shipping as needed
+            discountAmount: discountAmount,
+            totalAmount: calculatedSubtotal - discountAmount, 
             deliveryAddress,
             paymentMethod: paymentMethod || "CASH",
             customerNotes,
+            couponCode: orderData.couponCode,
             source: source || "Manual",
             status: "PLACED"
         });
 
         await newOrder.save({ session });
+
+        // 🏁 LOGIC UPGRADE: If source is Manual, we auto-confirm because the merchant 
+        // is the one creating it (it's effectively a direct POS sale).
+        if (source === "Manual") {
+            await session.commitTransaction();
+            const orderId = newOrder._id;
+            session.endSession();
+            
+            try {
+                const confirmedResult = await confirmOrder(orderId, merchantId);
+                return confirmedResult.order;
+            } catch (confirmError) {
+                // If auto-confirm fails, the order is already saved as PLACED.
+                // We log the error but return the order so the user doesn't lose data.
+                console.error("❌ Auto-confirmation failed for manual order:", confirmError);
+                return newOrder;
+            }
+        }
 
         // 🔔 Send Notification (Non-await)
         sendOrderNotification(newOrder, "PLACED");
@@ -110,17 +180,21 @@ const createOrder = async (orderData) => {
             metadata: { total: newOrder.totalAmount, numItems: newOrder.items.length }
         });
 
-        // 🏁 Logic Check: If payment is CASH/UPI we could simulate immediate success 
-        // For now, we keep it as PLACED -> MERCHANT CONFIRMS -> TRANSACTION CREATED
-
         await session.commitTransaction();
         session.endSession();
 
         return newOrder;
 
     } catch (error) {
-        await session.abortTransaction();
-        session.endSession();
+        // Safe check for transaction state to avoid "Cannot call abortTransaction after calling commitTransaction"
+        if (session && session.inTransaction()) {
+            try {
+                await session.abortTransaction();
+            } catch (abortError) {
+                console.error("⚠️ Failed to abort transaction cleanly:", abortError.message);
+            }
+        }
+        if (session) session.endSession();
         throw error;
     }
 };
@@ -144,17 +218,33 @@ const confirmOrder = async (orderId, merchantId) => {
         // 🔌 PLUG: Call Transaction Engine
         const transactionData = {
             customerId: order.customerId,
+            customerModel: order.customerModel,
             items: order.items.map(i => ({
                 productId: i.product,
-                quantity: i.quantity
+                quantity: i.quantity,
+                price: i.price,
+                unit: i.unit
             })),
             payment: {
                 method: order.paymentMethod,
-                paidAmount: order.totalAmount, // Assuming full payment on confirmation 
+                // If payment is KHATA, paidAmount is 0 (it's credit)
+                // Otherwise assume full payment for manual creations
+                paidAmount: order.paymentMethod === "KHATA" ? 0 : order.totalAmount,
+                discount: order.discountAmount || 0,
+                shipping: order.shipping || 0,
+                tax: order.tax || 0
             },
-            notes: `Auto-generated from Order: ${order.orderNumber}`,
+            couponCode: order.couponCode,
+            notes: order.notes || `Auto-generated from Order: ${order.orderNumber}`,
             source: order.source === "Vision AI Scan" ? "VISION_SCAN" : "POS"
         };
+
+        console.log("📝 Generating Transaction from Order:", {
+            orderNo: order.orderNumber,
+            total: order.totalAmount,
+            khata: order.paymentMethod === "KHATA",
+            items: transactionData.items
+        });
 
         // Note: transaction.service.js handles its own session, 
         // so we call it and get the record.
@@ -196,15 +286,34 @@ const confirmOrder = async (orderId, merchantId) => {
 };
 
 const getMerchantOrders = async (merchantId, filters = {}) => {
-    const { status, page = 1, limit = 20 } = filters;
+    const { status, page = 1, limit = 20, search } = filters;
     const query = { merchantId };
     if (status) query.status = status;
+    
+    if (search) {
+        const escapedSearch = search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        query.$or = [
+            { orderNumber: { $regex: escapedSearch, $options: "i" } },
+            { customerName: { $regex: escapedSearch, $options: "i" } }
+        ];
+    }
 
-    return await Order.find(query)
+    const totalOrders = await Order.countDocuments(query);
+    const orders = await Order.find(query)
         .sort({ createdAt: -1 })
         .limit(limit * 1)
         .skip((page - 1) * limit)
         .exec();
+
+    return {
+        orders,
+        pagination: {
+            total: totalOrders,
+            page: Number(page),
+            limit: Number(limit),
+            pages: Math.ceil(totalOrders / limit)
+        }
+    };
 };
 
 const getCustomerOrders = async (customerId, filters = {}) => {
@@ -212,11 +321,22 @@ const getCustomerOrders = async (customerId, filters = {}) => {
     const query = { customerId };
     if (status) query.status = status;
 
-    return await Order.find(query)
+    const totalOrders = await Order.countDocuments(query);
+    const orders = await Order.find(query)
         .sort({ createdAt: -1 })
         .limit(limit * 1)
         .skip((page - 1) * limit)
         .exec();
+
+    return {
+        orders,
+        pagination: {
+            total: totalOrders,
+            page: Number(page),
+            limit: Number(limit),
+            pages: Math.ceil(totalOrders / limit)
+        }
+    };
 };
 
 const updateOrderStatus = async (orderId, merchantId, status, note) => {

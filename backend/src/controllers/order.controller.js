@@ -1,6 +1,6 @@
-import { asyncHandler } from "../utlis/asynchandler.js";
-import { ApiResponse } from "../utlis/apiresponse.js";
-import { ApiError } from "../utlis/apierror.js";
+import { asyncHandler } from "../utils/asyncHandler.js";
+import { ApiResponse } from "../utils/ApiResponse.js";
+import { ApiError } from "../utils/ApiError.js";
 import * as OrderService from "../services/order.service.js";
 
 /**
@@ -8,13 +8,15 @@ import * as OrderService from "../services/order.service.js";
  * @description POST /orders/create - Customer or Merchant can create an order.
  */
 const createOrder = asyncHandler(async (req, res) => {
+    console.log("📥 Incoming Order Request:", req.body);
     const isCustomer = req.user.role === "Customer";
+    const isMerchant = req.user.role === "Merchant";
     
     const orderData = {
         ...req.body,
         customerId: isCustomer ? req.user._id : req.body.customerId,
-        customerModel: isCustomer ? "User" : "Customer",
-        // Extract merchant from body or stored context
+        customerModel: isCustomer ? "User" : (req.body.customerModel || "Customer"),
+        merchantId: isMerchant ? req.user._id : req.body.merchantId,
     };
 
     if (!orderData.merchantId) {

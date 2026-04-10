@@ -1,5 +1,5 @@
-import { asyncHandler } from "../utlis/asynchandler.js";
-import { ApiResponse } from "../utlis/apiresponse.js";
+import { asyncHandler } from "../utils/asyncHandler.js";
+import { ApiResponse } from "../utils/ApiResponse.js";
 import * as khataService from "../services/khata.service.js";
 
 const createCustomer = asyncHandler(async (req, res) => {
@@ -11,7 +11,8 @@ const createCustomer = asyncHandler(async (req, res) => {
 });
 
 const getKhataList = asyncHandler(async (req, res) => {
-    const list = await khataService.getMerchantKhataList(req.user._id, req.query.search);
+    const { search, page, limit } = req.query;
+    const list = await khataService.getMerchantKhataList(req.user._id, search, page, limit);
     
     return res.status(200).json(
         new ApiResponse(200, list, "Khata list fetched successfully")

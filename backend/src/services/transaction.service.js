@@ -3,7 +3,8 @@ import { Product } from "../models/Product.models.js";
 import { Customer } from "../models/Customer.models.js";
 import { User } from "../models/User.models.js";
 import { Coupon } from "../models/Coupon.models.js";
-import { ApiError } from "../utlis/apierror.js";
+import { Order } from "../models/Order.models.js";
+import { ApiError } from "../utils/ApiError.js";
 import { sendLowStockAlert } from "./notification.service.js";
 import { addInsightJob } from "../queues/index.js";
 import { createAuditLog } from "./audit.service.js";
@@ -26,6 +27,7 @@ const createSale = async (merchantId, saleData) => {
         const { 
             items, 
             customerId, 
+            customerModel,
             payment, 
             notes, 
             tags, 
@@ -39,21 +41,19 @@ const createSale = async (merchantId, saleData) => {
         }
 
         // 🟢 Validation: Ensure Customer belongs to this Merchant
-        let customerType = "Customer"; // Default to manual Customer model
+        let customerType = customerModel || "Customer"; 
+        let customer;
+        
         if (customerId) {
-            // Check manual Customer ledger first
-            let customer = await Customer.findOne({ _id: customerId, merchantId });
-            
-            if (!customer) {
-                // If not in manual ledger, check registered Users
-                customer = await User.findOne({ _id: customerId, merchantId, role: "Customer" });
-                if (customer) {
-                    customerType = "User";
-                }
+            // Unification: Both 'Khata' and 'Customer' now refer to the Customer collection
+            if (customerType === "User") {
+                customer = await User.findOne({ _id: customerId, role: "Customer" });
+            } else {
+                customer = await Customer.findOne({ _id: customerId, merchantId });
             }
 
             if (!customer) {
-                throw new ApiError(404, "Customer not found or unauthorized access attempt");
+                throw new ApiError(404, `Customer profile not found [ID: ${customerId}]`);
             }
         }
 
@@ -84,14 +84,16 @@ const createSale = async (merchantId, saleData) => {
                 throw new ApiError(400, `Insufficient stock for [${product.name}]. Available: ${product.stock}`);
             }
 
-            // 💰 Strategic Calculation: Use Price from DB, not from Client
-            // This prevents "Price Manipulation" attacks.
-            const unitPrice = product.sellingPrice;
-            // Note: Line-item discounts/taxes can still be applied from request but must be sanitized
+            // 💰 Strategic Calculation: Use Price from request if provided (overrides), 
+            // otherwise use DB price. This allows manual price adjustments during sale.
+            const unitPrice = item.price !== undefined ? item.price : (product.sellingPrice || 0);
+            
             const itemDiscount = item.discount || 0;
             const itemTax = item.tax || 0;
             const lineTotal = (unitPrice * item.quantity) - itemDiscount + itemTax;
             
+            console.log(`💰 Line Calc [${product.name}]: ${unitPrice} * ${item.quantity} = ${lineTotal}`);
+
             calculatedSubtotal += lineTotal;
 
             transactionItems.push({
@@ -131,14 +133,32 @@ const createSale = async (merchantId, saleData) => {
                 throw new ApiError(400, "Invalid or expired coupon code");
             }
 
-            // Centralized Validation Logic (Checks expiry, min amount, overall usage)
-            if (!coupon.isValid(calculatedSubtotal)) {
-                throw new ApiError(400, "Coupon constraints not met (Min amount or Overall usage limit)");
+            // Specific Validation Checks
+            const now = new Date();
+            if (coupon.expiryDate && coupon.expiryDate < now) {
+                throw new ApiError(400, "This coupon code has expired.");
+            }
+            if (calculatedSubtotal < coupon.minOrderAmount) {
+                throw new ApiError(400, `Coupon requires a minimum order of ₹${coupon.minOrderAmount}`);
+            }
+
+            // Per-Customer Limit Check
+            if (customerId) {
+                const customerUsageCount = await Order.countDocuments({
+                    merchantId,
+                    customerId,
+                    couponCode: coupon.code,
+                    status: { $ne: "CANCELLED" } // Don't count cancelled orders
+                });
+
+                if (customerUsageCount >= coupon.perCustomerLimit) {
+                    throw new ApiError(400, `This coupon has already been used ${customerUsageCount} times by this customer.`);
+                }
             }
 
             // ⛔ Customer-Specific Restrictions
-            if (coupon.targetCustomerId && coupon.targetCustomerId.toString() !== customerId?.toString()) {
-                throw new ApiError(400, "This coupon is targeted to a specific customer and is not valid for this sale");
+            if (coupon.targetCustomerId && customerId && coupon.targetCustomerId.toString() !== customerId.toString()) {
+                throw new ApiError(400, "This coupon is reserved for another customer profile.");
             }
 
             if (customerId) {
@@ -203,6 +223,25 @@ const createSale = async (merchantId, saleData) => {
         });
 
         await newTransaction.save({ session });
+
+        // 📒 UNIFIED LEDGER: If payment is on credit, update the customer's balance direktly
+        if (payment?.method === "KHATA" && customerId && customerType === "Customer") {
+             // We already have the 'customer' object from the validation block (if it was a Customer)
+             // But let's re-fetch if needed or use the existing one if it's in the same session scope
+             const ledgerCustomer = await Customer.findById(customerId).session(session);
+             
+             if (ledgerCustomer) {
+                const description = notes || `Items: ${transactionItems.map(i => i.name).join(", ")}`;
+                await ledgerCustomer.addCredit(
+                    grandTotal, 
+                    description,
+                    saleData.orderId || null,
+                    merchantId
+                );
+             } else {
+                console.warn(`⚠️ Payment was KHATA but Customer record disappeared: ${customerId}`);
+             }
+        }
 
         // 7. Update Customer Insights / Sales Stats
         if (customerId) {
@@ -462,6 +501,62 @@ const processRefund = async (merchantId, orderId, refundItems, refundAmount = 0)
         session.endSession();
         throw error;
     }
+};
+
+/**
+ * Validates a coupon code for a given order subtotal.
+ */
+export const validateCoupon = async (merchantId, code, subtotal, customerId = null) => {
+    if (!customerId) {
+        throw new ApiError(400, "Customer identification is required to apply a coupon.");
+    }
+    const coupon = await Coupon.findOne({
+        merchantId,
+        code: code.toUpperCase(),
+        isActive: true
+    });
+
+    if (!coupon) {
+        throw new ApiError(404, "Invalid or expired coupon code");
+    }
+
+    // Specific Validation Checks
+    const now = new Date();
+    if (coupon.expiryDate && coupon.expiryDate < now) {
+        throw new ApiError(400, "This coupon code has expired.");
+    }
+    if (subtotal < coupon.minOrderAmount) {
+        throw new ApiError(400, `Coupon requires a minimum order of ₹${coupon.minOrderAmount}`);
+    }
+
+    // Per-Customer Limit Check
+    if (customerId) {
+        const customerUsageCount = await Order.countDocuments({
+            merchantId,
+            customerId,
+            couponCode: coupon.code,
+            status: { $ne: "CANCELLED" }
+        });
+
+        if (customerUsageCount >= coupon.perCustomerLimit) {
+            throw new ApiError(400, `This coupon has already been used ${customerUsageCount} times by this customer.`);
+        }
+    }
+
+    // Check specific target customer if set
+    if (coupon.targetCustomerId && customerId && coupon.targetCustomerId.toString() !== customerId.toString()) {
+        throw new ApiError(400, "This coupon is reserved for another customer profile.");
+    }
+
+    const discountAmount = coupon.calculateDiscount(subtotal);
+
+    return {
+        applied: true,
+        discount: discountAmount,
+        type: coupon.type,
+        value: coupon.value,
+        code: coupon.code
+    };
 };
 
 export {

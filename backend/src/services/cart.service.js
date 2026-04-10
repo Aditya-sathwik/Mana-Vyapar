@@ -1,7 +1,7 @@
 import { Cart } from "../models/Cart.models.js";
 import { Product } from "../models/Product.models.js";
 import { createOrder } from "./order.service.js";
-import { ApiError } from "../utlis/apierror.js";
+import { ApiError } from "../utils/ApiError.js";
 
 /**
  * addToCart: Adds or updates quantity in the merchant-scoped cart.

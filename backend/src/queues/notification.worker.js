@@ -17,17 +17,9 @@ const notificationWorker = new Worker('notifications', async job => {
     console.log(`👷 [Worker: Notifications]: Processing "${type}" for job ${job.id}`);
     
     switch (type) {
-        case 'ORDER_CONFIRMATION':
-            await sendOrderNotification(payload.order, payload.status);
-            break;
-        case 'PAYMENT_RECEIVED':
-            await sendPaymentNotification(payload.transaction, payload.status);
-            break;
-        case 'LOW_STOCK':
-            await sendLowStockAlert(payload.product);
-            break;
-        case 'HIGH_VALUE_CUSTOMER':
-            await sendHighValueCustomerAlert(payload.customer, payload.merchantId);
+        case 'DISPATCH_PUSH':
+            // Logic to send FCM/WebPush/Email would go here
+            console.log(`🚀 [Push Dispatcher]: Sending notification ${payload.notificationId} to device...`);
             break;
         default:
             console.log(`⚠️ Unknown notification type: ${type}`);

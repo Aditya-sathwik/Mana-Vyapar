@@ -33,6 +33,7 @@ export default function RegisterPage() {
     phone: "",
     password: "",
     businessName: "",
+    businessCategory: "Electronics",
   })
   const [countryCode, setCountryCode] = useState("+91")
   const [errors, setErrors] = useState<Record<string, string>>({})
@@ -76,12 +77,13 @@ export default function RegisterPage() {
   const validateStep2 = () => {
     const newErrors: Record<string, string> = {}
     if (!formData.businessName.trim()) newErrors.businessName = "Business name is required"
+    if (!formData.businessCategory) newErrors.businessCategory = "Business category is required"
     
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target
     setFormData((prev) => ({
       ...prev,
@@ -264,6 +266,48 @@ export default function RegisterPage() {
                   error={errors.businessName}
                 />
                 
+                <div className="space-y-2">
+                  <label className="block text-[10px] font-black uppercase tracking-widest ml-1.5 text-muted-foreground">
+                    Business Category
+                  </label>
+                  <div className="relative group">
+                    <Briefcase className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                    <select
+                      name="businessCategory"
+                      value={["Electronics", "Fashion & Apparel", "Grocery & Daily Needs", "Home & Kitchen", "Health & Wellness", "Beauty & Personal Care", "Hardware & Tools", "General Store"].includes(formData.businessCategory) ? formData.businessCategory : "Other"}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setFormData(prev => ({ ...prev, businessCategory: val === "Other" ? "" : val }));
+                      }}
+                      className="w-full h-14 pl-12 pr-5 rounded-2xl border border-border bg-muted/30 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all appearance-none cursor-pointer"
+                    >
+                      {["Electronics", "Fashion & Apparel", "Grocery & Daily Needs", "Home & Kitchen", "Health & Wellness", "Beauty & Personal Care", "Hardware & Tools", "General Store"].map(cat => (
+                        <option key={cat} value={cat}>{cat}</option>
+                      ))}
+                      <option value="Other">Other / Custom</option>
+                    </select>
+                    <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+                  </div>
+                </div>
+
+                {!["Electronics", "Fashion & Apparel", "Grocery & Daily Needs", "Home & Kitchen", "Health & Wellness", "Beauty & Personal Care", "Hardware & Tools", "General Store"].includes(formData.businessCategory) && (
+                  <div className="space-y-2 animate-in slide-in-from-top-2 duration-300">
+                    <label className="block text-[10px] font-black uppercase tracking-widest ml-1.5 text-muted-foreground">
+                      Specify Category
+                    </label>
+                    <div className="relative group">
+                      <Plus className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                      <input
+                        type="text"
+                        placeholder="e.g. Handmade Crafts"
+                        value={formData.businessCategory}
+                        onChange={(e) => setFormData(prev => ({ ...prev, businessCategory: e.target.value }))}
+                        className="w-full h-14 pl-12 pr-5 rounded-2xl border border-border bg-muted/30 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                      />
+                    </div>
+                  </div>
+                )}
+
                 <div className="p-6 rounded-3xl border border-border bg-muted/20 flex items-start gap-4">
                   <div className="p-2.5 rounded-xl bg-muted text-muted-foreground">
                     <Briefcase className="h-5 w-5" />

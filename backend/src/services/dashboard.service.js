@@ -7,6 +7,7 @@ import mongoose from "mongoose";
 
 /**
  * DashboardService: Specialized logic for fetching merchant business metrics.
+ * Now Unified with the Customer-centric Data Model.
  */
 
 // 💰 Total Sales (Lifetime)
@@ -46,7 +47,7 @@ const getTopCustomers = async (merchantId, limit = 5) => {
     const mId = new mongoose.Types.ObjectId(merchantId);
     
     const shoppers = await Transaction.aggregate([
-        { $match: { merchantId: mId, type: "SALE" } },
+        { $match: { mId, type: "SALE" } },
         {
             $group: {
                 _id: "$customerId",
@@ -93,10 +94,38 @@ const getTopProducts = async (merchantId, limit = 5) => {
     ]);
 };
 
+// 📓 Unified Ledger Summary (Total outstanding balance from Customers)
+const getKhataSummary = async (merchantId) => {
+    const stats = await Customer.aggregate([
+        { $match: { merchantId: new mongoose.Types.ObjectId(merchantId) } },
+        { 
+            $group: { 
+                _id: null, 
+                totalBalance: { $sum: "$balance" },
+                customerCount: { $sum: 1 } 
+            } 
+        }
+    ]);
+    return {
+        totalOutstanding: stats[0]?.totalBalance || 0,
+        activeAccounts: stats[0]?.customerCount || 0
+    };
+};
+
+// 📦 Low Stock Count
+const getLowStockCount = async (merchantId) => {
+    return await Product.countDocuments({
+        merchantId,
+        $expr: { $lte: ["$stock", "$lowStockThreshold"] }
+    });
+};
+
 export {
     getTotalSalesValue,
     getTotalOrdersCount,
     getTodayRevenue,
     getTopCustomers,
-    getTopProducts
+    getTopProducts,
+    getKhataSummary,
+    getLowStockCount
 };

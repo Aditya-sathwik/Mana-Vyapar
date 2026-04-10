@@ -54,7 +54,8 @@ export default function StoreSettingsPage() {
          { dayGroup: "Monday - Friday", openTime: "09:00", closeTime: "21:00", isClosed: false },
          { dayGroup: "Saturday - Sunday", openTime: "10:00", closeTime: "19:00", isClosed: false }
       ],
-      gstin: ""
+      gstin: "",
+      businessCategory: "Electronics"
    })
 
    const [createFormData, setCreateFormData] = useState({
@@ -87,7 +88,8 @@ export default function StoreSettingsPage() {
                   { dayGroup: "Monday - Friday", openTime: "09:00", closeTime: "21:00", isClosed: false },
                   { dayGroup: "Saturday - Sunday", openTime: "10:00", closeTime: "19:00", isClosed: false }
                ],
-               gstin: res.data.gstin || ""
+               gstin: res.data.gstin || "",
+               businessCategory: res.data.owner?.businessCategory || "General"
             })
          }
       } catch (error: any) {
@@ -134,13 +136,25 @@ export default function StoreSettingsPage() {
 
       try {
          setIsSaving(true)
-         const res = await apiFetch("/stores/update", {
+         // 1. Update Store Details
+         const storeRes = await apiFetch("/stores/update", {
             method: "PATCH",
             body: JSON.stringify(formData)
          })
-         if (res.success) {
+         
+         // 2. Update User Details (for businessCategory)
+         await apiFetch("/users/update-account", {
+            method: "PATCH",
+            body: JSON.stringify({ 
+               fullname: formData.name, // assuming we keep it simple
+               email: formData.contactInfo.email,
+               businessCategory: formData.businessCategory 
+            })
+         })
+
+         if (storeRes.success) {
             toast.success("Settings saved successfully")
-            setStore(res.data)
+            setStore(storeRes.data)
          }
       } catch (error: any) {
          toast.error(error.message || "Failed to update settings")
@@ -424,6 +438,42 @@ export default function StoreSettingsPage() {
                                  />
                               </div>
                            </div>
+                           <div className="space-y-3">
+                              <label className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] ml-2">Business Category</label>
+                              <div className="relative group">
+                                 <Settings2 className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                                 <select
+                                    name="businessCategory"
+                                    value={["Electronics", "Fashion & Apparel", "Grocery & Daily Needs", "Home & Kitchen", "Health & Wellness", "Beauty & Personal Care", "Hardware & Tools", "General Store"].includes(formData.businessCategory) ? formData.businessCategory : "Other"}
+                                    onChange={(e) => {
+                                      const val = e.target.value;
+                                      setFormData(prev => ({ ...prev, businessCategory: val === "Other" ? "" : val }));
+                                    }}
+                                    className="w-full pl-12 pr-4 h-14 bg-muted/30 border border-border rounded-2xl text-sm font-bold text-foreground focus:ring-2 focus:ring-primary/20 focus:border-primary focus:outline-none transition-all appearance-none cursor-pointer"
+                                 >
+                                    {["Electronics", "Fashion & Apparel", "Grocery & Daily Needs", "Home & Kitchen", "Health & Wellness", "Beauty & Personal Care", "Hardware & Tools", "General Store"].map(cat => (
+                                       <option key={cat} value={cat}>{cat}</option>
+                                    ))}
+                                    <option value="Other">Other / Custom</option>
+                                 </select>
+                              </div>
+                           </div>
+
+                           {!["Electronics", "Fashion & Apparel", "Grocery & Daily Needs", "Home & Kitchen", "Health & Wellness", "Beauty & Personal Care", "Hardware & Tools", "General Store"].includes(formData.businessCategory) && (
+                              <div className="space-y-3 animate-in slide-in-from-top-2 duration-300">
+                                 <label className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] ml-2">Specify Category</label>
+                                 <div className="relative group">
+                                    <Plus className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                                    <input
+                                       type="text"
+                                       placeholder="e.g. Furniture Store"
+                                       value={formData.businessCategory}
+                                       onChange={(e) => setFormData(prev => ({ ...prev, businessCategory: e.target.value }))}
+                                       className="w-full pl-12 pr-4 h-14 bg-muted/30 border border-border rounded-2xl text-sm font-bold text-foreground focus:ring-2 focus:ring-primary/20 focus:border-primary focus:outline-none transition-all"
+                                    />
+                                 </div>
+                              </div>
+                           )}
                            <div className="space-y-3">
                               <label className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] ml-2">Store Link (Slug)</label>
                               <div className="relative group">

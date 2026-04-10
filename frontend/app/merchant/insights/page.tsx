@@ -298,7 +298,7 @@ export default function InsightsPage() {
                                 </div>
                                 <h4 className="text-lg font-black tracking-tight mb-1 truncate">{item.name}</h4>
                                 <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-6">
-                                    Velocity: {item.velocity.toFixed(2)} units / day
+                                    Velocity: {(item.velocity || 0).toFixed(2)} units / day
                                 </p>
                                 
                                 <div className="space-y-4">

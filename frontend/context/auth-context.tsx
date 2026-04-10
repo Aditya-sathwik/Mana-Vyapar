@@ -15,6 +15,8 @@ interface User {
   avatar?: string;
   role: string;
   businessName?: string;
+  businessCategory?: string;
+  storeSlug?: string;
 }
 
 interface LoginCredentials {
@@ -39,6 +41,7 @@ interface RegisterData {
   phone: string;
   password: string;
   businessName: string;
+  businessCategory?: string;
   role?: string;
   merchantId?: string;
 }

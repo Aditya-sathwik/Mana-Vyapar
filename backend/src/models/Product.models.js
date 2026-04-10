@@ -28,7 +28,7 @@ const productSchema = new Schema(
     },
     sellingPrice: {
       type: Number, // The actual price the customer pays
-      required: true,
+      default: 0,
       min: 0,
     },
     costPrice: {

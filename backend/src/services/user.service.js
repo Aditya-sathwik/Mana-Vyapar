@@ -1,6 +1,6 @@
 import { User } from "../models/User.models.js";
-import { ApiError } from "../utlis/apierror.js";
-import { uploadOnCloudinary } from "../utlis/cloudinary.js";
+import { ApiError } from "../utils/ApiError.js";
+import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import jwt from "jsonwebtoken";
 
 /**
@@ -25,17 +25,17 @@ export const generateAccessAndRefreshToken = async (userId) => {
     }
 };
 
-export const registerUser = async ({ 
-    fullname, 
-    username, 
-    email, 
-    password, 
-    phone, 
-    businessName, 
-    role = "Merchant", 
-    merchantId, 
-    avatarlocalpath, 
-    coverimagelocalpath 
+export const registerUser = async ({
+    fullname,
+    username,
+    email,
+    password,
+    phone,
+    businessName,
+    role = "Merchant",
+    merchantId,
+    avatarlocalpath,
+    coverimagelocalpath
 }) => {
     // If registering as a Customer, merchantId is REQUIRED and must be a valid Merchant
     if (role === "Customer") {
@@ -76,6 +76,7 @@ export const registerUser = async ({
         email,
         phone: phone || "",
         businessName: businessName || "",
+        businessCategory: businessCategory || "General",
         password,
         role,
         merchantId: role === "Customer" ? merchantId : null,
@@ -182,18 +183,18 @@ export const changeCurrentPassword = async (user, { oldPassword, newPassword }) 
     await user.save({ validateBeforeSave: false });
 };
 
-export const updateAccountDetails = async (userId, { fullname, email }) => {
+export const updateAccountDetails = async (userId, { fullname, email, businessCategory }) => {
     if (!fullname || !email) {
         throw new ApiError(400, "All fields are required");
     }
 
+    const updateFields = { fullname, email };
+    if (businessCategory) updateFields.businessCategory = businessCategory;
+
     const user = await User.findByIdAndUpdate(
         userId,
         {
-            $set: {
-                fullname,
-                email
-            }
+            $set: updateFields
         },
         { new: true }
     ).select("-password");
@@ -259,7 +260,7 @@ export const getAllUsers = async () => {
 
 export const getMerchantCustomers = async (merchantId) => {
     const customers = await User.find({ merchantId, role: "Customer" }).select("-password -refreshToken");
-    return { 
+    return {
         customers,
         totalCount: customers.length
     };

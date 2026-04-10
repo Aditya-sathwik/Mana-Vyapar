@@ -1,6 +1,6 @@
 import { Coupon } from "../models/Coupon.models.js";
 import { Customer } from "../models/Customer.models.js";
-import { ApiError } from "../utlis/apierror.js";
+import { ApiError } from "../utils/ApiError.js";
 
 /**
  * Creates a new merchant-specific coupon.

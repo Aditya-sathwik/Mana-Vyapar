@@ -1,4 +1,4 @@
-import { ApiError } from "../utlis/apierror.js";
+import { ApiError } from "../utils/ApiError.js";
 
 /**
  * validate: A generic middleware to validate req.body against a Joi schema.

@@ -25,7 +25,7 @@ const orderSchema = new Schema(
     },
     customerModel: {
       type: String,
-      enum: ["Customer", "User"],
+      enum: ["Customer", "User", "Khata"],
     },
 
     customerName: {
@@ -144,6 +144,15 @@ const orderSchema = new Schema(
       required: true,
       default: 0,
     },
+    couponCode: {
+      type: String,
+      trim: true,
+      uppercase: true
+    },
+    discountAmount: {
+      type: Number,
+      default: 0
+    },
 
     // Order status
     status: {
@@ -175,7 +184,7 @@ const orderSchema = new Schema(
     // Payment
     paymentMethod: {
       type: String,
-      enum: ["CASH", "UPI", "CARD", "KHATA", "OTHER"],
+      enum: ["CASH", "UPI", "CARD", "KHATA", "WHATSAPP", "OTHER"],
       default: "CASH",
     },
     paymentStatus: {
@@ -219,13 +228,18 @@ const orderSchema = new Schema(
 orderSchema.index({ merchantId: 1, status: 1 });
 orderSchema.index({ merchantId: 1, createdAt: -1 });
 
-// Pre-save hook to generate order number
-orderSchema.pre("save", async function (next) {
-  if (this.isNew && !this.orderNumber) {
-    const count = await mongoose.model("Order").countDocuments();
-    this.orderNumber = `ORD${Date.now()}${count + 1}`;
+// Pre-validate hook to generate order number
+orderSchema.pre("validate", async function (next) {
+  try {
+    if (this.isNew && !this.orderNumber) {
+      // Use this.constructor to avoid circular dependency issues
+      const count = await this.constructor.countDocuments();
+      this.orderNumber = `ORD-${Date.now()}-${count + 1}`;
+    }
+    next();
+  } catch (error) {
+    next(error);
   }
-  next();
 });
 
 // Pre-save hook to calculate totals

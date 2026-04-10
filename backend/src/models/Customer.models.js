@@ -74,28 +74,80 @@ const customerSchema = new Schema(
       type: String,
     },
 
-    // Optional link to Khata if they have a credit account
-    khataId: {
-      type: Schema.Types.ObjectId,
-      ref: "Khata",
+    // 💳 Khata / Ledger Integration (Now part of Customer)
+    balance: {
+      type: Number,
+      default: 0,
+      // Positive = Customer owes merchant, Negative = Merchant owes customer
     },
+    creditLimit: {
+      type: Number,
+      default: 0,
+    },
+    transactions: [
+      {
+        transactionId: String,
+        date: { type: Date, default: Date.now },
+        type: {
+          type: String,
+          enum: ["Credit", "Debit", "Payment Received", "Payment Made"],
+        },
+        amount: Number,
+        description: String,
+        orderId: { type: Schema.Types.ObjectId, ref: "Order" },
+        balanceAfter: Number,
+        recordedBy: { type: Schema.Types.ObjectId, ref: "User" },
+      },
+    ],
   },
   {
     timestamps: true,
   }
 );
 
-// CRITICAL: Compound index ensures a merchant can't have two customers with the same phone,
-// but two different merchants CAN have a customer with the same phone.
-customerSchema.index({ merchantId: 1, phone: 1 }, { unique: true });
+// khataId is removed as Customer is now the ledger
+// customerSchema.index({ merchantId: 1, phone: 1 }, { unique: true }); // Already exists
 
-// Optimize for common queries
-customerSchema.index({ merchantId: 1, "stats.totalSpent": -1 });
-customerSchema.index({ merchantId: 1, lastVisitDate: -1 });
-
-// Virtual to see if customer is a "Khata" customer
-customerSchema.virtual("isKhataCustomer").get(function () {
-  return !!this.khataId;
+// Virtual for outstanding amount
+customerSchema.virtual("outstandingAmount").get(function () {
+  return Math.abs(this.balance);
 });
+
+// Methods ported from Khata model
+customerSchema.methods.addCredit = function (amount, description, orderId = null, recordedBy = null) {
+  const transactionId = `TXN${Date.now()}${Math.random().toString(36).substr(2, 9)}`;
+  const newBalance = this.balance + amount;
+  this.transactions.push({
+    transactionId,
+    type: "Credit",
+    amount,
+    description,
+    orderId,
+    balanceAfter: newBalance,
+    recordedBy,
+  });
+  this.balance = newBalance;
+  return this.save();
+};
+
+customerSchema.methods.addPayment = function (amount, paymentMethod, description = "Payment received", recordedBy = null) {
+  const transactionId = `TXN${Date.now()}${Math.random().toString(36).substr(2, 9)}`;
+  const newBalance = this.balance - amount;
+  this.transactions.push({
+    transactionId,
+    type: "Payment Received",
+    amount,
+    description,
+    balanceAfter: newBalance,
+    recordedBy,
+  });
+  this.balance = newBalance;
+  return this.save();
+};
+
+// 🚀 CRITICAL: Unified CRM + Ledger Entity
+// Compund index ensures phone number uniqueness per merchant
+customerSchema.index({ merchantId: 1, phone: 1 }, { unique: true });
+customerSchema.index({ merchantId: 1, balance: -1 });
 
 export const Customer = mongoose.model("Customer", customerSchema);

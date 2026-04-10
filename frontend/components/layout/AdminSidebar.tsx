@@ -26,6 +26,8 @@ import {
   Box,
   LayoutDashboard
 } from "lucide-react"
+import { ThemeToggle } from "@/components/ui/theme-toggle"
+import { useAuth } from "@/context/auth-context"
 
 interface NavItemProps {
   item: any
@@ -40,13 +42,13 @@ const NavItem = ({ item, isCollapsed, isActive }: NavItemProps) => {
       className={cn(
         "group relative flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-300",
         isActive
-          ? "bg-primary/10 text-primary border border-primary/20 shadow-[0_0_15px_-5px_rgba(5,148,103,0.3)]"
-          : "text-slate-400 hover:bg-slate-800/50 hover:text-white border border-transparent"
+          ? "bg-primary/10 text-primary border border-primary/20 dark:shadow-[0_0_15px_-5px_rgba(5,148,103,0.3)] shadow-[0_0_10px_-2px_rgba(5,148,103,0.1)]"
+          : "text-muted-foreground hover:bg-muted hover:text-foreground border border-transparent"
       )}
     >
       {isActive && (
         <motion.div
-          layoutId="active-pill"
+          layoutId="active-pill-admin"
           className="absolute left-0 w-1 h-6 bg-primary rounded-r-full shadow-[0_0_10px_rgba(5,148,103,1)]"
           transition={{ type: "spring", stiffness: 300, damping: 30 }}
         />
@@ -54,15 +56,15 @@ const NavItem = ({ item, isCollapsed, isActive }: NavItemProps) => {
       
       <item.icon className={cn(
         "h-5 w-5 shrink-0 transition-transform duration-300 group-hover:scale-110",
-        isActive ? "text-primary" : "text-slate-400 group-hover:text-white"
+        isActive ? "text-primary" : "text-muted-foreground group-hover:text-primary transition-colors"
       )} />
       
       {!isCollapsed && (
-        <span className="text-sm font-medium truncate">{item.label}</span>
+        <span className="text-sm font-bold truncate tracking-tight">{item.label}</span>
       )}
 
       {isCollapsed && (
-        <div className="absolute left-14 bg-slate-900 text-white text-[10px] px-2.5 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none transition-all duration-300 whitespace-nowrap z-50 border border-slate-700 font-bold uppercase tracking-widest translate-x-[-10px] group-hover:translate-x-0 shadow-xl">
+        <div className="absolute left-14 bg-foreground text-background text-[10px] px-2.5 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none transition-all duration-300 whitespace-nowrap z-50 border border-border font-bold uppercase tracking-widest translate-x-[-10px] group-hover:translate-x-0 shadow-xl">
           {item.label}
         </div>
       )}
@@ -91,6 +93,7 @@ const adminSections = [
     items: [
       { href: "/admin/support", label: "Support Queue", icon: HelpCircle },
       { href: "/admin/system-alerts", label: "Kernel Logs", icon: Terminal },
+      { href: "/admin/api-engine", label: "API Engine", icon: Zap },
       { href: "/admin/infrastructure", label: "Edge Config", icon: Box },
     ]
   }
@@ -100,6 +103,7 @@ export function AdminSidebar({ className }: { className?: string }) {
   const [isCollapsed, setIsCollapsed] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
   const pathname = usePathname()
+  const { user } = useAuth()
 
   // Handle client-side responsiveness for initial state
   useEffect(() => {
@@ -122,21 +126,21 @@ export function AdminSidebar({ className }: { className?: string }) {
       animate={{ width: isCollapsed ? 80 : 280 }}
       transition={{ type: "spring", stiffness: 300, damping: 30 }}
       className={cn(
-        "relative bg-[#09090b]/90 backdrop-blur-2xl border-r border-slate-800/50 flex flex-col z-40 h-screen sticky top-0 shadow-2xl overflow-visible group/sidebar",
+        "relative bg-card/95 backdrop-blur-2xl border-r border-border/50 flex flex-col z-40 h-screen sticky top-0 shadow-2xl overflow-visible group/sidebar",
         className
       )}
     >
       {/* Sidebar Toggle Button - Only show on Desktop */}
       <button
         onClick={() => setIsCollapsed(!isCollapsed)}
-        className="absolute -right-3.5 top-10 bg-slate-900 text-slate-400 h-7 w-7 rounded-full hidden md:flex items-center justify-center shadow-xl hover:text-primary hover:border-primary/50 transition-all border border-slate-700 z-50 group-hover/sidebar:opacity-100 opacity-0"
+        className="absolute -right-4 top-10 bg-primary text-white h-8 w-8 rounded-full hidden md:flex items-center justify-center shadow-[0_0_15px_rgba(5,148,103,0.4)] hover:scale-110 transition-all border-2 border-background z-50 group-hover/sidebar:opacity-100 opacity-0 group/toggle"
       >
-        {isCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+        {isCollapsed ? <ChevronRight className="h-5 w-5 group-hover:translate-x-0.5 transition-transform" /> : <ChevronLeft className="h-5 w-5 group-hover:-translate-x-0.5 transition-transform" />}
       </button>
 
       {/* Header / Logo */}
       <div className={cn(
-        "h-20 flex items-center border-b border-slate-800/50 transition-all duration-300",
+        "h-20 flex items-center border-b border-border/50 transition-all duration-300",
         isCollapsed ? "px-4 justify-center" : "px-6"
       )}>
         <div className="flex items-center gap-3">
@@ -150,7 +154,7 @@ export function AdminSidebar({ className }: { className?: string }) {
                 className="object-contain"
               />
             </div>
-            <div className="absolute -top-1 -right-1 h-3 w-3 bg-primary rounded-full border-2 border-[#09090b] shadow-[0_0_5px_rgba(5,148,103,1)]" />
+            <div className="absolute -top-1 -right-1 h-3 w-3 bg-primary rounded-full border-2 border-background shadow-[0_0_5px_rgba(5,148,103,1)]" />
           </div>
           {!isCollapsed && (
             <motion.div 
@@ -158,10 +162,10 @@ export function AdminSidebar({ className }: { className?: string }) {
               animate={{ opacity: 1, x: 0 }}
               className="flex flex-col"
             >
-              <span className="text-white font-black text-lg tracking-tighter leading-none uppercase italic">MANA VYAPAR</span>
+              <span className="text-foreground font-black text-lg tracking-tighter leading-none uppercase">MANA VYAPAR</span>
               <div className="flex items-center gap-1.5 mt-1">
                 <span className="h-1 w-1 rounded-full bg-primary animate-pulse" />
-                <span className="text-[10px] font-bold text-slate-500 tracking-[0.2em] uppercase">Control Layer</span>
+                <span className="text-[10px] font-bold text-muted-foreground tracking-[0.2em] uppercase">Control Layer</span>
               </div>
             </motion.div>
           )}
@@ -172,13 +176,13 @@ export function AdminSidebar({ className }: { className?: string }) {
       {!isCollapsed && (
         <div className="px-6 py-4">
           <div className="relative group">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500 group-focus-within:text-primary transition-colors" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
             <input 
               type="text"
-              placeholder="System search..."
+              placeholder="Search features..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-slate-900/50 border border-slate-800 rounded-xl py-2 pl-10 pr-4 text-xs text-slate-300 focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/20 transition-all placeholder:text-slate-600"
+              className="w-full bg-muted/50 border border-border rounded-xl py-2 pl-10 pr-4 text-xs text-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/20 transition-all placeholder:text-muted-foreground"
             />
           </div>
         </div>
@@ -189,8 +193,8 @@ export function AdminSidebar({ className }: { className?: string }) {
         {adminSections.map((section) => (
           <div key={section.title} className="space-y-1">
             {!isCollapsed && (
-              <p className="text-[10px] font-bold text-slate-600 uppercase tracking-[0.3em] mb-3 ml-2 flex items-center gap-2">
-                <span className="h-px flex-1 bg-slate-800" />
+              <p className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-[0.3em] mb-3 ml-2 flex items-center gap-2">
+                <span className="h-px flex-1 bg-border" />
                 {section.title}
               </p>
             )}
@@ -210,60 +214,34 @@ export function AdminSidebar({ className }: { className?: string }) {
 
       {/* Footer / User Profile */}
       <div className={cn(
-        "p-4 mt-auto border-t border-slate-800/50 bg-[#09090b]/50 backdrop-blur-md",
+        "p-4 mt-auto border-t border-border/50 bg-card/50 backdrop-blur-md",
         isCollapsed ? "flex flex-col items-center gap-4" : ""
       )}>
-        {!isCollapsed ? (
-          <div className="flex flex-col gap-3">
-             <Link
-              href="/admin/profile"
-              className="flex items-center gap-3 p-2 rounded-xl border border-slate-800 bg-slate-900/30 hover:bg-slate-800/50 transition-all group"
-            >
-              <div className="relative">
-                <div className="h-10 w-10 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center overflow-hidden">
-                  <User className="h-6 w-6 text-slate-400 group-hover:text-primary transition-colors" />
+        <div className="flex items-center justify-between gap-2 px-1">
+           <ThemeToggle />
+           {!isCollapsed && (
+             <div className="flex-1 flex items-center gap-3 pl-3">
+                <div className="h-8 w-8 rounded-lg bg-muted flex items-center justify-center text-muted-foreground border border-border">
+                   <User className="h-4 w-4" />
                 </div>
-                <div className="absolute -bottom-1 -right-1 h-3.5 w-3.5 bg-primary rounded-full border-2 border-[#09090b] flex items-center justify-center">
-                  <Zap className="h-2 w-2 text-black" />
+                <div className="flex flex-col min-w-0">
+                   <span className="text-[10px] font-bold text-foreground truncate uppercase">{user?.fullname?.split(" ")[0] || "Aditya"}</span>
+                   <span className="text-[8px] font-bold text-primary uppercase opacity-70">Operator</span>
                 </div>
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-bold text-white truncate">Aditya Sathwik</p>
-                <p className="text-[10px] text-primary font-black uppercase tracking-wider">Super Operator</p>
-              </div>
-              <Settings className="h-4 w-4 text-slate-500 hover:text-white transition-colors" />
-            </Link>
-            
-            <button
-              className="w-full flex items-center justify-between px-4 py-2.5 rounded-xl text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-all border border-transparent hover:border-red-500/20 group text-xs font-bold uppercase tracking-wider"
-            >
-              <span>Terminate Session</span>
-              <LogOut className="h-4 w-4 opacity-70 group-hover:translate-x-1 transition-transform" />
-            </button>
-          </div>
-        ) : (
-          <div className="flex flex-col gap-4 items-center">
-             <Link
-              href="/admin/profile"
-              className="relative h-10 w-10 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center group pointer-events-auto"
-            >
-              <User className="h-6 w-6 text-slate-400 group-hover:text-primary transition-colors" />
-               <div className="absolute left-14 bg-slate-900 text-white text-[10px] px-2.5 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none transition-all duration-300 whitespace-nowrap z-50 border border-slate-700 font-bold uppercase tracking-widest translate-x-[-10px] group-hover:translate-x-0 shadow-xl">
-                My Profile
-              </div>
-            </Link>
-            <button className="h-10 w-10 flex items-center justify-center rounded-lg text-red-500 hover:bg-red-500/10 transition-all border border-transparent hover:border-red-500/20 group relative">
-              <LogOut className="h-5 w-5" />
-              <div className="absolute left-14 bg-red-900 text-white text-[10px] px-2.5 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none transition-all duration-300 whitespace-nowrap z-50 border border-red-700 font-bold uppercase tracking-widest translate-x-[-10px] group-hover:translate-x-0 shadow-xl">
-                Logout
-              </div>
-            </button>
-          </div>
-        )}
+             </div>
+           )}
+        </div>
+        
+        <button
+          className="w-full mt-2 flex items-center gap-3 px-3 py-2.5 rounded-xl text-red-500 hover:bg-red-500/10 transition-all group relative border border-transparent hover:border-red-500/10"
+        >
+          <LogOut className="h-5 w-5 shrink-0 transition-transform group-hover:-translate-x-1" />
+          {!isCollapsed && <span className="font-bold text-[10px] uppercase tracking-widest">End Session</span>}
+        </button>
       </div>
 
-      {/* Glossy Overlay effect for active states */}
-      <div className="absolute inset-x-0 bottom-0 top-0 pointer-events-none bg-gradient-to-t from-primary/5 via-transparent to-transparent opacity-30" />
+      {/* Subtle background glow */}
+      <div className="absolute inset-x-0 bottom-0 top-0 pointer-events-none bg-gradient-to-t from-primary/5 via-transparent to-transparent opacity-30 dark:opacity-20 transition-opacity" />
     </motion.aside>
   )
 }

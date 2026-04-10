@@ -59,6 +59,11 @@ const userSchema = new Schema(
       type: String,
       trim: true,
     },
+    businessCategory: {
+      type: String,
+      trim: true,
+      default: "General",
+    },
     businessAddress: {
       street: { type: String },
       city: { type: String },
@@ -166,6 +171,12 @@ const userSchema = new Schema(
         type: String,
         enum: ["CASH", "UPI", "CARD", "KHATA"],
       },
+    },
+    // Store reference for quick access
+    storeSlug: {
+      type: String,
+      lowercase: true,
+      trim: true,
     }
   },
   {
@@ -194,6 +205,7 @@ userSchema.methods.generateAccessToken = function () {
       fullname: this.fullname,
       username: this.username,
       role: this.role,
+      storeSlug: this.storeSlug,
     },
     process.env.ACCESS_TOKEN_SECRET,
     { expiresIn: process.env.ACCESS_TOKEN_EXPIRY }

@@ -56,9 +56,11 @@ const sidebarSections = [
     title: "Operations",
     items: [
       { href: "/merchant/notifications", label: "Messages", icon: Bell },
+      { href: "/merchant/support", label: "Merchant Support", icon: HeadphonesIcon },
       { href: "/merchant/alerts", label: "System Sync", icon: AlertTriangle },
       { href: "/merchant/subscription", label: "Billing", icon: CreditCard },
       { href: "/merchant/delivery", label: "Orders", icon: Truck },
+      { href: "/merchant/settings/policies", label: "Store Policies", icon: FileText },
     ]
   }
 ]
@@ -243,13 +245,15 @@ export function Sidebar({ className }: { className?: string }) {
   {!isActuallyCollapsed && (
     <div className="px-4 mb-4">
       <div className="bg-muted/50 dark:bg-primary/10 rounded-2xl p-4 border border-border dark:border-primary/10 group relative overflow-hidden">
-         <div className="relative z-10">
+          <div className="relative z-10">
             <div className="flex items-center gap-2 mb-2">
                 <HeadphonesIcon className="h-4 w-4 text-primary" />
                 <span className="text-[10px] font-black uppercase text-muted-foreground">Shop Support</span>
             </div>
-            <button className="w-full py-2 bg-primary text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:scale-105 transition-all shadow-lg shadow-primary/20">Get AI Assistance</button>
-         </div>
+            <Link href="/merchant/assistance">
+                <button className="w-full py-2 bg-primary text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:scale-105 transition-all shadow-lg shadow-primary/20">Get Assistance</button>
+            </Link>
+          </div>
          <div className="absolute -right-4 -bottom-4 opacity-10 group-hover:rotate-12 transition-transform">
             <Zap className="h-16 w-16 text-primary fill-primary" />
          </div>

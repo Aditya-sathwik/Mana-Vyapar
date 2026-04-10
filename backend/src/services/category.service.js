@@ -1,6 +1,6 @@
 import { Category } from "../models/Category.models.js";
-import { ApiError } from "../utlis/apierror.js";
-import { uploadOnCloudinary } from "../utlis/cloudinary.js";
+import { ApiError } from "../utils/ApiError.js";
+import { uploadOnCloudinary } from "../utils/cloudinary.js";
 
 /* 🌳 The Tree Builder Logic */
 export const getCategoryTree = async (storeId) => {

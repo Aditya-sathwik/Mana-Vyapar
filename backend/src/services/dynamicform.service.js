@@ -1,6 +1,6 @@
 import { DynamicForm } from "../models/DynamicForm.models.js";
 import { FormSubmission } from "../models/FormSubmission.models.js";
-import { ApiError } from "../utlis/apierror.js";
+import { ApiError } from "../utils/ApiError.js";
 
 /**
  * createForm: Blueprint for a new custom store form.

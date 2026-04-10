@@ -14,13 +14,13 @@ export default function AdminLayout({
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
   return (
-    <div className="dark bg-[#09090b] min-h-screen flex text-slate-300 font-body selection:bg-primary/30 selection:text-primary overflow-hidden relative">
+    <div className="bg-background min-h-screen flex text-foreground font-body selection:bg-primary/30 selection:text-primary overflow-hidden relative transition-colors duration-300">
       {/* Background Mesh Gradient */}
-      <div className="absolute inset-0 pointer-events-none opacity-20">
-        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/20 rounded-full blur-[120px]" />
-        <div className="absolute bottom-[10%] right-[-5%] w-[30%] h-[30%] bg-emerald-900/20 rounded-full blur-[100px]" />
+      <div className="absolute inset-0 pointer-events-none opacity-30 dark:opacity-20">
+        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/10 dark:bg-primary/20 rounded-full blur-[120px]" />
+        <div className="absolute bottom-[10%] right-[-5%] w-[30%] h-[30%] bg-emerald-900/10 dark:bg-emerald-900/20 rounded-full blur-[100px]" />
       </div>
-
+ 
       {/* Sidebar - Desktop */}
       <AdminSidebar className="hidden md:flex" />
 

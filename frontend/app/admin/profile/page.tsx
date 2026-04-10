@@ -12,9 +12,13 @@ import {
   Smartphone, 
   LogOut,
   Camera,
-  CheckCircle2,
+  CheckCircle,
   Clock,
-  ArrowRight
+  ArrowRight,
+  ShieldAlert,
+  Zap,
+  Fingerprint,
+  ChevronRight
 } from "lucide-react"
 import { Card } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
@@ -23,187 +27,204 @@ export default function AdminProfilePage() {
   const [is2FAEnabled, setIs2FAEnabled] = useState(true)
 
   return (
-    <div className="max-w-6xl mx-auto w-full space-y-8 pb-12">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div className="space-y-12 pb-20 max-w-[1400px] mx-auto">
+      {/* Dynamic Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-8">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white mb-1">
-            Account Management
-          </h1>
-          <p className="text-slate-500 dark:text-slate-400 text-sm">
-            View and manage your super admin credentials and security preferences.
-          </p>
+           <div className="flex items-center gap-3 mb-2">
+              <div className="p-2 bg-primary/10 rounded-lg">
+                 <ShieldCheck className="h-4 w-4 text-primary" />
+              </div>
+              <span className="text-[10px] font-black uppercase tracking-[0.4em] text-muted-foreground italic">Super User Authentication</span>
+           </div>
+           <h1 className="text-4xl md:text-5xl font-black text-foreground tracking-tighter uppercase leading-none italic">
+             Account <span className="text-primary tracking-normal">Security</span>
+           </h1>
+           <p className="text-muted-foreground text-sm mt-4 font-medium max-w-lg leading-relaxed italic opacity-80">
+             Manage high-level administrative credentials, multi-factor authorization, and session persistence.
+           </p>
         </div>
-        <div className="flex items-center gap-2 px-4 py-2 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 rounded-full text-sm font-bold">
-           <ShieldCheck className="h-4 w-4" />
-           Verified Administrator
+        <div className="flex items-center gap-3 px-6 py-3 bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl shadow-emerald-500/5 transition-all hover:scale-105 active:scale-95 cursor-default">
+           <ShieldAlert className="h-5 w-5 text-emerald-500" />
+           Verified System Owner
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        {/* Left Column: Profile Summary */}
-        <div className="lg:col-span-4 space-y-6">
-          <Card className="p-8 text-center bg-white dark:bg-[#09090b] border-primary/10 relative overflow-hidden">
-             <div className="absolute top-0 left-0 w-full h-24 bg-gradient-to-br from-primary/20 to-primary-dark/20 -z-10"></div>
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
+        {/* Left Column: Premium Profile Summary */}
+        <div className="lg:col-span-4 space-y-8">
+          <Card className="p-10 text-center bg-card border-border/50 shadow-2xl rounded-[3rem] relative overflow-hidden group">
+             {/* Adaptive Background Gradient */}
+             <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-br from-primary/20 via-primary/5 to-transparent -z-10 group-hover:opacity-60 transition-opacity"></div>
              
-             <div className="relative inline-block mt-4">
-                <div className="h-32 w-32 rounded-3xl bg-slate-100 dark:bg-slate-800 p-1 ring-4 ring-white dark:ring-[#09090b] overflow-hidden">
+             <div className="relative inline-block mt-4 mb-8">
+                <div className="h-40 w-40 rounded-[2.5rem] bg-muted border-4 border-background p-1.5 overflow-hidden shadow-2xl transition-transform duration-500 group-hover:scale-105">
                    <img 
-                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuB5QGtyS46ffXJmtiUOY-Mq-cEmOc7FePMAok4tf6sm3G4X7oW97TivKVxOLQ0NsUlEoQN7-oYfr5cpdKMJrOd6mD19rgvD6Z1yTasNnlhUUAu47Jw6vXSJ40yql6yHWPvUFNA3qE9kwyQA0B_TOvtUhEgBDXKwxCi9bsIJMP5rRhX15jNJr35xjlrXSycBVedLuDD4lJ0Swodp1ogo0-Sbnysa4H65Ujorz0BV-0X3HiLMw-Kf_TMQjxRGw9xjO1WkdjtItytNu-A" 
+                    src="https://api.dicebear.com/7.x/adventurer/svg?seed=aditya" 
                     alt="Admin Avatar" 
-                    className="h-full w-full object-cover rounded-2xl"
+                    className="h-full w-full object-cover rounded-[2rem] grayscale group-hover:grayscale-0 transition-all duration-700"
                    />
                 </div>
-                <button className="absolute -bottom-2 -right-2 p-2.5 bg-primary text-black rounded-xl shadow-xl hover:scale-110 transition-transform">
-                   <Camera className="h-4 w-4" />
+                <button className="absolute -bottom-2 -right-2 h-12 w-12 bg-primary text-primary-foreground rounded-2xl shadow-2xl border-4 border-background flex items-center justify-center hover:scale-110 active:scale-90 transition-all shadow-primary/40">
+                   <Camera className="h-5 w-5" />
                 </button>
              </div>
 
-             <div className="mt-6 mb-8">
-                <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Aditya Sathwik</h2>
-                <p className="text-slate-500 font-medium">Chief Technology Officer</p>
-             </div>
-
-             <div className="space-y-3">
-                <div className="flex items-center justify-between text-sm p-3 bg-slate-50 dark:bg-white/5 rounded-xl border border-slate-100 dark:border-slate-800">
-                   <span className="text-slate-500">Access Level</span>
-                   <span className="font-bold text-primary">System Owner</span>
-                </div>
-                <div className="flex items-center justify-between text-sm p-3 bg-slate-50 dark:bg-white/5 rounded-xl border border-slate-100 dark:border-slate-800">
-                   <span className="text-slate-500">Member Since</span>
-                   <span className="font-bold text-slate-700 dark:text-slate-300">Mar 12, 2022</span>
+             <div className="mb-10">
+                <h2 className="text-3xl font-black text-foreground tracking-tighter uppercase italic leading-none mb-3">Aditya Sathwik</h2>
+                <div className="flex items-center justify-center gap-2">
+                   <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                   <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em] italic opacity-60">Chief Strategy Officer</p>
                 </div>
              </div>
 
-             <button className="w-full mt-8 flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-red-600 font-bold bg-red-50 dark:bg-red-900/10 hover:bg-red-100 transition-colors">
-                <LogOut className="h-5 w-5" />
-                Sign Out Everywhere
+             <div className="space-y-4">
+                <div className="flex items-center justify-between p-5 bg-muted/40 border border-border/50 rounded-2xl shadow-inner group/item hover:bg-muted/60 transition-colors">
+                   <span className="text-[9px] font-black text-muted-foreground uppercase tracking-widest opacity-60 italic">Permission Level</span>
+                   <span className="text-xs font-black text-primary uppercase italic tracking-tighter">Root Authority</span>
+                </div>
+                <div className="flex items-center justify-between p-5 bg-muted/40 border border-border/50 rounded-2xl shadow-inner group/item hover:bg-muted/60 transition-colors">
+                   <span className="text-[9px] font-black text-muted-foreground uppercase tracking-widest opacity-60 italic">Node Lifetime</span>
+                   <span className="text-xs font-black text-foreground tracking-tighter italic tabular-nums">1,245 Days Active</span>
+                </div>
+             </div>
+
+             <button className="w-full h-16 mt-10 flex items-center justify-center gap-3 rounded-2xl text-[10px] font-black uppercase tracking-[0.3em] text-red-500 bg-red-500/5 border border-red-500/10 hover:bg-red-500 hover:text-white transition-all shadow-lg active:scale-95 group/logout">
+                <LogOut className="h-5 w-5 group-hover:-translate-x-1 transition-transform" />
+                Terminate All Sessions
              </button>
           </Card>
 
-          <Card className="p-6 bg-white dark:bg-[#09090b] border-primary/10">
-             <h3 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-widest mb-4 flex items-center gap-2">
-                <Activity className="h-4 w-4 text-primary" />
-                Recent Logs
+          <Card className="p-10 bg-card border-border/50 shadow-xl rounded-[3rem]">
+             <h3 className="text-2xl font-black text-foreground tracking-tighter uppercase italic mb-8 flex items-center gap-4">
+                <Activity className="h-6 w-6 text-primary" />
+                Security Logs
              </h3>
-             <div className="space-y-4">
+             <div className="space-y-6">
                 {[
-                  { event: "API Key Regened", time: "2h ago", icon: Key, color: "blue" },
-                  { event: "Login Success", time: "5h ago", icon: ShieldCheck, color: "emerald" },
-                  { event: "Config Change", time: "Yesterday", icon: Smartphone, color: "orange" },
+                  { event: "Kernel Key Rotation", time: "2h ago", icon: Key, color: "blue" },
+                  { event: "Authorized Entrance", time: "5h ago", icon: ShieldCheck, color: "emerald" },
+                  { event: "Protocol Update", time: "Yesterday", icon: Zap, color: "orange" },
                 ].map((item, i) => (
-                  <div key={i} className="flex items-center gap-3">
-                     <div className={cn("h-8 w-8 rounded-lg flex items-center justify-center shrink-0", 
-                       item.color === 'blue' ? "bg-blue-100 dark:bg-blue-900/20 text-blue-600" :
-                       item.color === 'emerald' ? "bg-emerald-100 dark:bg-emerald-900/20 text-emerald-600" :
-                       "bg-orange-100 dark:bg-orange-900/20 text-orange-600"
+                  <div key={i} className="flex items-center gap-5 group cursor-pointer hover:translate-x-1 transition-all">
+                     <div className={cn("h-10 w-10 rounded-xl flex items-center justify-center shrink-0 shadow-lg transition-transform group-hover:rotate-12", 
+                       item.color === 'blue' ? "bg-blue-500 text-white shadow-blue-500/20" :
+                       item.color === 'emerald' ? "bg-emerald-500 text-white shadow-emerald-500/20" :
+                       "bg-orange-500 text-white shadow-orange-500/20"
                      )}>
-                        <item.icon className="h-4 w-4" />
+                        <item.icon className="h-5 w-5" />
                      </div>
                      <div className="flex-1 min-w-0">
-                        <p className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">{item.event}</p>
-                        <p className="text-[10px] text-slate-400">{item.time}</p>
+                        <p className="text-[11px] font-black text-foreground uppercase tracking-tight truncate">{item.event}</p>
+                        <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest opacity-40 italic mt-0.5">{item.time}</p>
                      </div>
-                     <ArrowRight className="h-3 w-3 text-slate-300" />
+                     <ChevronRight className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
                   </div>
                 ))}
              </div>
-             <button className="w-full mt-6 text-[10px] font-bold text-primary uppercase tracking-widest hover:underline">View All Activity</button>
+             <button className="w-full mt-10 h-12 bg-muted border border-border rounded-xl text-[9px] font-black text-muted-foreground uppercase tracking-widest hover:text-primary transition-colors italic">Deep Audit History</button>
           </Card>
         </div>
 
-        {/* Right Column: Settings */}
-        <div className="lg:col-span-8 space-y-8">
-          <Card className="p-8 bg-white dark:bg-[#09090b] border-primary/10">
-             <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-8 flex items-center gap-3">
-                <User className="h-6 w-6 text-primary" />
-                Personal Details
+        {/* Right Column: Identity & Security Parameters */}
+        <div className="lg:col-span-8 space-y-10">
+          <Card className="p-10 bg-card border-border/50 shadow-2xl rounded-[3.5rem] relative overflow-hidden">
+             <div className="absolute top-0 right-0 p-10 opacity-[0.03] rotate-12 transition-transform">
+                <Fingerprint className="h-64 w-64 text-primary" />
+             </div>
+             <h3 className="text-3xl font-black text-foreground tracking-tighter uppercase italic leading-none mb-12 flex items-center gap-5 relative z-10">
+                <User className="h-7 w-7 text-primary" />
+                Core Profile
              </h3>
-             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                   <label className="text-sm font-bold text-slate-700 dark:text-slate-300 ml-1">Full Name</label>
-                   <div className="relative">
-                      <User className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
+             <div className="grid grid-cols-1 md:grid-cols-2 gap-10 relative z-10">
+                <div className="space-y-3">
+                   <label className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em] ml-2 opacity-60">Legal Nomenclature</label>
+                   <div className="relative group/input">
+                      <User className="absolute left-5 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground group-focus-within/input:text-primary transition-colors" />
                       <input 
                         type="text" 
                         defaultValue="Aditya Sathwik"
-                        className="w-full pl-11 pr-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-sm focus:ring-2 focus:ring-primary focus:outline-none transition-all"
+                        className="w-full pl-14 pr-6 py-5 bg-muted/40 border border-border rounded-2xl text-sm font-black tracking-tight text-foreground focus:ring-4 focus:ring-primary/10 focus:outline-none transition-all"
                       />
                    </div>
                 </div>
-                <div className="space-y-2">
-                   <label className="text-sm font-bold text-slate-700 dark:text-slate-300 ml-1">Email Address</label>
-                   <div className="relative">
-                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
+                <div className="space-y-3">
+                   <label className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em] ml-2 opacity-60">Strategic Communication</label>
+                   <div className="relative group/input">
+                      <Mail className="absolute left-5 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground group-focus-within/input:text-primary transition-colors" />
                       <input 
                         type="email" 
                         defaultValue="aditya@manavyapar.com"
-                        className="w-full pl-11 pr-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-sm focus:ring-2 focus:ring-primary focus:outline-none transition-all"
+                        className="w-full pl-14 pr-6 py-5 bg-muted/40 border border-border rounded-2xl text-sm font-black tracking-tight text-foreground focus:ring-4 focus:ring-primary/10 focus:outline-none transition-all"
                       />
                    </div>
                 </div>
-                <div className="space-y-2">
-                   <label className="text-sm font-bold text-slate-700 dark:text-slate-300 ml-1">Phone Number</label>
-                   <div className="relative">
-                      <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
+                <div className="space-y-3">
+                   <label className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em] ml-2 opacity-60">Direct Hotlink</label>
+                   <div className="relative group/input">
+                      <Phone className="absolute left-5 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground group-focus-within/input:text-primary transition-colors" />
                       <input 
                         type="tel" 
                         defaultValue="+91 99887 76655"
-                        className="w-full pl-11 pr-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-sm focus:ring-2 focus:ring-primary focus:outline-none transition-all"
+                        className="w-full pl-14 pr-6 py-5 bg-muted/40 border border-border rounded-2xl text-sm font-black tracking-tight text-foreground focus:ring-4 focus:ring-primary/10 focus:outline-none transition-all"
                       />
                    </div>
                 </div>
-                <div className="space-y-2 flex flex-col justify-end">
-                   <button className="bg-primary hover:bg-primary-dark text-black font-bold py-3 px-6 rounded-xl shadow-lg shadow-primary/20 transition-all flex items-center justify-center gap-2">
-                      Update Profile Information
+                <div className="space-y-3 flex flex-col justify-end">
+                   <button className="h-16 bg-primary hover:bg-emerald-600 text-primary-foreground font-black text-[10px] uppercase tracking-[0.2em] rounded-2xl shadow-xl shadow-primary/20 transition-all hover:-translate-y-1 active:translate-y-0 flex items-center justify-center gap-3">
+                      Update Neural Identity
                    </button>
                 </div>
              </div>
           </Card>
 
-          <Card className="p-8 bg-white dark:bg-[#09090b] border-primary/10">
-             <div className="flex items-center justify-between mb-8">
-                <h3 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-3">
-                   <Shield className="h-6 w-6 text-primary" />
-                   Security & Credentialing
+          <Card className="p-10 bg-card border-border/50 shadow-2xl rounded-[3.5rem] flex flex-col relative overflow-hidden">
+             <div className="absolute bottom-0 right-0 p-10 opacity-[0.03] -rotate-12 transition-transform group-hover:rotate-0">
+                <Shield className="h-64 w-64 text-primary" />
+             </div>
+             <div className="flex items-center justify-between mb-12 relative z-10">
+                <h3 className="text-3xl font-black text-foreground tracking-tighter uppercase italic leading-none flex items-center gap-5">
+                   <Shield className="h-7 w-7 text-primary" />
+                   Security Protocols
                 </h3>
              </div>
 
-             <div className="space-y-6">
-                <div className="p-6 bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl flex items-center justify-between">
-                   <div className="flex items-center gap-4">
-                      <div className="h-12 w-12 rounded-xl bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center text-orange-600">
-                         <Smartphone className="h-6 w-6" />
+             <div className="space-y-8 relative z-10">
+                <div className="p-8 bg-muted/30 border border-border/50 rounded-[2.5rem] flex items-center justify-between shadow-inner group/toggle hover:bg-muted/50 transition-all">
+                   <div className="flex items-center gap-6">
+                      <div className="h-16 w-16 rounded-2xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center text-orange-500 shadow-xl shadow-orange-500/10">
+                         <Smartphone className="h-8 w-8" />
                       </div>
                       <div>
-                         <h4 className="font-bold text-slate-900 dark:text-white">Two-Factor Authentication</h4>
-                         <p className="text-xs text-slate-500">Secure your account with SMS & Authenticator App.</p>
+                         <h4 className="text-xl font-black text-foreground tracking-tighter uppercase italic leading-none mb-2">Two-Factor Authorization</h4>
+                         <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest opacity-60">Multi-point identity verification layer.</p>
                       </div>
                    </div>
                    <button 
                     onClick={() => setIs2FAEnabled(!is2FAEnabled)}
                     className={cn(
-                      "relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none",
-                      is2FAEnabled ? "bg-primary" : "bg-slate-300 dark:bg-slate-700"
+                      "relative inline-flex h-8 w-16 items-center rounded-full transition-colors focus:outline-none shadow-lg",
+                      is2FAEnabled ? "bg-primary" : "bg-muted-foreground/30"
                     )}
                    >
                       <span className={cn(
-                        "inline-block h-4 w-4 transform rounded-full bg-white transition-transform",
-                        is2FAEnabled ? "translate-x-6" : "translate-x-1"
+                        "inline-block h-6 w-6 transform rounded-full bg-white transition-transform shadow-xl",
+                        is2FAEnabled ? "translate-x-9" : "translate-x-1"
                       )} />
                    </button>
                 </div>
 
-                <div className="p-6 bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl flex items-center justify-between group cursor-pointer hover:border-primary/30 transition-all">
-                   <div className="flex items-center gap-4">
-                      <div className="h-12 w-12 rounded-xl bg-blue-100 dark:bg-blue-900/20 flex items-center justify-center text-blue-600">
-                         <Key className="h-6 w-6" />
+                <div className="p-8 bg-muted/30 border border-border/50 rounded-[2.5rem] flex items-center justify-between shadow-inner group hover:bg-card hover:shadow-2xl hover:border-primary/30 transition-all cursor-pointer">
+                   <div className="flex items-center gap-6">
+                      <div className="h-16 w-16 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-500 shadow-xl shadow-blue-500/10">
+                         <Key className="h-8 w-8" />
                       </div>
                       <div>
-                         <h4 className="font-bold text-slate-900 dark:text-white">Change Root Password</h4>
-                         <p className="text-xs text-slate-500">Last updated 124 days ago. (Recommendation: 90 days)</p>
+                         <h4 className="text-xl font-black text-foreground tracking-tighter uppercase italic leading-none mb-2">Root Access Rotation</h4>
+                         <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest opacity-60 italic">Last entropy update: 124 cycles ago. (High Entropy Recommended)</p>
                       </div>
                    </div>
-                   <button className="text-primary font-bold text-sm">Update Now</button>
+                   <button className="h-12 px-8 border border-primary/30 rounded-xl text-[10px] font-black text-primary uppercase tracking-widest border-2 hover:bg-primary hover:text-white transition-all shadow-sm">INITIATE ROTATION</button>
                 </div>
              </div>
           </Card>

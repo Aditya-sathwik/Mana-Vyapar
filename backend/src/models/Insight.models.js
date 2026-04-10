@@ -70,7 +70,9 @@ const insightSchema = new Schema(
         productId: { type: Schema.Types.ObjectId, ref: "Product" },
         name: String,
         currentStock: Number,
-        predictedOutDate: Date, // Simplified "velocity check"
+        velocity: { type: Number, default: 0 },
+        predictedOutDate: Date, 
+        projectedRunOutDate: Date,
         status: { type: String, enum: ["HEALTHY", "RESTOCK_SOON", "CRITICAL"], default: "HEALTHY" }
       }
     ],

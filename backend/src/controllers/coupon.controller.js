@@ -1,6 +1,6 @@
-import { asyncHandler } from "../utlis/asynchandler.js";
-import { ApiResponse } from "../utlis/apiresponse.js";
-import { ApiError } from "../utlis/apierror.js";
+import { asyncHandler } from "../utils/asyncHandler.js";
+import { ApiResponse } from "../utils/ApiResponse.js";
+import { ApiError } from "../utils/ApiError.js";
 import * as CouponService from "../services/coupon.service.js";
 
 /**

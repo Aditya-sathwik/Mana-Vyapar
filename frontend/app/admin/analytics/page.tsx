@@ -16,29 +16,38 @@ import {
   MoreVertical,
   Zap,
   Target,
-  PieChart
+  PieChart,
+  LayoutGrid,
+  MapPin
 } from "lucide-react"
 import { Card } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
 
 export default function MerchantPerformanceAnalytics() {
   return (
-    <div className="space-y-12 pb-12">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div className="space-y-12 pb-20">
+      {/* Dynamic Header */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-8">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white mb-1">
-            Performance Analytics
-          </h1>
-          <p className="text-slate-500 dark:text-slate-400 text-sm">
-            Deep dive into merchant growth, retention metrics, and market penetration.
-          </p>
+           <div className="flex items-center gap-3 mb-2">
+              <div className="p-2 bg-primary/10 rounded-lg">
+                 <TrendingUp className="h-4 w-4 text-primary" />
+              </div>
+              <span className="text-[10px] font-black uppercase tracking-[0.4em] text-muted-foreground italic">Market Intelligence Engine</span>
+           </div>
+           <h1 className="text-4xl md:text-5xl font-black text-foreground tracking-tighter uppercase leading-none italic">
+             Performance <span className="text-primary tracking-normal">Metrics</span>
+           </h1>
+           <p className="text-muted-foreground text-sm mt-4 font-medium max-w-lg leading-relaxed italic opacity-80">
+             Deep dive into merchant growth dynamics, transactional retention matrix, and regional market penetration.
+           </p>
         </div>
-        <div className="flex items-center gap-3">
-           <button className="flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-sm font-bold text-slate-600 dark:text-slate-300">
-              <Calendar className="h-4 w-4" />
-              Full Year 2023
+        <div className="flex flex-wrap items-center gap-4">
+           <button className="h-14 px-8 bg-card border border-border rounded-2xl flex items-center gap-3 text-[10px] font-black uppercase tracking-widest text-foreground hover:shadow-xl transition-all shadow-sm active:scale-95">
+              <Calendar className="h-4 w-4 text-primary" />
+              FY 2026 CYCLE
            </button>
-           <button className="bg-primary hover:bg-primary-dark text-black px-6 py-2.5 rounded-xl font-bold shadow-lg shadow-primary/20 flex items-center gap-2 transition-all">
+           <button className="h-14 px-10 bg-primary hover:bg-emerald-600 text-primary-foreground rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] shadow-2xl shadow-primary/30 flex items-center gap-3 transition-all hover:scale-105 active:scale-95">
               <Download className="h-4 w-4" />
               Export Analytics
            </button>
@@ -46,142 +55,133 @@ export default function MerchantPerformanceAnalytics() {
       </div>
 
       {/* Overview Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-         <Card className="p-8 bg-gradient-to-br from-indigo-500/10 to-transparent border-indigo-500/20 relative overflow-hidden group">
-            <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
-               <Users className="h-20 w-20" />
-            </div>
-            <div className="h-12 w-12 rounded-2xl bg-indigo-500/20 text-indigo-500 flex items-center justify-center mb-6">
-               <TrendingUp className="h-6 w-6" />
-            </div>
-            <p className="text-sm font-bold text-slate-500 mb-1 uppercase tracking-widest">Merchant Growth</p>
-            <h3 className="text-4xl font-black text-slate-900 dark:text-white mb-4">12.4%</h3>
-            <div className="flex items-center gap-2 text-xs font-bold text-indigo-600 dark:text-indigo-400">
-               <span className="bg-indigo-500/10 px-2 py-0.5 rounded-full inline-flex items-center gap-1">
-                  <ArrowRight className="h-3 w-3" />
-                  842 New signups
-               </span>
-               <span className="text-slate-400">Since last quarter</span>
-            </div>
-         </Card>
-
-         <Card className="p-8 bg-gradient-to-br from-emerald-500/10 to-transparent border-emerald-500/20 relative overflow-hidden group">
-            <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
-               <ShoppingBag className="h-20 w-20" />
-            </div>
-            <div className="h-12 w-12 rounded-2xl bg-emerald-500/20 text-emerald-500 flex items-center justify-center mb-6">
-               <Target className="h-6 w-6" />
-            </div>
-            <p className="text-sm font-bold text-slate-500 mb-1 uppercase tracking-widest">Average Transaction</p>
-            <h3 className="text-4xl font-black text-slate-900 dark:text-white mb-4">₹1,450</h3>
-            <div className="flex items-center gap-2 text-xs font-bold text-emerald-600 dark:text-emerald-400">
-               <span className="bg-emerald-500/10 px-2 py-0.5 rounded-full inline-flex items-center gap-1">
-                  <TrendingUp className="h-3 w-3" />
-                  +5.2%
-               </span>
-               <span className="text-slate-400">Per merchant basket</span>
-            </div>
-         </Card>
-
-         <Card className="p-8 bg-gradient-to-br from-pink-500/10 to-transparent border-pink-500/20 relative overflow-hidden group">
-            <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
-               <Zap className="h-20 w-20" />
-            </div>
-            <div className="h-12 w-12 rounded-2xl bg-pink-500/20 text-pink-500 flex items-center justify-center mb-6">
-               <TrendingUpDown className="h-6 w-6" />
-            </div>
-            <p className="text-sm font-bold text-slate-500 mb-1 uppercase tracking-widest">Churn Rate</p>
-            <h3 className="text-4xl font-black text-slate-900 dark:text-white mb-4">2.1%</h3>
-            <div className="flex items-center gap-2 text-xs font-bold text-pink-600 dark:text-pink-400">
-               <span className="bg-pink-500/10 px-2 py-0.5 rounded-full inline-flex items-center gap-1">
-                  <TrendingDown className="h-3 w-3" />
-                  -0.4%
-               </span>
-               <span className="text-slate-400">Industry leading retention</span>
-            </div>
-         </Card>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+         {[
+           { label: "Merchant Growth", value: "12.4%", sub: "842 New signups", icon: Users, color: "indigo" },
+           { label: "Average Transaction", value: "₹1,450", sub: "+5.2% Per basket", icon: ShoppingBag, color: "emerald" },
+           { label: "Churn Matrix", value: "2.1%", sub: "-0.4% Retention Up", icon: TrendingUpDown, color: "pink" },
+         ].map((stat, i) => (
+           <Card key={i} className="p-10 bg-card border-border/50 shadow-xl rounded-[2.5rem] group relative overflow-hidden transition-all hover:scale-[1.02]">
+              <div className="absolute right-0 top-0 p-10 opacity-[0.03] group-hover:rotate-12 transition-transform">
+                 <stat.icon className="h-24 w-24 text-primary" />
+              </div>
+              
+              <div className={cn(
+                "h-16 w-16 rounded-2xl flex items-center justify-center mb-10 shadow-lg transition-transform group-hover:scale-110",
+                stat.color === 'indigo' ? "bg-indigo-500 text-white shadow-indigo-500/20" :
+                stat.color === 'emerald' ? "bg-emerald-500 text-white shadow-emerald-500/20" :
+                "bg-pink-500 text-white shadow-pink-500/20"
+              )}>
+                 <stat.icon className="h-8 w-8" />
+              </div>
+              
+              <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em] mb-2 opacity-60 italic">{stat.label}</p>
+              <h3 className="text-5xl font-black text-foreground tracking-tighter mb-6 italic leading-none">{stat.value}</h3>
+              
+              <div className="flex items-center gap-3 text-[10px] font-black uppercase tracking-widest text-primary italic bg-primary/5 border border-primary/10 w-fit px-4 py-1.5 rounded-full">
+                 <ArrowRight className="h-3.5 w-3.5" />
+                 {stat.sub}
+              </div>
+           </Card>
+         ))}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
          {/* Detailed Analytics */}
-         <Card className="lg:col-span-8 p-8 bg-white dark:bg-[#09090b] border-primary/10">
-            <div className="flex items-center justify-between mb-8">
-               <h3 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-3">
-                  <PieChart className="h-6 w-6 text-primary" />
-                  Merchant Distribution
-               </h3>
-               <button className="text-slate-300 hover:text-slate-600"><MoreVertical className="h-5 w-5" /></button>
+         <Card className="lg:col-span-8 p-12 bg-card border-border/50 shadow-2xl rounded-[3rem] relative overflow-hidden">
+            <div className="flex items-center justify-between mb-16 relative z-10">
+               <div>
+                  <h3 className="text-3xl font-black text-foreground tracking-tighter uppercase leading-none italic mb-2">Merchant Distribution</h3>
+                  <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest opacity-60">Revenue sharding across core business verticals.</p>
+               </div>
+               <button className="h-12 w-12 flex items-center justify-center rounded-2xl bg-muted border border-border text-muted-foreground hover:text-foreground transition-all"><MoreVertical className="h-6 w-6" /></button>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
-               <div className="relative aspect-square flex items-center justify-center">
-                  <div className="absolute inset-0 rounded-full border-[20px] border-primary/10"></div>
-                  <div className="absolute inset-0 rounded-full border-[20px] border-emerald-500/40 border-t-transparent border-l-transparent rotate-12"></div>
-                  <div className="absolute inset-0 rounded-full border-[20px] border-indigo-500/60 border-b-transparent border-r-transparent -rotate-45"></div>
-                  <div className="flex flex-col items-center">
-                     <span className="text-4xl font-black text-slate-900 dark:text-white">12.4K</span>
-                     <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Merchants</span>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-16 items-center relative z-10">
+               <div className="relative aspect-square flex items-center justify-center p-8">
+                  {/* High-Fidelity Custom Chart visualization using CSS borders */}
+                  <div className="absolute inset-0 rounded-full border-[30px] border-muted shadow-inner opacity-50"></div>
+                  <div className="absolute inset-0 rounded-full border-[30px] border-primary border-t-transparent border-l-transparent rotate-[30deg] shadow-[0_0_30px_rgba(5,148,103,0.3)]"></div>
+                  <div className="absolute inset-0 rounded-full border-[30px] border-indigo-500 border-b-transparent border-r-transparent -rotate-45 shadow-[0_0_30px_rgba(79,70,229,0.3)]"></div>
+                  
+                  <div className="flex flex-col items-center relative z-20">
+                     <span className="text-5xl font-black text-foreground tracking-tighter leading-none italic transition-transform hover:scale-110 cursor-default">12.4K</span>
+                     <span className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.4em] mt-3">Active Units</span>
                   </div>
+
+                  {/* Decorative Elements */}
+                  <div className="absolute -top-4 left-1/2 -translate-x-1/2 h-8 w-1 bg-primary rounded-full shadow-[0_0_10px_rgba(5,148,103,1)] animate-pulse" />
                </div>
 
-               <div className="space-y-6">
+               <div className="space-y-8">
                   {[
                     { category: "Retail & Grocery", percentage: "42%", count: "5,208", color: "bg-primary" },
                     { category: "Electronics", percentage: "18%", count: "2,232", color: "bg-indigo-500" },
                     { category: "Textiles", percentage: "25%", count: "3,100", color: "bg-emerald-500" },
-                    { category: "Other", percentage: "15%", count: "1,860", color: "bg-slate-400" },
+                    { category: "Miscellaneous", percentage: "15%", count: "1,860", color: "bg-muted" },
                   ].map((cat) => (
-                    <div key={cat.category} className="space-y-2">
+                    <div key={cat.category} className="space-y-3 group cursor-pointer">
                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                             <div className={cn("h-3 w-3 rounded-full", cat.color)} />
-                             <span className="text-sm font-bold text-slate-700 dark:text-slate-300">{cat.category}</span>
+                          <div className="flex items-center gap-4">
+                             <div className={cn("h-4 w-4 rounded-md shadow-sm group-hover:scale-125 transition-transform", cat.color)} />
+                             <span className="text-[11px] font-black text-foreground uppercase tracking-widest">{cat.category}</span>
                           </div>
-                          <span className="text-sm font-black text-slate-900 dark:text-white">{cat.percentage}</span>
+                          <span className="text-sm font-black text-foreground italic">{cat.percentage}</span>
                        </div>
-                       <div className="w-full bg-slate-100 dark:bg-slate-800 h-2 rounded-full overflow-hidden">
-                          <div className={cn("h-full rounded-full", cat.color)} style={{ width: cat.percentage }}></div>
+                       <div className="w-full bg-muted border border-border h-2.5 rounded-full overflow-hidden shadow-inner p-0.5">
+                          <div className={cn("h-full rounded-full transition-all duration-1000", cat.color)} style={{ width: cat.percentage }}></div>
                        </div>
-                       <p className="text-[10px] text-slate-400 font-medium text-right">{cat.count} stores onboarded</p>
+                       <div className="flex justify-between items-center opacity-0 group-hover:opacity-100 transition-opacity">
+                          <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest leading-none italic">{cat.count} verified entities</p>
+                          <ArrowRight className="h-3 w-3 text-primary" />
+                       </div>
                     </div>
                   ))}
                </div>
             </div>
          </Card>
 
-         {/* Market Insight */}
-         <Card className="lg:col-span-4 p-8 bg-white dark:bg-[#09090b] border-primary/10">
-            <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-8">Regional Insight</h3>
-            <div className="space-y-6">
+         {/* Regional Penetration Matrix */}
+         <Card className="lg:col-span-4 p-10 bg-card border-border/50 shadow-2xl rounded-[3rem] relative overflow-hidden">
+            <div className="absolute top-0 right-0 p-10 opacity-[0.03] rotate-12">
+               <MapPin className="h-48 w-48 text-primary" />
+            </div>
+            <h3 className="text-2xl font-black text-foreground tracking-tighter uppercase leading-none italic mb-10 relative z-10 flex items-center gap-4">
+               <Target className="h-6 w-6 text-primary" />
+               Regional Pulse
+            </h3>
+            
+            <div className="space-y-5 relative z-10">
                {[
                  { city: "Bangalore", share: "34%", status: "High Growth", color: "blue" },
-                 { city: "Hyderabad", share: "22%", status: "Stable", color: "emerald" },
+                 { city: "Hyderabad", share: "22%", status: "Stable Cluster", color: "emerald" },
                  { city: "Mumbai", share: "18%", status: "Expanding", color: "primary" },
-                 { city: "Delhi", share: "14%", status: "Saturated", color: "orange" },
+                 { city: "Delhi Capital", share: "14%", status: "Saturated", color: "orange" },
                ].map((region) => (
-                 <div key={region.city} className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 flex items-center justify-between group cursor-pointer hover:border-primary/40 transition-all">
-                    <div className="flex items-center gap-4">
+                 <div key={region.city} className="p-6 rounded-[2rem] bg-muted/30 border border-border/50 flex items-center justify-between group cursor-pointer hover:bg-card hover:shadow-2xl transition-all relative overflow-hidden">
+                    <div className="flex items-center gap-5 relative z-10">
                        <div className={cn(
-                        "h-10 w-10 rounded-xl flex items-center justify-center shrink-0 uppercase font-black text-xs",
-                        region.color === 'blue' ? "bg-blue-100 text-blue-600" :
-                        region.color === 'emerald' ? "bg-emerald-100 text-emerald-600" :
-                        region.color === 'primary' ? "bg-primary/10 text-primary" : "bg-orange-100 text-orange-600"
+                        "h-12 w-12 rounded-2xl flex items-center justify-center shrink-0 font-black text-[11px] uppercase tracking-tighter border shadow-sm group-hover:scale-110 transition-transform",
+                        region.color === 'blue' ? "bg-blue-500 text-white border-blue-400/30" :
+                        region.color === 'emerald' ? "bg-emerald-500 text-white border-emerald-400/30" :
+                        region.color === 'primary' ? "bg-primary text-primary-foreground border-primary/30" : "bg-orange-500 text-white border-orange-400/30"
                        )}>
                           {region.city.substring(0, 2)}
                        </div>
                        <div>
-                          <h4 className="font-bold text-slate-900 dark:text-white text-sm">{region.city}</h4>
-                          <p className="text-[10px] text-slate-500">{region.status}</p>
+                          <h4 className="font-black text-foreground text-sm uppercase tracking-tight mb-1">{region.city}</h4>
+                          <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest italic opacity-60 leading-none">{region.status}</p>
                        </div>
                     </div>
-                    <div className="text-right">
-                       <p className="text-sm font-black text-slate-900 dark:text-white">{region.share}</p>
-                       <p className="text-[10px] text-slate-400">Total Share</p>
+                    <div className="text-right relative z-10">
+                       <p className="text-xl font-black text-foreground italic leading-none mb-1">{region.share}</p>
+                       <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest opacity-40">Portfolio</p>
                     </div>
+                    <div className="absolute inset-y-0 left-0 w-1 bg-primary scale-y-0 group-hover:scale-y-100 transition-transform origin-bottom" />
                  </div>
                ))}
-               <button className="w-full py-4 border border-dashed border-slate-300 dark:border-slate-800 rounded-2xl text-xs font-bold text-slate-500 hover:text-primary transition-colors">
-                  View Heatmap Details
+               <button className="w-full mt-10 h-14 border-2 border-dashed border-border rounded-3xl text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em] hover:text-primary hover:border-primary/50 hover:bg-primary/5 transition-all active:scale-95 italic">
+                  Launch Global Penetration Map
                </button>
             </div>
          </Card>

@@ -56,6 +56,8 @@ import auditRouter from "./routes/audit.routes.js";
 import dynamicFormRouter from "./routes/dynamicform.routes.js";
 import merchantRouter from "./routes/merchant.routes.js";
 import configRouter from "./routes/config.routes.js";
+import dynamicDataRouter from "./routes/dynamic.routes.js";
+import notificationRouter from "./routes/notification.routes.js";
 
 // Routes declaration
 app.use('/api/v1/users', userRouter);
@@ -75,6 +77,8 @@ app.use('/api/v1/audit', auditRouter);
 app.use('/api/v1/dynamic-forms', dynamicFormRouter);
 app.use("/api/v1/merchants", merchantRouter);
 app.use("/api/v1/admin/config", configRouter);
+app.use("/api/v1/dynamic", dynamicDataRouter);
+app.use("/api/v1/notifications", notificationRouter);
 
 // Error Handler Middleware (must be last)
 app.use(errorHandler);

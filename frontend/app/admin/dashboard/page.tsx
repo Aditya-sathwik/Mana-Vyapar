@@ -13,64 +13,80 @@ import {
   ShieldCheck,
   Zap,
   MoreVertical,
-  Calendar
+  Calendar,
+  Layers,
+  FileCode,
+  Download
 } from "lucide-react"
 import { Card } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
 
 export default function PlatformAnalyticsDashboard() {
   return (
-    <div className="space-y-12 pb-12">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div className="space-y-12 pb-20">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white mb-1">
-            Platform Analytics
-          </h1>
-          <p className="text-slate-500 dark:text-slate-400 text-sm">
-            Real-time insights across all merchants, transactions, and system clusters.
-          </p>
+           <div className="flex items-center gap-3 mb-2">
+              <div className="p-2 bg-primary/10 rounded-lg">
+                 <Activity className="h-4 w-4 text-primary" />
+              </div>
+              <span className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground">Platform Intelligence</span>
+           </div>
+           <h1 className="text-4xl md:text-5xl font-black text-foreground tracking-tighter uppercase leading-none">
+             Platform <span className="text-primary italic">Health</span>
+           </h1>
+           <p className="text-muted-foreground text-sm mt-3 font-medium max-w-lg leading-relaxed">
+             Real-time insights across all merchants, transactions, and system clusters with automated anomaly detection.
+           </p>
         </div>
         <div className="flex items-center gap-3">
-           <div className="flex items-center gap-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-4 py-2 rounded-xl text-sm font-bold text-slate-600 dark:text-slate-300">
-              <Calendar className="h-4 w-4" />
-              Last 30 Days
+           <div className="flex items-center gap-2 bg-card border border-border px-5 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest text-foreground shadow-sm hover:shadow-lg transition-all cursor-pointer">
+              <Calendar className="h-4 w-4 text-primary" />
+              Reporting Period: Last 30 Days
            </div>
-           <button className="bg-primary hover:bg-primary-dark text-black px-6 py-2.5 rounded-xl font-bold shadow-lg shadow-primary/20 transition-all">
-              Generate Report
+           <button className="bg-primary hover:bg-emerald-600 text-primary-foreground px-8 py-3 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] shadow-xl shadow-primary/20 transition-all hover:-translate-y-0.5 active:translate-y-0 flex items-center gap-2">
+              <Download className="h-4 w-4" /> Export Report
            </button>
         </div>
       </div>
 
       {/* High-Level Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
         {[
           { label: "Total Revenue", value: "₹42.5M", growth: "+14.2%", icon: CreditCard, color: "primary" },
           { label: "Active Merchants", value: "12,402", growth: "+8.4%", icon: Users, color: "blue" },
           { label: "Transaction Vol", value: "1.2M", growth: "+22.1%", icon: Activity, color: "purple" },
           { label: "System Uptime", value: "99.99%", growth: "Stable", icon: Globe, color: "emerald" },
         ].map((metric) => (
-          <Card key={metric.label} className="p-6 bg-white dark:bg-[#09090b] border-primary/10 hover:border-primary/30 transition-all group">
-            <div className="flex justify-between items-start mb-4">
-               <div className={cn(
-                 "h-12 w-12 rounded-2xl flex items-center justify-center shrink-0",
-                 metric.color === 'primary' ? "bg-primary/10 text-primary" :
-                 metric.color === 'blue' ? "bg-blue-100 dark:bg-blue-900/20 text-blue-600" :
-                 metric.color === 'purple' ? "bg-purple-100 dark:bg-purple-900/20 text-purple-600" : "bg-emerald-100 dark:bg-emerald-900/20 text-emerald-600"
-               )}>
-                  <metric.icon className="h-6 w-6" />
-               </div>
-               <button className="text-slate-300 hover:text-slate-500"><MoreVertical className="h-5 w-5" /></button>
+          <Card key={metric.label} className="p-8 bg-card border-border/50 shadow-xl rounded-[2rem] hover:shadow-2xl hover:border-primary/20 transition-all group relative overflow-hidden">
+            <div className="absolute -right-8 -top-8 opacity-[0.03] group-hover:rotate-12 transition-transform">
+               <metric.icon className="h-24 w-24 text-primary" />
             </div>
-            <p className="text-sm font-medium text-slate-500 mb-1">{metric.label}</p>
-            <div className="flex items-baseline gap-3">
-               <h3 className="text-3xl font-extrabold text-slate-900 dark:text-white">{metric.value}</h3>
-               <span className={cn(
-                 "text-xs font-bold flex items-center gap-0.5",
-                 metric.growth.startsWith('+') ? "text-emerald-500" : "text-slate-400"
+            
+            <div className="flex justify-between items-start mb-10 relative z-10">
+               <div className={cn(
+                 "h-14 w-14 rounded-2xl flex items-center justify-center shrink-0 shadow-lg",
+                 metric.color === 'primary' ? "bg-primary text-primary-foreground shadow-primary/20" :
+                 metric.color === 'blue' ? "bg-blue-500 text-white shadow-blue-500/20" :
+                 metric.color === 'purple' ? "bg-purple-500 text-white shadow-purple-500/20" : "bg-emerald-500 text-white shadow-emerald-500/20"
                )}>
-                  {metric.growth.startsWith('+') && <TrendingUp className="h-3 w-3" />}
-                  {metric.growth}
-               </span>
+                  <metric.icon className="h-7 w-7" />
+               </div>
+               <button className="p-2 text-muted-foreground hover:text-foreground transition-colors"><MoreVertical className="h-5 w-5" /></button>
+            </div>
+            
+            <div className="relative z-10">
+               <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] mb-2 opacity-60">{metric.label}</p>
+               <div className="flex items-baseline gap-4">
+                  <h3 className="text-4xl font-black text-foreground tracking-tighter italic">{metric.value}</h3>
+                  <span className={cn(
+                    "text-[10px] font-black flex items-center gap-1 px-2 py-1 rounded-full uppercase tracking-widest",
+                    metric.growth.startsWith('+') ? "bg-emerald-500/10 text-emerald-500" : "bg-muted text-muted-foreground"
+                  )}>
+                     {metric.growth.startsWith('+') && <TrendingUp className="h-3 w-3" />}
+                     {metric.growth}
+                  </span>
+               </div>
             </div>
           </Card>
         ))}
@@ -78,39 +94,44 @@ export default function PlatformAnalyticsDashboard() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Performance Chart Placeholder */}
-        <Card className="lg:col-span-2 p-8 bg-white dark:bg-[#09090b] border-primary/10">
-           <div className="flex items-center justify-between mb-8">
-              <h3 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-3">
-                 <BarChart3 className="h-6 w-6 text-primary" />
-                 Revenue Performance
+        <Card className="lg:col-span-2 p-10 bg-card border-border/50 shadow-xl rounded-[3rem]">
+           <div className="flex items-center justify-between mb-12">
+              <h3 className="text-2xl font-black text-foreground tracking-tighter uppercase leading-none flex items-center gap-4 italic">
+                 <BarChart3 className="h-7 w-7 text-primary" />
+                 Growth Metrics
               </h3>
-              <div className="flex gap-2">
+              <div className="flex gap-2 p-1 bg-muted rounded-xl border border-border shadow-inner">
                  {['Daily', 'Weekly', 'Monthly'].map(t => (
-                   <button key={t} className={cn("px-4 py-1.5 rounded-lg text-xs font-bold transition-all", t === 'Weekly' ? "bg-primary text-black" : "text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800")}>{t}</button>
+                   <button key={t} className={cn("px-6 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all", t === 'Weekly' ? "bg-card text-primary shadow-lg border border-border" : "text-muted-foreground hover:text-foreground")}>{t}</button>
                  ))}
               </div>
            </div>
            
-           <div className="h-[350px] w-full flex items-end justify-between gap-4 pt-4">
+           <div className="h-[400px] w-full flex items-end justify-between gap-5 pt-10">
               {[45, 60, 40, 80, 55, 90, 70, 85, 50, 65, 75, 95].map((val, i) => (
-                <div key={i} className="flex-1 flex flex-col items-center gap-3 group">
+                <div key={i} className="flex-1 flex flex-col items-center gap-4 group">
                    <div 
-                    className="w-full bg-primary/10 dark:bg-primary/5 rounded-t-xl group-hover:bg-primary/30 transition-all relative" 
+                    className="w-full bg-primary/10 dark:bg-primary/5 border border-primary/10 rounded-t-2xl group-hover:bg-primary/40 group-hover:border-primary/50 transition-all relative cursor-pointer shadow-inner" 
                     style={{ height: `${val}%` }}
                    >
-                      {i === 11 && <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-primary text-black text-[10px] font-bold px-2 py-1 rounded-lg shadow-xl">₹42.5M</div>}
+                      {i === 11 && (
+                        <div className="absolute -top-12 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground text-[10px] font-black px-4 py-2 rounded-full shadow-2xl animate-bounce uppercase tracking-widest border border-white/20 whitespace-nowrap">
+                          Peak: ₹4.2M
+                        </div>
+                      )}
+                      <div className="absolute inset-0 bg-gradient-to-t from-primary/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                    </div>
-                   <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">M{i+1}</span>
+                   <span className="text-[10px] font-black text-muted-foreground uppercase opacity-40 group-hover:opacity-100 transition-opacity tracking-widest leading-none">M{i+1}</span>
                 </div>
               ))}
            </div>
         </Card>
 
         {/* Infrastructure Nodes */}
-        <Card className="p-8 bg-white dark:bg-[#09090b] border-primary/10">
-           <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-8 flex items-center gap-3">
-              <Database className="h-6 w-6 text-primary" />
-              Service Status
+        <Card className="p-10 bg-card border-border/50 shadow-xl rounded-[3rem]">
+           <h3 className="text-2xl font-black text-foreground tracking-tighter mb-10 uppercase leading-none flex items-center gap-4 italic">
+              <Database className="h-7 w-7 text-primary" />
+              Live Nodes
            </h3>
            <div className="space-y-6">
               {[
@@ -119,29 +140,30 @@ export default function PlatformAnalyticsDashboard() {
                 { name: "AI Scanner V3", status: "Degraded", uptime: "98.50%", load: "88%" },
                 { name: "Cloud Storage", status: "Healthy", uptime: "100%", load: "12%" },
               ].map((node) => (
-                <div key={node.name} className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 group hover:border-primary/30 transition-all">
-                   <div className="flex items-center justify-between mb-3">
-                      <span className="font-bold text-slate-900 dark:text-white text-sm">{node.name}</span>
+                <div key={node.name} className="p-6 rounded-[2rem] bg-muted/30 border border-border/50 group hover:bg-card hover:shadow-2xl transition-all cursor-pointer relative overflow-hidden">
+                   <div className="flex items-center justify-between mb-4 relative z-10">
+                      <span className="font-black text-foreground text-[11px] uppercase tracking-tight">{node.name}</span>
                       <span className={cn(
-                        "text-[10px] font-bold px-2 py-0.5 rounded-full uppercase",
-                        node.status === 'Healthy' ? "bg-emerald-500/10 text-emerald-500" : "bg-orange-500/10 text-orange-500"
+                        "text-[9px] font-black px-3 py-1 rounded-full uppercase tracking-widest shadow-sm",
+                        node.status === 'Healthy' ? "bg-emerald-500 text-white" : "bg-orange-500 text-white"
                       )}>
                          {node.status}
                       </span>
                    </div>
-                   <div className="flex items-center justify-between mt-auto">
-                      <div className="flex items-center gap-1 text-[10px] text-slate-500">
-                         <Activity className="h-3 w-3" />
-                         {node.uptime} Uptime
+                   <div className="flex items-center justify-between mt-auto relative z-10">
+                      <div className="flex items-center gap-2 text-[9px] font-bold text-muted-foreground uppercase tracking-widest opacity-60">
+                         <Activity className="h-3.5 w-3.5 text-primary" />
+                         {node.uptime} Up
                       </div>
-                      <div className="w-24 bg-slate-200 dark:bg-slate-800 h-1.5 rounded-full overflow-hidden">
-                         <div className={cn("h-full rounded-full", parseInt(node.load) > 80 ? "bg-orange-500" : "bg-primary")} style={{ width: node.load }}></div>
+                      <div className="w-28 bg-muted border border-border h-2 rounded-full overflow-hidden shadow-inner">
+                         <div className={cn("h-full rounded-full transition-all duration-1000", parseInt(node.load) > 80 ? "bg-orange-500 shadow-[0_0_8px_rgba(249,115,22,0.4)]" : "bg-primary shadow-[0_0_8px_rgba(5,148,103,0.4)]")} style={{ width: node.load }}></div>
                       </div>
                    </div>
+                   <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                 </div>
               ))}
            </div>
-           <button className="w-full mt-8 py-3 bg-slate-100 dark:bg-slate-800 rounded-xl text-sm font-bold text-slate-600 dark:text-slate-400 hover:text-primary transition-colors">Launch Health Console</button>
+           <button className="w-full mt-10 h-14 bg-muted border border-border rounded-2xl text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em] hover:bg-card hover:text-primary hover:border-primary/30 hover:shadow-xl transition-all active:scale-95">Analyze All Clusters</button>
         </Card>
       </div>
     </div>

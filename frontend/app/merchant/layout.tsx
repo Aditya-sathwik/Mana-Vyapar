@@ -100,9 +100,9 @@ export default function DashboardLayout({
           <footer className="mt-20 py-8 border-t border-border/50 flex flex-col md:flex-row justify-between items-center gap-6 text-[10px] font-bold text-muted-foreground uppercase tracking-[0.3em] mb-12 md:mb-0">
             <p className="text-center md:text-left">© 2026 MANA VYAPAR • MERCHANT HUB V2.4</p>
             <div className="flex flex-wrap justify-center items-center gap-6">
-              <a href="#" className="hover:text-primary transition-colors">Help Center</a>
-              <a href="#" className="hover:text-primary transition-colors">Privacy</a>
-              <a href="#" className="hover:text-primary transition-colors">Contact Node</a>
+              <a href="#" className="hover:text-primary transition-colors">Help & Support</a>
+              <a href="#" className="hover:text-primary transition-colors">Privacy Policy</a>
+              <a href="#" className="hover:text-primary transition-colors">Contact Us</a>
             </div>
           </footer>
         </main>

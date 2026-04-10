@@ -1,6 +1,6 @@
-import { asyncHandler } from "../utlis/asynchandler.js";
-import { ApiResponse } from "../utlis/apiresponse.js";
-import { ApiError } from "../utlis/apierror.js";
+import { asyncHandler } from "../utils/asyncHandler.js";
+import { ApiResponse } from "../utils/ApiResponse.js";
+import { ApiError } from "../utils/ApiError.js";
 import * as TransactionService from "../services/transaction.service.js";
 
 /**
@@ -75,10 +75,35 @@ const updateMetadata = asyncHandler(async (req, res) => {
         .json(new ApiResponse(200, updatedRecord, "Transaction metadata updated successfully"));
 });
 
+/**
+ * @controller checkCoupon
+ * @description Validates a coupon and returns the discount preview.
+ */
+const checkCoupon = asyncHandler(async (req, res) => {
+    const merchantId = req.user?._id;
+    const { code } = req.params;
+    const { subtotal, customerId } = req.query;
+
+    if (!code) throw new ApiError(400, "Coupon code is required");
+    if (!subtotal) throw new ApiError(400, "Order subtotal is required for validation");
+
+    const result = await TransactionService.validateCoupon(
+        merchantId, 
+        code, 
+        parseFloat(subtotal), 
+        customerId
+    );
+
+    return res
+        .status(200)
+        .json(new ApiResponse(200, result, "Coupon validated successfully"));
+});
+
 export {
     executeSale,
     getHistory,
     getCustomerHistory,
     voidSale,
-    updateMetadata
+    updateMetadata,
+    checkCoupon
 };

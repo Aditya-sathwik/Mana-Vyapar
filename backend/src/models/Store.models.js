@@ -269,6 +269,12 @@ const storeSchema = new Schema(
       lastSaved: { type: Date, default: Date.now }
     },
 
+    policies: {
+      privacyPolicy: { type: String, default: "" },
+      returnPolicy: { type: String, default: "" },
+      shippingPolicy: { type: String, default: "" },
+      termsConditions: { type: String, default: "" },
+    },
     isActive: {
       type: Boolean,
       default: true,

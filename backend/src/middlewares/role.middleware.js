@@ -1,5 +1,5 @@
-import { ApiError } from "../utlis/apierror.js";
-import { asyncHandler } from "../utlis/asynchandler.js";
+import { ApiError } from "../utils/ApiError.js";
+import { asyncHandler } from "../utils/asyncHandler.js";
 
 /**
  * Middleware to restrict access to Super Admins only.

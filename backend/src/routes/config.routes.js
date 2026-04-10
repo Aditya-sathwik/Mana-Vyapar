@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { verifyJWT, authorizeRoles } from "../middlewares/auth.middleware.js";
-import { asyncHandler } from "../utlis/asynchandler.js";
-import { ApiResponse } from "../utlis/apiresponse.js";
+import { asyncHandler } from "../utils/asyncHandler.js";
+import { ApiResponse } from "../utils/ApiResponse.js";
 import { upsertConfig } from "../services/config.service.js";
 
 const router = Router();

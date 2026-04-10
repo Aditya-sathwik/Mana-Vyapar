@@ -1,7 +1,8 @@
 import { Store } from "../models/Store.models.js";
-import { ApiError } from "../utlis/apierror.js";
-import { uploadOnCloudinary } from "../utlis/cloudinary.js";
+import { ApiError } from "../utils/ApiError.js";
+import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import { Category } from "../models/Category.models.js";
+import { User } from "../models/User.models.js";
 
 
 export const createStore = async (merchantId, storeData) => {
@@ -25,6 +26,9 @@ export const createStore = async (merchantId, storeData) => {
         description,
         owner: merchantId
     });
+    
+    // 🔥 New: Sync storeSlug to User document
+    await User.findByIdAndUpdate(merchantId, { $set: { storeSlug: store.slug } });
 
     return store;
 }
@@ -48,6 +52,12 @@ export const updateStoreByOwnerId = async (ownerId, storeData) => {
     if (isActive !== undefined) store.isActive = isActive;
 
     await store.save();
+
+    // 🔥 New: Sync storeSlug to User document if slug changed
+    if (slug) {
+        await User.findByIdAndUpdate(ownerId, { $set: { storeSlug: store.slug } });
+    }
+
     return store;
 }
 
@@ -97,6 +107,9 @@ export const deleteStoreById = async (storeId) => {
         throw new ApiError(400, "Store ID is required");
     }
     const store = await Store.findByIdAndDelete(storeId);
+    if (store) {
+        await User.findByIdAndUpdate(store.owner, { $set: { storeSlug: null } });
+    }
 
     if (!store) {
         throw new ApiError(404, "Store not found");
@@ -110,7 +123,7 @@ export const getStoreByOwnerId = async (ownerId) => {
     if (!ownerId) {
         throw new ApiError(400, "Owner ID is required");
     }
-    const store = await Store.findOne({ owner: ownerId });
+    const store = await Store.findOne({ owner: ownerId }).populate("owner", "fullname email businessCategory");
 
     if (!store) {
         throw new ApiError(404, "Store not found");

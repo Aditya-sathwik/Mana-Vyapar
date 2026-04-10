@@ -1,5 +1,5 @@
 import redisClient from "../config/redis.js";
-import { ApiResponse } from "../utlis/apiresponse.js";
+import { ApiResponse } from "../utils/ApiResponse.js";
 
 /**
  * cacheMiddleware: Intercepts requests and serves from memory if valid.

@@ -1,7 +1,7 @@
 import { Product } from "../models/Product.models.js";
 import { Store } from "../models/Store.models.js";
-import { ApiError } from "../utlis/apierror.js";
-import { uploadOnCloudinary } from "../utlis/cloudinary.js";
+import { ApiError } from "../utils/ApiError.js";
+import { uploadOnCloudinary } from "../utils/cloudinary.js";
 
 /**
  * Service to handle business logic for Product/Inventory operations.
