@@ -37,30 +37,30 @@ const sidebarSections = [
   {
     title: "Business",
     items: [
-      { href: "/merchant/dashboard", label: "Overview", icon: LayoutDashboard },
-      { href: "/merchant/khata", label: "Smart Khata", icon: Wallet },
-      { href: "/merchant/categories", label: "Categories", icon: Box },
-      { href: "/merchant/coupons", label: "Promotions", icon: Tag },
-      { href: "/merchant/website", label: "Website Control", icon: Store },
+      { href: "/merchant/dashboard", label: "Overview", icon: LayoutDashboard, feature: "DASHBOARD" },
+      { href: "/merchant/khata", label: "Smart Khata", icon: Wallet, feature: "KHATA" },
+      { href: "/merchant/categories", label: "Categories", icon: Box, feature: "INVENTORY" },
+      { href: "/merchant/coupons", label: "Promotions", icon: Tag, feature: "COUPONS" },
+      { href: "/merchant/website", label: "Website Control", icon: Store, feature: "WEBSITE" },
     ]
   },
   {
     title: "Intelligence",
     items: [
-      { href: "/merchant/scanner", label: "AI Product Scan", icon: ScanLine },
-      { href: "/merchant/insights", label: "Advanced Insights", icon: TrendingUp },
-      { href: "/merchant/forms/list", label: "Customer Forms", icon: FileText },
+      { href: "/merchant/scanner", label: "AI Product Scan", icon: ScanLine, feature: "SCANNER" },
+      { href: "/merchant/insights", label: "Advanced Insights", icon: TrendingUp, feature: "ANALYTICS" },
+      { href: "/merchant/forms/list", label: "Customer Forms", icon: FileText, feature: "FORMS" },
     ]
   },
   {
     title: "Operations",
     items: [
-      { href: "/merchant/notifications", label: "Messages", icon: Bell },
-      { href: "/merchant/support", label: "Merchant Support", icon: HeadphonesIcon },
-      { href: "/merchant/alerts", label: "System Sync", icon: AlertTriangle },
-      { href: "/merchant/subscription", label: "Billing", icon: CreditCard },
-      { href: "/merchant/delivery", label: "Orders", icon: Truck },
-      { href: "/merchant/settings/policies", label: "Store Policies", icon: FileText },
+      { href: "/merchant/notifications", label: "Messages", icon: Bell, feature: "SUPPORT" },
+      { href: "/merchant/support", label: "Merchant Support", icon: HeadphonesIcon, feature: "SUPPORT" },
+      { href: "/merchant/alerts", label: "System Sync", icon: AlertTriangle, feature: "SUPPORT" },
+      { href: "/merchant/subscription", label: "Billing", icon: CreditCard, feature: "ORDERS" },
+      { href: "/merchant/delivery", label: "Orders", icon: Truck, feature: "ORDERS" },
+      { href: "/merchant/settings/policies", label: "Store Policies", icon: FileText, feature: "WEBSITE" },
     ]
   }
 ]
@@ -109,8 +109,7 @@ export function Sidebar({ className }: { className?: string }) {
   const [searchQuery, setSearchQuery] = useState("")
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false)
   const pathname = usePathname()
-  const { logout } = useAuth()
-
+  const { user, logout } = useAuth()
   const isActuallyCollapsed = isCollapsed && !isHovered;
 
   useEffect(() => {
@@ -130,9 +129,17 @@ export function Sidebar({ className }: { className?: string }) {
 
   const filteredSections = sidebarSections.map((section) => ({
     ...section,
-    items: section.items.filter((item) =>
-      item.label.toLowerCase().includes(searchQuery.toLowerCase())
-    ),
+    items: section.items.filter((item) => {
+      // 1. Search filter
+      const matchesSearch = item.label.toLowerCase().includes(searchQuery.toLowerCase());
+      
+      // 2. Feature filter
+      // If user has 'features' array, check if item.feature is included.
+      // If no features array (old user or admin), allow all.
+      const hasPermission = !user?.features || user.role === "admin" || user.features.includes((item as any).feature);
+
+      return matchesSearch && hasPermission;
+    }),
   })).filter((section) => section.items.length > 0);
 
   return (
@@ -268,7 +275,7 @@ export function Sidebar({ className }: { className?: string }) {
   )}>
     <div className="flex items-center justify-between gap-2 px-1">
        <ThemeToggle />
-        {!isActuallyCollapsed && (
+        {!isActuallyCollapsed && (!user?.features || user.features.includes("WEBSITE")) && (
          <Link
           href="/merchant/store-settings"
           className={cn(
@@ -280,7 +287,7 @@ export function Sidebar({ className }: { className?: string }) {
           <span>Settings</span>
         </Link>
        )}
-       {isActuallyCollapsed && (
+       {isActuallyCollapsed && (!user?.features || user.features.includes("WEBSITE")) && (
           <Link href="/merchant/store-settings" className="h-8 w-8 flex items-center justify-center rounded-lg text-muted-foreground hover:text-primary transition-colors">
               <Settings className="h-5 w-5" />
           </Link>

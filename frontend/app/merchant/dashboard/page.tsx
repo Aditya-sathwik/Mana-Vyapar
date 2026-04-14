@@ -17,6 +17,8 @@ import {
    Loader2,
    HeadphonesIcon
 } from "lucide-react"
+import { apiFetch } from "@/lib/api-client"
+
 import { Card } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
 import Link from "next/link"
@@ -43,13 +45,7 @@ export default function DashboardPage() {
          }
 
          try {
-            const response = await fetch("http://localhost:8080/api/v1/stores/me", {
-               headers: {
-                  "Authorization": `Bearer ${localStorage.getItem("mana_vyapar_access_token") || ""}`,
-                  "Content-Type": "application/json"
-               }
-            });
-            const result = await response.json();
+            const result = await apiFetch("/stores/me");
             if (result.success && result.data?.slug) {
                localStorage.setItem("storeSlug", result.data.slug);
                console.log("✅ Store slug saved to local storage:", result.data.slug);

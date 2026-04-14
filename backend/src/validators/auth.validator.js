@@ -5,12 +5,14 @@ import Joi from "joi";
  */
 export const registerSchema = Joi.object({
     fullname: Joi.string().required().min(3).max(50),
+    username: Joi.string().required().min(3).max(30).lowercase().trim(),
     email: Joi.string().email().optional().lowercase(),
     password: Joi.string().required().min(6),
     phone: Joi.string().required().regex(/^[0-9]{10}$/).message("Phone number must be exactly 10 digits"),
     role: Joi.string().valid("Merchant", "Customer", "Admin").default("Customer"),
+    onlyOwner: Joi.string().optional(),
     businessCategory: Joi.string().optional().default("General"),
-    storeName: Joi.string().when("role", { 
+    businessName: Joi.string().when("role", { 
         is: "Merchant", 
         then: Joi.required(), 
         otherwise: Joi.optional() 

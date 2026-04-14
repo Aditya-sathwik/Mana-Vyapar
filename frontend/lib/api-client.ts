@@ -1,3 +1,5 @@
+import storage from "./storage";
+
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
 interface ApiOptions extends RequestInit {
@@ -10,8 +12,16 @@ export async function apiFetch(endpoint: string, options: ApiOptions = {}): Prom
   const url = `${BASE_URL}${endpoint}`;
   const retryCount = (options as any)._retryCount || 0;
 
+  let accessToken = storage.getAccessToken();
+  
+  // Guard against "undefined" string in storage
+  if (accessToken === "undefined" || accessToken === "null") {
+    accessToken = null;
+  }
+
   const headers: HeadersInit = {
     ...options.headers,
+    ...(accessToken ? { "Authorization": `Bearer ${accessToken}` } : {}),
   };
 
   // If not multipart, we assume JSON
@@ -49,6 +59,12 @@ export async function apiFetch(endpoint: string, options: ApiOptions = {}): Prom
           isRefreshing = false;
 
           if (refreshRes.ok) {
+            const result = await refreshRes.json();
+            if (result.success && result.data) {
+              const { accessToken, refreshToken } = result.data;
+              storage.setTokens(accessToken, refreshToken);
+            }
+            
             // Retry the original request with incremented retry count
             return await apiFetch(endpoint, { ...options, _retryCount: retryCount + 1 } as any);
           }

@@ -17,7 +17,7 @@ router.get("/profile/:merchantId", getStorePublicProfile);
 
 // 🔑 Secured Routes for the Merchant themselves
 router.use(verifyJWT);
-router.use(restrictTo("Merchant", "Super Admin"));
+router.use(restrictTo("Merchant", "Admin"));
 
 /**
  * @route PATCH /v1/merchants/branding

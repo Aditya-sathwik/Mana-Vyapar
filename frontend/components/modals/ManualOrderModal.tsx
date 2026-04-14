@@ -23,6 +23,8 @@ import { cn } from "@/lib/utils"
 import storage from "@/lib/storage"
 import { useAuth } from "@/context/auth-context"
 import { useKhata } from "@/hooks/use-khata"
+import { apiFetch } from "@/lib/api-client"
+
 
 interface Product {
   _id: string
@@ -115,15 +117,9 @@ export function ManualOrderModal({ isOpen, onClose, onSuccess }: ManualOrderModa
     try {
       setLoadingProducts(true)
       
-      // Get slug from user object or localStorage as fallback
       const slug = user?.storeSlug || localStorage.getItem("storeSlug") || "kirana";
 
-      const res = await fetch(`${API_BASE}/products/store/${slug}?search=${searchQuery}`, {
-        headers: {
-          "Authorization": `Bearer ${localStorage.getItem("mana_vyapar_access_token") || ""}`
-        }
-      })
-      const data = await res.json()
+      const data = await apiFetch(`/products/store/${slug}?search=${searchQuery}`);
       if (data.success) {
         setProducts(data.data.products || data.data || [])
       }
@@ -185,19 +181,7 @@ export function ManualOrderModal({ isOpen, onClose, onSuccess }: ManualOrderModa
     
     try {
       setIsVerifyingCoupon(true);
-      const token = storage.getAccessToken();
-      
-      if (!token) {
-        toast.error("Session expired. Please log in again.");
-        return;
-      }
-
-      const res = await fetch(`${API_BASE}/transactions/coupon/validate/${couponCode}?subtotal=${totalAmount}&customerId=${customer.id}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      const data = await res.json();
+      const data = await apiFetch(`/transactions/coupon/validate/${couponCode}?subtotal=${totalAmount}&customerId=${customer.id}`);
       
       if (data.success) {
         setCouponDiscountAmount(data.data.discount);
@@ -267,16 +251,11 @@ export function ManualOrderModal({ isOpen, onClose, onSuccess }: ManualOrderModa
 
       console.log("📦 Sending Order Payload:", orderPayload);
 
-      const response = await fetch(`${API_BASE}/orders/create`, {
+      const data = await apiFetch("/orders/create", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${localStorage.getItem("mana_vyapar_access_token") || ""}`
-        },
         body: JSON.stringify(orderPayload)
-      })
+      });
 
-      const data = await response.json()
       if (data.success) {
         toast.success("Order created successfully!")
         onSuccess()
@@ -284,7 +263,7 @@ export function ManualOrderModal({ isOpen, onClose, onSuccess }: ManualOrderModa
         // Reset state
         setStep(1)
         setSelectedItems([])
-        setCustomer({ name: "", phone: "", model: "Customer" })
+        setCustomer({ name: "", phone: "", email: "", model: "Customer", id: "" })
       } else {
         toast.error(data.message || "Failed to create order")
       }

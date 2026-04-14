@@ -90,7 +90,7 @@ const supportTicketSchema = new Schema(
         },
         addedByRole: {
           type: String,
-          enum: ["Merchant", "Customer Care", "Super Admin"],
+          enum: ["Merchant", "Customer Care", "Admin"],
         },
         timestamp: {
           type: Date,
@@ -206,7 +206,7 @@ supportTicketSchema.methods.addUpdate = function (
   });
 
   // Set first response time if this is the first response from support
-  if (!this.firstResponseAt && ["Customer Care", "Super Admin"].includes(addedByRole)) {
+  if (!this.firstResponseAt && ["Customer Care", "Admin"].includes(addedByRole)) {
     this.firstResponseAt = new Date();
     this.responseTime = Math.floor((this.firstResponseAt - this.createdAt) / 60000); // in minutes
   }

@@ -268,20 +268,14 @@ export default function WebsiteBuilderPage() {
 
     try {
       setIsSaving(true)
-      const token = localStorage.getItem("accessToken")
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/stores/logo`, {
+      const res = await apiFetch("/stores/logo", {
         method: "PATCH",
-        headers: {
-          "Authorization": `Bearer ${token}`
-        },
-        body: payload
+        body: payload,
+        isMultipart: true
       })
-      const res = await response.json()
       if (res.success) {
         toast.success("Logo updated")
         setStore(res.data)
-      } else {
-        throw new Error(res.message)
       }
     } catch (error: any) {
       toast.error(error.message || "Logo upload failed")

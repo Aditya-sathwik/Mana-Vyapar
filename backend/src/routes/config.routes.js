@@ -7,7 +7,7 @@ import { upsertConfig } from "../services/config.service.js";
 const router = Router();
 
 // Secure all config routes to Super Admins only
-router.use(verifyJWT, authorizeRoles("Super Admin"));
+router.use(verifyJWT, authorizeRoles("Admin"));
 
 /**
  * @route POST /admin/config

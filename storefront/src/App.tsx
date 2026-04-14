@@ -4,6 +4,7 @@ import { Provider } from 'react-redux';
 import { store } from './store';
 import './index.css';
 import PreviewListener from './components/PreviewListener';
+import ProtectedRoute from './components/ProtectedRoute';
 
 // Lazy load pages for performance
 const Home = lazy(() => import('./pages/Home'));
@@ -40,14 +41,14 @@ const App: React.FC = () => {
             <Route path="/products" element={<ProductListing />} />
             <Route path="/categories" element={<ProductListing />} />
             <Route path="/product/:id" element={<ProductDetail />} />
-            <Route path="/cart" element={<Cart />} />
-            <Route path="/profile" element={<Profile />} />
+            <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+            <Route path="/cart" element={<ProtectedRoute><Cart /></ProtectedRoute>} />
+            <Route path="/orders" element={<ProtectedRoute><Orders /></ProtectedRoute>} />
+            <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+            <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
             <Route path="/feedback" element={<Feedback />} />
-            <Route path="/orders" element={<Orders />} />
-            <Route path="/settings" element={<Settings />} />
-            <Route path="/notifications" element={<Notifications />} />
             {/* Catch-all route */}
             <Route path="*" element={<Home />} />
           </Routes>

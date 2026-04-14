@@ -7,7 +7,8 @@ import { MerchantHeader } from "@/components/layout/MerchantHeader"
 import { motion, AnimatePresence } from "framer-motion"
 import { X, Loader2 } from "lucide-react"
 import { useAuth } from "@/context/auth-context"
-import { useRouter } from "next/navigation"
+import { useRouter, usePathname } from "next/navigation"
+import toast from "react-hot-toast"
 
 export default function DashboardLayout({
   children,
@@ -17,13 +18,46 @@ export default function DashboardLayout({
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const { user, loading } = useAuth()
   const router = useRouter()
+  const pathname = usePathname()
 
-  // ROUTE PROTECTION: Ensure only logged-in merchants can access this sidebar layout
+  // ROUTE PROTECTION & FEATURE GUARDING
   useEffect(() => {
     if (!loading && !user) {
       router.replace("/auth/login")
+      return
     }
-  }, [user, loading, router])
+
+    if (user && user.features) {
+      // Feature Mapping
+      const routeFeatureMap: Record<string, string> = {
+        "/merchant/khata": "KHATA",
+        "/merchant/inventory": "INVENTORY",
+        "/merchant/categories": "INVENTORY",
+        "/merchant/orders": "ORDERS",
+        "/merchant/delivery": "ORDERS",
+        "/merchant/coupons": "COUPONS",
+        "/merchant/website": "WEBSITE",
+        "/merchant/store-settings": "WEBSITE",
+        "/merchant/analytics": "ANALYTICS",
+        "/merchant/insights": "ANALYTICS",
+        "/merchant/scanner": "SCANNER",
+        "/merchant/forms": "FORMS",
+        "/merchant/support": "SUPPORT",
+        "/merchant/notifications": "SUPPORT",
+        "/merchant/alerts": "SUPPORT",
+      }
+
+      // Find if current path is restricted
+      const path = Object.keys(routeFeatureMap).find(p => pathname.startsWith(p));
+      if (path) {
+        const requiredFeature = routeFeatureMap[path];
+        if (!user.features.includes(requiredFeature) && user.role !== "admin") {
+          toast.error("Access Restricted: This feature is not enabled for your account.")
+          router.replace("/merchant/dashboard")
+        }
+      }
+    }
+  }, [user, loading, router, pathname])
 
   // Show a loading screen while auth state is resolving
   if (loading || !user) {

@@ -62,9 +62,9 @@ router.route("/merchant-customers").get(
 router.route("/avatar").patch(verifyJWT, upload.single("avatar"), updateUserAvatar);
 router.route("/cover-image").patch(verifyJWT, upload.single("coverimage"), updateUserCoverImage);
 
-// --- MASTER CONTROL (Super Admin Only) ---
+// --- MASTER CONTROL (Admin Only) ---
 router.route("/admin/all-merchants").get(
-    restrictTo("Super Admin"),
+    restrictTo("Admin"),
     asyncHandler(async (req, res) => {
         const merchants = await User.find({ role: "Merchant" }).select("-password -refreshToken");
         return res.status(200).json(
@@ -73,10 +73,36 @@ router.route("/admin/all-merchants").get(
     })
 );
 
+router.route("/admin/user/:userId/features").patch(
+    restrictTo("Admin"),
+    asyncHandler(async (req, res) => {
+        const { userId } = req.params;
+        const { features } = req.body;
+
+        if (!Array.isArray(features)) {
+            return res.status(400).json(new ApiResponse(400, null, "Features must be an array"));
+        }
+
+        const user = await User.findByIdAndUpdate(
+            userId,
+            { features },
+            { new: true }
+        ).select("-password -refreshToken");
+
+        if (!user) {
+            return res.status(404).json(new ApiResponse(404, null, "User not found"));
+        }
+
+        return res.status(200).json(
+            new ApiResponse(200, user, "User features updated successfully")
+        );
+    })
+);
+
 
 router.route("/admin/all-users").get(
     verifyJWT,
-    restrictTo("Super Admin"),
+    restrictTo("Admin"),
     getAllUsers
 );
 

@@ -12,8 +12,8 @@ const router = Router();
 
 // Internal Admin Routes (to manage collections)
 // Secured for Super Admins only
-router.route("/admin/sync").post(verifyJWT, authorizeRoles("Super Admin"), syncCollection);
-router.route("/admin/list").get(verifyJWT, authorizeRoles("Super Admin"), getAllCollections);
+router.route("/admin/sync").post(verifyJWT, authorizeRoles("Admin"), syncCollection);
+router.route("/admin/list").get(verifyJWT, authorizeRoles("Admin"), getAllCollections);
 
 // Public/Custom Endpoints (The "Dynamic" part)
 // These would typically be used by developers or Postman

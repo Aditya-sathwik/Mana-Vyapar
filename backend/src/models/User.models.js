@@ -31,7 +31,7 @@ const userSchema = new Schema(
     // Role-based access
     role: {
       type: String,
-      enum: ["Super Admin", "Merchant", "Customer"],
+      enum: ["Admin", "Merchant", "Customer"],
       required: true,
       default: "Merchant",
     },
@@ -99,23 +99,23 @@ const userSchema = new Schema(
 
     // 🎨 Branding & Customization (For SaaS support)
     branding: {
-        primaryColor: { type: String, default: "#6366f1" }, // Default Indigo
-        secondaryColor: { type: String, default: "#f43f5e" }, // Default Rose
-        logo: { type: String }, // Shop Logo URL
-        fontFamily: { type: String, default: "Inter, sans-serif" },
-        socialLinks: {
-            website: String,
-            instagram: String,
-            facebook: String,
-        }
+      primaryColor: { type: String, default: "#6366f1" }, // Default Indigo
+      secondaryColor: { type: String, default: "#f43f5e" }, // Default Rose
+      logo: { type: String }, // Shop Logo URL
+      fontFamily: { type: String, default: "Inter, sans-serif" },
+      socialLinks: {
+        website: String,
+        instagram: String,
+        facebook: String,
+      }
     },
 
     // ⚙️ Shop Settings
     settings: {
-        currency: { type: String, default: "INR" },
-        invoicePrefix: { type: String, default: "MV" },
-        taxRate: { type: Number, default: 0 },
-        lowStockAlert: { type: Boolean, default: true },
+      currency: { type: String, default: "INR" },
+      invoicePrefix: { type: String, default: "MV" },
+      taxRate: { type: Number, default: 0 },
+      lowStockAlert: { type: Boolean, default: true },
     },
 
 
@@ -125,6 +125,35 @@ const userSchema = new Schema(
       enum: ["FREE", "PRO", "ENTERPRISE"],
       default: "FREE",
       index: true,
+    },
+
+    // Dynamic Feature Access control
+    features: {
+      type: [String],
+      enum: [
+        "DASHBOARD",
+        "KHATA",
+        "INVENTORY",
+        "ORDERS",
+        "WEBSITE",
+        "ANALYTICS",
+        "SUPPORT",
+        "SCANNER",
+        "COUPONS",
+        "FORMS"
+      ],
+      default: [
+        "DASHBOARD",
+        "KHATA",
+        "INVENTORY",
+        "ORDERS",
+        "WEBSITE",
+        "ANALYTICS",
+        "SUPPORT",
+        "SCANNER",
+        "COUPONS",
+        "FORMS"
+      ],
     },
 
     // Subscription reference
@@ -206,6 +235,7 @@ userSchema.methods.generateAccessToken = function () {
       username: this.username,
       role: this.role,
       storeSlug: this.storeSlug,
+      features: this.features,
     },
     process.env.ACCESS_TOKEN_SECRET,
     { expiresIn: process.env.ACCESS_TOKEN_EXPIRY }

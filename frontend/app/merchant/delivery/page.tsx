@@ -30,6 +30,8 @@ import {
 } from "next/navigation"
 import { toast } from "react-hot-toast"
 import { ManualOrderModal, OrderFilterModal, OrderDetailsModal } from "@/components/modals"
+import { apiFetch } from "@/lib/api-client"
+
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api/v1"
 
@@ -98,19 +100,13 @@ export default function OrdersPage() {
   const fetchOrders = async () => {
     try {
       setLoading(true)
-      const token = localStorage.getItem("mana_vyapar_access_token") || "";
-      const headers = {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${token}`
-      };
-
       const [ordersRes, summaryRes] = await Promise.all([
-        fetch(`${API_BASE}/orders/merchant?page=${currentPage}&limit=15${activeTab !== 'all' ? `&status=${activeTab}` : ''}${searchTerm ? `&search=${searchTerm}` : ''}`, { headers }),
-        fetch(`${API_BASE}/dashboard/summary`, { headers })
+        apiFetch(`/orders/merchant?page=${currentPage}&limit=15${activeTab !== 'all' ? `&status=${activeTab}` : ''}${searchTerm ? `&search=${searchTerm}` : ''}`),
+        apiFetch(`/dashboard/summary`)
       ])
       
-      const ordersData = await ordersRes.json()
-      const summaryData = await summaryRes.json()
+      const ordersData = ordersRes
+      const summaryData = summaryRes
       
       setOrders(ordersData.data?.orders || [])
       setPagination(ordersData.data?.pagination)

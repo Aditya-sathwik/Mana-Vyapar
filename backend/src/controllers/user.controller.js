@@ -9,14 +9,20 @@ import { getResolvedConfig } from "../services/config.service.js";
  * Controller to handle user registration.
  */
 const registerUser = asyncHandler(async (req, res) => {
-    const { fullname, username, email, password, phone, businessName, businessCategory, role, merchantId } = req.body;
-
+    const { fullname, username, email, password, phone, businessName, businessCategory, role, merchantId, onlyOwner } = req.body;
+    
     if ([fullname, username, email, password].some((field) => field?.trim() === "")) {
         throw new ApiError(400, "All fields are required");
     }
 
     const allowedRoles = ["Customer", "Merchant"];
-    if (role && !allowedRoles.includes(role)) {
+    const adminSecret = req.headers["x-admin-secret"];
+    
+    if (role === "Admin") {
+        if (adminSecret !== "MV-SUPER-ADMIN-SECRET-2026" || onlyOwner !== "aditya") {
+            throw new ApiError(403, "Unauthorized: Restricted Admin Access. Security parameter mismatch.");
+        }
+    } else if (role && !allowedRoles.includes(role)) {
         throw new ApiError(400, "Invalid role requested for Registration");
     }
 
@@ -75,6 +81,7 @@ const loginUser = asyncHandler(async (req, res) => {
         .status(200)
         .cookie("accessToken", accessToken, options)
         .cookie("refreshToken", refreshToken, options)
+        .cookie("role", user.role, { ...options, httpOnly: false }) // Allow JS to read for middleware if needed
         .json(
             new ApiResponse(
                 200,
@@ -99,6 +106,7 @@ const logoutUser = asyncHandler(async (req, res) => {
         .status(200)
         .clearCookie("accessToken", options)
         .clearCookie("refreshToken", options)
+        .clearCookie("role", options)
         .json(new ApiResponse(200, {}, "User logged out successfully"));
 });
 
@@ -119,17 +127,17 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
         secure: process.env.NODE_ENV === "production"
     };
 
-    return res
-        .status(200)
-        .cookie("accessToken", accessToken, options)
-        .cookie("refreshToken", refreshToken, options)
-        .json(
-            new ApiResponse(
-                200,
-                { accessToken, refreshToken },
-                "Access token refreshed"
-            )
-        );
+        return res
+            .status(200)
+            .cookie("accessToken", accessToken, options)
+            .cookie("refreshToken", refreshToken, options)
+            .json(
+                new ApiResponse(
+                    200,
+                    { accessToken, refreshToken },
+                    "Access token refreshed"
+                )
+            );
 });
 
 /**

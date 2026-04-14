@@ -17,6 +17,7 @@ interface User {
   businessName?: string;
   businessCategory?: string;
   storeSlug?: string;
+  features?: string[];
 }
 
 interface LoginCredentials {
@@ -141,7 +142,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // Dynamic Redirect Logic based on role
         if (userData.role === "Merchant") {
           router.push("/merchant/dashboard");
-        } else if (userData.role === "Super Admin" || userData.role === "admin") {
+        } else if (userData.role === "Admin" || userData.role === "admin") {
           router.push("/admin/dashboard");
         } else {
           router.push("/store");

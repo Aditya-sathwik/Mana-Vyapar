@@ -16,7 +16,7 @@ const createMasterAdmin = async () => {
             username: "aditya_master",
             email: "aditya@mail.com",
             password: "$@thU17723",
-            role: "Super Admin",
+            role: "Admin",
             isVerified: true
         };
 

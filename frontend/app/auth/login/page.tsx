@@ -31,7 +31,7 @@ export default function LoginPage() {
 
       if (user.role === "Merchant") {
         router.replace("/merchant/dashboard")
-      } else if (user.role === "Super Admin" || user.role === "admin") {
+      } else if (user.role === "Admin" || user.role === "admin") {
         router.replace("/admin/dashboard")
       } else {
         router.replace("/store")
