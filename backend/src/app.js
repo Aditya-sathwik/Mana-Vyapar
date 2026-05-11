@@ -12,15 +12,15 @@ app.use(cors({
     origin: function (origin, callback) {
         // Allow requests with no origin (like mobile apps/curl)
         if (!origin) return callback(null, true);
-        
+
         const allowedPatterns = [
             /^http:\/\/localhost:\d+$/,
             /^http:\/\/.*\.lvh\.me:\d+$/
         ];
 
-        const isAllowed = allowedPatterns.some(pattern => pattern.test(origin)) || 
-                         origin === process.env.CORS_ORIGIN;
-        
+        const isAllowed = allowedPatterns.some(pattern => pattern.test(origin)) ||
+            origin === process.env.CORS_ORIGIN;
+
         if (isAllowed) {
             callback(null, true);
         } else {
@@ -57,6 +57,7 @@ import dynamicFormRouter from "./routes/dynamicform.routes.js";
 import merchantRouter from "./routes/merchant.routes.js";
 import configRouter from "./routes/config.routes.js";
 import dynamicDataRouter from "./routes/dynamic.routes.js";
+import supportRouter from "./routes/support.routes.js";
 import notificationRouter from "./routes/notification.routes.js";
 
 // Routes declaration
@@ -78,6 +79,7 @@ app.use('/api/v1/dynamic-forms', dynamicFormRouter);
 app.use("/api/v1/merchants", merchantRouter);
 app.use("/api/v1/admin/config", configRouter);
 app.use("/api/v1/dynamic", dynamicDataRouter);
+app.use("/api/v1/support", supportRouter);
 app.use("/api/v1/notifications", notificationRouter);
 
 // Error Handler Middleware (must be last)

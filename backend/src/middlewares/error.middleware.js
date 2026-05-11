@@ -23,8 +23,8 @@ const errorHandler = (err, req, res, next) => {
         // Handle MongoDB Duplicate Key Errors (11000)
         if (err.code === 11000) {
             const field = Object.keys(err.keyValue || {})[0] || "field";
-            const message = field === "owner" 
-                ? "You already have a store created. One merchant can only have one store." 
+            const message = field === "owner"
+                ? "You already have a store created. One merchant can only have one store."
                 : `Store with this ${field} already exists.`;
             error = new ApiError(409, message);
         } else {

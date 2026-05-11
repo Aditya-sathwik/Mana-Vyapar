@@ -36,6 +36,20 @@ const userSchema = new Schema(
       default: "Merchant",
     },
 
+    // Granular permissions for staff/members
+    permissions: {
+      type: [String],
+      enum: [
+        "CHAT_ACCESS",
+        "TICKET_MGMT",
+        "FINANCIAL_READ",
+        "INVENTORY_MGMT",
+        "ORDER_MGMT",
+        "SUPPORT_ADMIN",
+      ],
+      default: [],
+    },
+
     // Common profile fields
     fullname: {
       type: String,

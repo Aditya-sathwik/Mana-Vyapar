@@ -44,7 +44,7 @@ export default function RootLayout({
             <LanguageProvider>
               <AuthProvider>
                 {children}
-                <Toaster 
+                <Toaster
                   position="top-right"
                   toastOptions={{
                     style: {

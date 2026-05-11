@@ -23,8 +23,8 @@ const Notifications = lazy(() => import('./pages/Notifications'));
 const LoadingScreen = () => (
   <div className="min-h-screen bg-sf-background flex flex-col justify-center items-center">
     <div className="w-16 h-16 relative">
-       <div className="absolute inset-0 border-4 border-sf-primary/10 rounded-full" />
-       <div className="absolute inset-0 border-4 border-t-sf-primary rounded-full animate-spin" />
+      <div className="absolute inset-0 border-4 border-sf-primary/10 rounded-full" />
+      <div className="absolute inset-0 border-4 border-t-sf-primary rounded-full animate-spin" />
     </div>
     <p className="mt-8 text-[10px] font-black tracking-[0.3em] text-sf-primary uppercase animate-pulse">Entering Atelier</p>
   </div>

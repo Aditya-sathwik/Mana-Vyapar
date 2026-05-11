@@ -40,6 +40,7 @@ next-env.d.ts
 
 # agent folder (CRITICAL)
 .agent/
+.continue/
 
 # OS files
 Thumbs.db
