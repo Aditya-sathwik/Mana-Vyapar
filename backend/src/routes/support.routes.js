@@ -4,9 +4,11 @@ import {
     listTickets, 
     getTicketDetails, 
     addComment, 
-    reassignTicket 
+    reassignTicket,
+    uploadAttachment 
 } from "../controllers/support.controller.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
+import { upload } from "../middlewares/multer.middleware.js";
 
 const router = Router();
 
@@ -24,5 +26,8 @@ router.route("/tickets/:ticketId/comments")
 
 router.route("/tickets/:ticketId/reassign")
     .patch(reassignTicket);
+
+router.route("/upload-attachment")
+    .post(upload.single("attachment"), uploadAttachment);
 
 export default router;

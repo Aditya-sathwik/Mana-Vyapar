@@ -33,10 +33,10 @@ const sendOrderNotification = async (order, type = "PLACED") => {
     try {
         const title = type === "PLACED" ? "New Order Received" : `Order Status: ${type}`;
         const message = `Order #${order.orderNumber || order.orderId || order._id} has been ${type.toLowerCase()}.`;
-        
+
         // Ensure we pass the ID correctly
         const userId = order.merchantId?._id || order.merchantId;
-        
+
         return await createNotification(userId, "ORDER", title, message, { orderId: order._id });
     } catch (error) {
         console.error("❌ sendOrderNotification failed:", error);
@@ -47,9 +47,9 @@ const sendPaymentNotification = async (transaction, status = "SUCCESS") => {
     try {
         const title = status === "SUCCESS" ? "Payment Received" : "Payment Failed";
         const message = `Payment of ₹${transaction.amount} for Order #${transaction.orderId} was ${status.toLowerCase()}.`;
-        
+
         const userId = transaction.merchantId?._id || transaction.merchantId;
-        
+
         return await createNotification(userId, "PAYMENT", title, message, { transactionId: transaction._id });
     } catch (error) {
         console.error("❌ sendPaymentNotification failed:", error);
@@ -60,9 +60,9 @@ const sendLowStockAlert = async (product) => {
     try {
         const title = "Inventory Alert: Low Stock";
         const message = `Product '${product.name}' is running low (${product.stock} left).`;
-        
+
         const userId = product.merchantId?._id || product.merchantId;
-        
+
         return await createNotification(userId, "STOCK", title, message, { productId: product._id });
     } catch (error) {
         console.error("❌ sendLowStockAlert failed:", error);
@@ -72,8 +72,15 @@ const sendLowStockAlert = async (product) => {
 const sendHighValueCustomerAlert = async (customer, merchantId) => {
     const title = "High Value Customer Spotted";
     const message = `${customer.fullname} just spent a significant amount in your store.`;
-    
+
     return await createNotification(merchantId, "CUSTOMER", title, message, { customerId: customer._id });
+};
+
+const sendChatNotification = async (receiverId, senderName, roomId, messageSnippet) => {
+    const title = `New Message from ${senderName}`;
+    const message = messageSnippet || "You have a new message.";
+    
+    return await createNotification(receiverId, "CHAT", title, message, { roomId });
 };
 
 export {
@@ -81,6 +88,7 @@ export {
     sendPaymentNotification,
     sendLowStockAlert,
     sendHighValueCustomerAlert,
-    createNotification
+    createNotification,
+    sendChatNotification
 };
 

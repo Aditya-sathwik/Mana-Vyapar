@@ -17,6 +17,11 @@ const chatMessageSchema = new Schema(
       enum: ["Admin", "Merchant", "Customer", "Support"],
       required: true,
     },
+    messageType: {
+      type: String,
+      enum: ["TEXT", "IMAGE", "VIDEO", "FILE", "AUDIO"],
+      default: "TEXT",
+    },
     content: {
       type: String,
       required: true,
@@ -32,12 +37,35 @@ const chatMessageSchema = new Schema(
       type: Boolean,
       default: false,
     },
-    isRead: {
+    status: {
+      type: String,
+      enum: ["PENDING", "SENT", "DELIVERED", "READ"],
+      default: "SENT",
+    },
+    readAt: {
+      type: Date,
+      default: null,
+    },
+    replyTo: {
+      type: Schema.Types.ObjectId,
+      ref: "ChatMessage",
+      default: null,
+    },
+
+    isEdited: {
       type: Boolean,
       default: false,
     },
+    editedAt: {
+      type: Date,
+      default: null,
+    },
+
   },
   { timestamps: true }
 );
+
+chatMessageSchema.index({ roomId: 1, createdAt: -1 });
+
 
 export const ChatMessage = mongoose.model("ChatMessage", chatMessageSchema);

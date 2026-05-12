@@ -4,6 +4,7 @@ import productReducer from './slices/productSlice';
 import authReducer from './slices/authSlice';
 import orderReducer from './slices/orderSlice';
 import storeReducer from './slices/storeSlice';
+import supportReducer from './slices/supportSlice';
 
 export const storefrontStore = configureStore({
   reducer: {
@@ -12,8 +13,9 @@ export const storefrontStore = configureStore({
     auth: authReducer,
     order: orderReducer,
     store: storeReducer,
+    support: supportReducer,
   },
 });
 
-export type StorefrontRootState = ReturnType<typeof storefrontStore.getState>;
-export type StorefrontAppDispatch = typeof storefrontStore.dispatch;
+export type RootState = ReturnType<typeof storefrontStore.getState>;
+export type AppDispatch = typeof storefrontStore.dispatch;

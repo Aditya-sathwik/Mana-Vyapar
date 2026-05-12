@@ -77,38 +77,52 @@ const supportTicketSchema = new Schema(
     },
 
     // Conversation/Updates
-    updates: [
-      {
-        message: {
-          type: String,
-          required: true,
-        },
-        addedBy: {
-          type: Schema.Types.ObjectId,
-          ref: "User",
-          required: true,
-        },
-        addedByRole: {
-          type: String,
-          enum: ["Merchant", "Customer Care", "Admin"],
-        },
-        timestamp: {
-          type: Date,
-          default: Date.now,
-        },
-        attachments: [
-          {
-            url: String,
-            filename: String,
-            fileType: String,
-          },
-        ],
-        isInternal: {
-          type: Boolean,
-          default: false, // Internal notes not visible to merchant
-        },
-      },
-    ],
+    // updates: [
+    //   {
+    //     message: {
+    //       type: String,
+    //       required: true,
+    //     },
+    //     addedBy: {
+    //       type: Schema.Types.ObjectId,
+    //       ref: "User",
+    //       required: true,
+    //     },
+    //     addedByRole: {
+    //       type: String,
+    //       enum: ["Merchant", "Customer Care", "Admin"],
+    //     },
+    //     timestamp: {
+    //       type: Date,
+    //       default: Date.now,
+    //     },
+    //     attachments: [
+    //       {
+    //         url: String,
+    //         filename: String,
+    //         fileType: String,
+    //       },
+    //     ],
+    //     isInternal: {
+    //       type: Boolean,
+    //       default: false, // Internal notes not visible to merchant
+    //     },
+    //   },
+    // ],
+
+    lastActivityAt: {
+      type: Date,
+      default: Date.now,
+    },
+
+    lastMessageSnippet: {
+      type: String,
+    },
+
+
+
+
+
 
     // Attachments (screenshots, logs, etc.)
     attachments: [
@@ -189,30 +203,30 @@ supportTicketSchema.pre("save", async function (next) {
 });
 
 // Method to add an update/comment
-supportTicketSchema.methods.addUpdate = function (
-  message,
-  addedBy,
-  addedByRole,
-  attachments = [],
-  isInternal = false
-) {
-  this.updates.push({
-    message,
-    addedBy,
-    addedByRole,
-    timestamp: new Date(),
-    attachments,
-    isInternal,
-  });
+// supportTicketSchema.methods.addUpdate = function (
+//   message,
+//   addedBy,
+//   addedByRole,
+//   attachments = [],
+//   isInternal = false
+// ) {
+//   this.updates.push({
+//     message,
+//     addedBy,
+//     addedByRole,
+//     timestamp: new Date(),
+//     attachments,
+//     isInternal,
+//   });
 
-  // Set first response time if this is the first response from support
-  if (!this.firstResponseAt && ["Customer Care", "Admin"].includes(addedByRole)) {
-    this.firstResponseAt = new Date();
-    this.responseTime = Math.floor((this.firstResponseAt - this.createdAt) / 60000); // in minutes
-  }
+//   // Set first response time if this is the first response from support
+//   if (!this.firstResponseAt && ["Customer Care", "Admin"].includes(addedByRole)) {
+//     this.firstResponseAt = new Date();
+//     this.responseTime = Math.floor((this.firstResponseAt - this.createdAt) / 60000); // in minutes
+//   }
 
-  return this.save();
-};
+//   return this.save();
+// };
 
 // Method to assign ticket
 supportTicketSchema.methods.assignTo = function (userId) {

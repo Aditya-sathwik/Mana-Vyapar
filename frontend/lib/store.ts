@@ -2,6 +2,8 @@ import { configureStore } from '@reduxjs/toolkit';
 import themeReducer from './features/themeSlice';
 import scannerReducer from './features/scannerSlice';
 import khataReducer from './features/khataSlice';
+import authReducer from '../redux/slices/authSlice';
+import supportReducer from '../redux/slices/supportSlice';
 
 // Existing Merchant Store Factory
 export const makeStore = () => {
@@ -10,6 +12,8 @@ export const makeStore = () => {
             theme: themeReducer,
             scanner: scannerReducer,
             khata: khataReducer,
+            auth: authReducer,
+            support: supportReducer,
         },
     });
 };

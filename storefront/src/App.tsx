@@ -30,6 +30,8 @@ const LoadingScreen = () => (
   </div>
 );
 
+import SupportChatWidget from './components/support/SupportChatWidget';
+
 const App: React.FC = () => {
   return (
     <Provider store={store}>
@@ -53,6 +55,7 @@ const App: React.FC = () => {
             <Route path="*" element={<Home />} />
           </Routes>
         </Suspense>
+        <SupportChatWidget roomId="customer-support-room" />
       </Router>
     </Provider>
   );

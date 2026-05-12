@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { 
-  HeadphonesIcon, 
+  Headphones, 
   Search, 
   MessageSquare, 
   Clock, 
@@ -24,6 +24,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
+import ChatInterface from "@/components/shared/ChatInterface"
 
 // Mock Tickets
 const MOCK_TICKETS = [
@@ -171,101 +172,21 @@ export default function MerchantSupportPage() {
         )}>
           {selectedTicket ? (
             <>
-              {/* Chat Header */}
-              <div className="p-6 border-b border-border/50 flex items-center justify-between bg-card/50">
-                <div className="flex items-center gap-4">
-                  <button 
-                    onClick={() => setSelectedTicket(null)}
-                    className="lg:hidden p-2 hover:bg-muted rounded-xl transition-colors"
-                  >
-                    <ArrowLeft className="h-5 w-5" />
-                  </button>
-                  <div>
-                    <div className="flex items-center gap-2 mb-1">
-                        <span className="text-[10px] font-black text-primary uppercase tracking-widest">Currently Viewing Inquiry</span>
-                        <div className="h-1.5 w-1.5 bg-primary rounded-full animate-pulse" />
-                    </div>
-                    <h2 className="font-bold text-lg tracking-tight truncate">{selectedTicket.subject}</h2>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3">
-                    <Button variant="outline" className="rounded-xl border-border/50 h-10 px-4 text-[10px] items-center gap-2 hidden sm:flex">
-                        <CheckCircle2 className="h-4 w-4 text-primary" /> Resolve
-                    </Button>
-                    <button className="h-10 w-10 flex items-center justify-center hover:bg-muted rounded-xl transition-all">
-                        <MoreVertical className="h-5 w-5 text-muted-foreground" />
-                    </button>
-                </div>
-              </div>
-
-              {/* Messages Area */}
-              <div className="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-6">
-                <div className="flex flex-col items-center justify-center py-8 text-center space-y-3 opacity-50">
-                    <div className="h-10 w-10 bg-primary/10 rounded-full flex items-center justify-center">
-                        <ShieldCheck className="h-5 w-5 text-primary" />
-                    </div>
-                    <div>
-                        <p className="text-[10px] font-black uppercase tracking-widest text-foreground">Secure Support Channel Established</p>
-                        <p className="text-[9px] text-muted-foreground uppercase tracking-widest font-bold mt-1">Chat encrypted with TLS 1.3 Encryption</p>
-                    </div>
-                </div>
-
-                {selectedTicket.messages.map((msg, idx) => (
-                  <motion.div
-                    key={idx}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className={cn(
-                      "flex flex-col max-w-[80%]",
-                      msg.sender === 'merchant' ? "ml-auto items-end" : "items-start"
-                    )}
-                  >
-                    <div className={cn(
-                      "p-4 rounded-3xl text-sm leading-relaxed",
-                      msg.sender === 'merchant' 
-                        ? "bg-primary text-white rounded-tr-none shadow-xl shadow-primary/20" 
-                        : "bg-muted/80 backdrop-blur-sm border border-border/50 rounded-tl-none"
-                    )}>
-                      {msg.text}
-                    </div>
-                    <div className="mt-2 flex items-center gap-2 px-1">
-                        <span className="text-[8px] font-bold text-muted-foreground uppercase">{msg.timestamp}</span>
-                        {msg.sender === 'merchant' && <CheckCircle2 className="h-3 w-3 text-primary" />}
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
-
-              {/* Input Area */}
-              <div className="p-6 border-t border-border/50 bg-card/80">
-                <div className="flex items-center gap-3">
-                  <div className="flex-1 relative">
-                    <input 
-                      type="text"
-                      className="w-full bg-muted/50 border border-border/50 rounded-2xl h-14 pl-6 pr-14 text-sm focus:outline-none focus:border-primary/50 transition-all focus:ring-4 focus:ring-primary/5"
-                      placeholder="Type your response to support..."
-                      value={messageInput}
-                      onChange={(e) => setMessageInput(e.target.value)}
-                      onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
-                    />
-                    <button className="absolute right-3 top-1/2 -translate-y-1/2 h-8 w-8 flex items-center justify-center hover:bg-primary/20 rounded-xl transition-all">
-                        <Paperclip className="h-4 w-4 text-muted-foreground" />
-                    </button>
-                  </div>
-                  <Button 
-                    onClick={handleSendMessage}
-                    className="h-14 w-14 rounded-2xl bg-primary text-white shadow-lg shadow-primary/20 hover:scale-105 transition-all p-0 flex items-center justify-center shrink-0"
-                  >
-                    <Send className="h-5 w-5" />
-                  </Button>
-                </div>
+              {/* Chat Area */}
+              <div className="flex-1 overflow-hidden">
+                <ChatInterface 
+                  roomId={selectedTicket.id} 
+                  role="Merchant" 
+                  title={selectedTicket.subject} 
+                  showInternalNotes={false}
+                />
               </div>
             </>
           ) : (
             <div className="flex-1 flex flex-col items-center justify-center p-12 text-center">
                 <div className="relative mb-8">
                     <div className="h-32 w-32 bg-primary/5 rounded-full flex items-center justify-center animate-pulse">
-                        <HeadphonesIcon className="h-16 w-16 text-primary" />
+                        <Headphones className="h-16 w-16 text-primary" />
                     </div>
                     <motion.div 
                         initial={{ opacity: 0, scale: 0 }}

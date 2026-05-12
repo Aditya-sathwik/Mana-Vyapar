@@ -3,6 +3,7 @@ import { User } from "../models/User.models.js";
 import { ChatMessage } from "../models/ChatMessage.models.js";
 import { ChatRoom } from "../models/ChatRoom.models.js";
 import { ApiError } from "../utils/ApiError.js";
+import { sendChatNotification } from "./notification.service.js";
 
 /**
  * Automagically assigns a ticket to available support staff
@@ -40,7 +41,7 @@ const autoAssignTicket = async (ticketId) => {
     ticket.assignedTo = chosenStaff;
     ticket.assignedAt = new Date();
     if (ticket.status === "Open") ticket.status = "In Progress";
-    
+
     await ticket.save();
     return chosenStaff;
 };
@@ -77,32 +78,93 @@ const createTicket = async (merchantId, ticketData) => {
 };
 
 const addTicketComment = async (ticketId, senderId, senderRole, messageData) => {
-    const ticket = await SupportTicket.findById(ticketId);
+    const ticket = await SupportTicket.findOne({ $or: [{ ticketNumber: ticketId }, { _id: ticketId }] });
     if (!ticket) throw new ApiError(404, "Ticket not found");
 
-    const { message, attachments, isInternal } = messageData;
-
-    // Add to ticket updates array (for legacy/history)
-    await ticket.addUpdate(message, senderId, senderRole, attachments, isInternal);
+    const { message, attachments, isInternal, messageType = "TEXT", tempId, replyTo } = messageData;
 
     // Persist as a ChatMessage
     const chatMessage = await ChatMessage.create({
         roomId: ticket.ticketNumber,
         sender: senderId,
         senderRole,
+        messageType,
         content: message,
         attachments,
-        isInternal
+        isInternal,
+        tempId,
+        replyTo,
+        status: "SENT"
     });
 
+    await chatMessage.populate("sender", "fullname email avatar");
+    if (replyTo) {
+        await chatMessage.populate("replyTo", "content messageType");
+    }
     // Update participants in ChatRoom if not already present
     await ChatRoom.findOneAndUpdate(
         { roomId: ticket.ticketNumber },
         { $addToSet: { participants: senderId } }
     );
 
+    SupportTicket.findByIdAndUpdate(ticket._id, {
+        lastActivityAt: new Date(),
+        lastMessageSnippet: isInternal ? "Internal Note Added" : message.substring(0, 50),
+        // Smart Automation: Update ticket status based on sender
+        ...(senderRole === "Merchant" ? { status: "In Progress" } : { status: "Waiting for Customer" })
+    }).exec();
+
+    // Send Notification to the other party
+    const receiverId = senderRole === "Merchant" ? ticket.assignedTo : ticket.merchantId;
+    if (receiverId && !isInternal) {
+        const sender = await User.findById(senderId).select("fullname");
+        sendChatNotification(receiverId, sender?.fullname || "Support", ticket.ticketNumber, message.substring(0, 50));
+    }
+
     return chatMessage;
 };
+
+const getChatHistory = async (roomId, userId, role, page = 1, limit = 50, search = "") => {
+    const skip = (page - 1) * limit;
+
+    const query = { roomId };
+
+    // Search functionality
+    if (search) {
+        query.content = { $regex: search, $options: "i" };
+    }
+
+    // Hide internal messages from non-admins
+    if (role !== "Admin") {
+        query.isInternal = false;
+    }
+
+    const messages = await ChatMessage.find(query)
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .populate("sender", "fullname email avatar role")
+        .populate("replyTo", "content messageType");
+
+    return messages.reverse();
+
+};
+
+
+const markMessagesAsRead = async (roomId, readerId) => {
+    const result = await ChatMessage.updateMany(
+        {
+            roomId,
+            sender: { $ne: readerId }, // Don't mark your own messages as read
+            status: { $ne: "READ" }
+        },
+        {
+            $set: { status: "READ", readAt: new Date() }
+        }
+    );
+    return result.modifiedCount > 0;
+};
+
 
 const getTicketDetails = async (ticketId, userId, role) => {
     const ticket = await SupportTicket.findById(ticketId).populate("assignedTo", "fullname email avatar");
@@ -114,7 +176,7 @@ const getTicketDetails = async (ticketId, userId, role) => {
     }
 
     // Fetch message history from ChatMessage collection
-    const messages = await ChatMessage.find({ 
+    const messages = await ChatMessage.find({
         roomId: ticket.ticketNumber,
         ...(role === "Merchant" ? { isInternal: false } : {}) // Hide internal notes from merchants
     }).sort({ createdAt: 1 });
@@ -147,5 +209,7 @@ export {
     addTicketComment,
     getTicketDetails,
     listTickets,
-    autoAssignTicket
+    autoAssignTicket,
+    markMessagesAsRead,
+    getChatHistory
 };

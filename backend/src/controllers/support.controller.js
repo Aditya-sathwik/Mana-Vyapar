@@ -2,6 +2,7 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { ApiError } from "../utils/ApiError.js";
 import * as supportService from "../services/support.service.js";
+import { uploadOnCloudinary } from "../utils/cloudinary.js";
 
 const createTicket = asyncHandler(async (req, res) => {
     const { title, description, category, priority } = req.body;
@@ -53,7 +54,7 @@ const getTicketDetails = asyncHandler(async (req, res) => {
 
 const addComment = asyncHandler(async (req, res) => {
     const { ticketId } = req.params;
-    const { message, isInternal, attachments } = req.body;
+    const { message, isInternal, attachments, messageType, tempId, replyTo } = req.body;
 
     if (!message) {
         throw new ApiError(400, "Message is required");
@@ -63,7 +64,7 @@ const addComment = asyncHandler(async (req, res) => {
         ticketId,
         req.user._id,
         req.user.role,
-        { message, isInternal, attachments }
+        { message, isInternal, attachments, messageType, tempId, replyTo }
     );
 
     // Get Socket.io instance and broadcast
@@ -74,6 +75,57 @@ const addComment = asyncHandler(async (req, res) => {
 
     return res.status(201).json(
         new ApiResponse(201, comment, "Comment added successfully")
+    );
+});
+
+const getChatHistory = asyncHandler(async (req, res) => {
+    const { roomId } = req.params;
+    const { page, limit, search } = req.query;
+
+    const messages = await supportService.getChatHistory(
+        roomId,
+        req.user._id,
+        req.user.role,
+        parseInt(page) || 1,
+        parseInt(limit) || 50,
+        search
+    );
+
+    return res.status(200).json(
+        new ApiResponse(200, messages, "Chat history fetched successfully")
+    );
+});
+
+const markAsRead = asyncHandler(async (req, res) => {
+    const { roomId } = req.params;
+
+    const updated = await supportService.markMessagesAsRead(roomId, req.user._id);
+
+    return res.status(200).json(
+        new ApiResponse(200, { updated }, "Messages marked as read")
+    );
+});
+
+const uploadAttachment = asyncHandler(async (req, res) => {
+    const attachmentLocalPath = req.file?.path;
+
+    if (!attachmentLocalPath) {
+        throw new ApiError(400, "Attachment file is missing");
+    }
+
+    const attachment = await uploadOnCloudinary(attachmentLocalPath);
+
+    if (!attachment) {
+        throw new ApiError(400, "Error while uploading attachment");
+    }
+
+    return res.status(200).json(
+        new ApiResponse(200, {
+            url: attachment.url,
+            fileType: attachment.resource_type,
+            filename: req.file.originalname,
+            size: attachment.bytes
+        }, "Attachment uploaded successfully")
     );
 });
 
@@ -97,5 +149,8 @@ export {
     listTickets,
     getTicketDetails,
     addComment,
-    reassignTicket
+    reassignTicket,
+    getChatHistory,
+    markAsRead,
+    uploadAttachment
 };

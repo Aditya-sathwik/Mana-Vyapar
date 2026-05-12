@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { 
-  HeadphonesIcon, 
+  Headphones, 
   Send, 
   Paperclip, 
   X,
@@ -20,6 +20,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
 import Link from "next/link"
+import ChatInterface from "@/components/shared/ChatInterface"
 
 const INITIAL_MESSAGES = [
   { id: 1, sender: "support", text: "Hello! I'm your Mana Vyapar concierge. How can I assist you with your shop operations today?", timestamp: "Just now" }
@@ -136,80 +137,13 @@ export default function ShopAssistancePage() {
         </div>
 
         {/* Chat System */}
-        <div className="lg:col-span-3 flex flex-col bg-card/80 backdrop-blur-2xl border border-border/50 rounded-[2.5rem] overflow-hidden shadow-2xl relative min-h-0">
-            {/* Messages */}
-            <div ref={scrollRef} className="flex-1 overflow-y-auto p-8 space-y-8 custom-scrollbar scroll-smooth">
-                <div className="flex flex-col items-center justify-center py-8 text-center space-y-4 opacity-50">
-                    <div className="h-12 w-12 bg-primary/10 rounded-2xl flex items-center justify-center">
-                        <ShieldCheck className="h-6 w-6 text-primary" />
-                    </div>
-                    <div>
-                        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-foreground">Concierge Support Session Secure</p>
-                        <p className="text-[8px] text-muted-foreground uppercase tracking-widest font-bold mt-1">Encrypted for business safety</p>
-                    </div>
-                </div>
-
-                {messages.map((msg, i) => (
-                    <motion.div
-                        key={`${msg.id}-${i}`}
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className={cn(
-                            "flex flex-col max-w-[85%]",
-                            msg.sender === 'merchant' ? "ml-auto items-end" : "items-start"
-                        )}
-                    >
-                        <div className={cn(
-                            "p-5 rounded-3xl text-sm leading-relaxed",
-                            msg.sender === 'merchant' 
-                                ? "bg-primary text-white rounded-tr-none shadow-xl shadow-primary/20" 
-                                : "bg-muted/80 backdrop-blur-sm border border-border/50 rounded-tl-none font-medium text-foreground"
-                        )}>
-                            {msg.text}
-                        </div>
-                        <div className="mt-2 flex items-center gap-2 px-1">
-                             {msg.sender === 'support' && <div className="h-2 w-2 bg-primary rounded-full animate-pulse mr-1" />}
-                             <span className="text-[8px] font-black text-muted-foreground uppercase tracking-widest">{msg.sender === 'merchant' ? 'You' : 'Concierge'} • {msg.timestamp}</span>
-                        </div>
-                    </motion.div>
-                ))}
-
-                {isTyping && (
-                    <div className="flex items-center gap-2 p-4 bg-muted/40 rounded-2xl border border-border/50 w-fit">
-                        <span className="text-[8px] font-black uppercase text-muted-foreground tracking-widest">Agent is typing</span>
-                        <div className="flex gap-1">
-                            <div className="h-1 w-1 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                            <div className="h-1 w-1 bg-primary rounded-full animate-bounce" style={{ animationDelay: '200ms' }} />
-                            <div className="h-1 w-1 bg-primary rounded-full animate-bounce" style={{ animationDelay: '400ms' }} />
-                        </div>
-                    </div>
-                )}
-            </div>
-
-            {/* Input Overlay */}
-            <div className="p-8 border-t border-border/50 bg-card/80">
-                <div className="flex items-center gap-4">
-                    <div className="flex-1 relative group">
-                        <input 
-                            type="text"
-                            value={input}
-                            onChange={(e) => setInput(e.target.value)}
-                            onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-                            placeholder="Describe your issue or ask for guidance..."
-                            className="w-full h-16 bg-muted/50 border border-border/50 rounded-2xl pl-6 pr-14 text-sm font-medium focus:outline-none focus:border-primary/50 transition-all focus:shadow-[0_0_20px_rgba(5,148,103,0.1)]"
-                        />
-                        <button className="absolute right-4 top-1/2 -translate-y-1/2 h-10 w-10 flex items-center justify-center hover:bg-primary/10 rounded-xl transition-all group">
-                             <Paperclip className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
-                        </button>
-                    </div>
-                    <Button 
-                        onClick={() => handleSend()}
-                        className="h-16 w-16 rounded-2xl bg-primary text-white shadow-xl shadow-primary/20 hover:scale-105 transition-all p-0 flex items-center justify-center shrink-0"
-                    >
-                         <Send className="h-6 w-6" />
-                    </Button>
-                </div>
-            </div>
+        <div className="lg:col-span-3 min-h-0 flex flex-col">
+            <ChatInterface 
+                roomId="assistance-room" 
+                role="Merchant" 
+                title="Platform Concierge" 
+                showInternalNotes={false}
+            />
         </div>
       </div>
 

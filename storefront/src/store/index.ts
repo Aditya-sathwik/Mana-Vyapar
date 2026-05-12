@@ -4,6 +4,7 @@ import productReducer from '../features/productSlice';
 import userReducer from '../features/userSlice';
 import previewReducer from '../features/previewSlice';
 import storeReducer from '../features/storeSlice';
+import supportReducer from './slices/supportSlice';
 
 export const store = configureStore({
   reducer: {
@@ -12,6 +13,7 @@ export const store = configureStore({
     user: userReducer,
     preview: previewReducer,
     store: storeReducer,
+    support: supportReducer,
   },
 });
 

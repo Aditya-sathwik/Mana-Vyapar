@@ -7,11 +7,10 @@ A premium, AI-powered digital storefront and business management solution design
 | Feature Category | Development Status | Key Highlights |
 | :--- | :--- | :--- |
 | **Category Management** | ✅ Completed | Recursive Trees, Theme-Aware, Scrollers |
+| **Enterprise Support Chat** | ✅ Completed | Real-time Sockets, AI Autopilot, Media Attachments |
 | **Smart Khata** | 🟠 UI Ready | Transaction Ledger, Private Bookkeeping |
 | **AI Product Scan** | 🟠 UI Ready | Real-time Camera HUD, AI Parsing Mockups |
 | **Merchant Dashboard** | 🟠 UI Ready | High-level metrics, Quick Actions |
-| **Store Control** | 🟠 UI Ready | Basic store settings & metadata |
-| **Customer Web-App** | 🔴 Pending | Public-facing storefront generation |
 
 ---
 
@@ -24,6 +23,16 @@ The most developed module in the hub, providing a sophisticated way to organize 
 - **Smart Scrollers**: Optimized for large folder structures (Vertical + Horizontal scrolling).
 - **Theme-Adaptive UI**: Perfectly calibrated for both **Light** and **Dark** modes with no hardcoded colors.
 - **Classification CRUD**: Full Create, Update, and Delete support with parent category context.
+
+### 2. Enterprise Support & Assistance
+A robust, WhatsApp-standard communication system integrated throughout the platform.
+- **Two Distinct Flows**:
+  - **Support (`/merchant/support`)**: Direct communication between Customers and Merchants.
+  - **Assistance (`/merchant/assistance`)**: Direct link between Merchants and the Platform Admin/Support team.
+- **Real-Time Engine**: Powered by Socket.io for instant messaging, delivery receipts, and typing indicators.
+- **Media Support**: Integrated Cloudinary upload for images, videos, and documents.
+- **AI Autopilot**: Automatic ticket analysis, sentiment detection, and draft resolutions using OpenAI.
+- **Enterprise UX**: Status tracking (Sent/Delivered/Read), infinite scroll history, and threaded replies.
 
 ### 2. Smart Khata (Digital Ledger)
 - **Status: UI Ready, Integration Pending**
