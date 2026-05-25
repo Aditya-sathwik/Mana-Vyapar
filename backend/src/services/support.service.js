@@ -13,17 +13,25 @@ const autoAssignTicket = async (ticketId) => {
     if (!ticket) throw new ApiError(404, "Ticket not found");
 
     // Find all users with TICKET_MGMT permission
-    const supportStaff = await User.find({
+    let supportStaff = await User.find({
         permissions: { $in: ["TICKET_MGMT", "SUPPORT_ADMIN"] },
         isActive: true
     });
 
     if (supportStaff.length === 0) {
-        console.warn("⚠️ No support staff available for auto-assignment");
+        console.warn("⚠️ No support staff available for auto-assignment. Falling back to Admin...");
+        supportStaff = await User.find({
+            role: "Admin",
+            isActive: true
+        });
+    }
+
+    if (supportStaff.length === 0) {
+        console.error("❌ No support staff or active admins available for ticket assignment");
         return null;
     }
 
-    // Get workload for each staff member
+    // Get workload for each staff member / admin
     const staffWorkload = await Promise.all(
         supportStaff.map(async (staff) => {
             const count = await SupportTicket.countDocuments({
@@ -78,7 +86,12 @@ const createTicket = async (merchantId, ticketData) => {
 };
 
 const addTicketComment = async (ticketId, senderId, senderRole, messageData) => {
-    const ticket = await SupportTicket.findOne({ $or: [{ ticketNumber: ticketId }, { _id: ticketId }] });
+    const isObjectId = typeof ticketId === "string" && ticketId.match(/^[0-9a-fA-F]{24}$/);
+    const query = isObjectId 
+        ? { $or: [{ ticketNumber: ticketId }, { _id: ticketId }] }
+        : { ticketNumber: ticketId };
+        
+    const ticket = await SupportTicket.findOne(query);
     if (!ticket) throw new ApiError(404, "Ticket not found");
 
     const { message, attachments, isInternal, messageType = "TEXT", tempId, replyTo } = messageData;
@@ -167,7 +180,10 @@ const markMessagesAsRead = async (roomId, readerId) => {
 
 
 const getTicketDetails = async (ticketId, userId, role) => {
-    const ticket = await SupportTicket.findById(ticketId).populate("assignedTo", "fullname email avatar");
+    const isObjectId = ticketId.match(/^[0-9a-fA-F]{24}$/);
+    const ticket = await SupportTicket.findOne(
+        isObjectId ? { _id: ticketId } : { ticketNumber: ticketId }
+    ).populate("assignedTo", "fullname email avatar");
     if (!ticket) throw new ApiError(404, "Ticket not found");
 
     // Check authorization
@@ -179,7 +195,9 @@ const getTicketDetails = async (ticketId, userId, role) => {
     const messages = await ChatMessage.find({
         roomId: ticket.ticketNumber,
         ...(role === "Merchant" ? { isInternal: false } : {}) // Hide internal notes from merchants
-    }).sort({ createdAt: 1 });
+    })
+    .sort({ createdAt: 1 })
+    .populate("sender", "fullname email avatar role");
 
     return { ticket, messages };
 };

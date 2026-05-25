@@ -6,6 +6,7 @@ interface Message {
     sender: {
         _id: string;
         fullName: string;
+        fullname?: string;
         role: string;
         avatar?: string;
     };
@@ -15,6 +16,7 @@ interface Message {
     attachments: any[];
     createdAt: string;
     tempId?: string;
+    isInternal?: boolean;
 }
 
 interface SupportState {

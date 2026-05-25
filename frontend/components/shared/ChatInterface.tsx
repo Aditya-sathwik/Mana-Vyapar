@@ -5,7 +5,10 @@ import { useSelector, useDispatch } from 'react-redux';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSupportSocket } from '@/hooks/useSupportSocket';
 import { RootState } from '@/redux/store';
-import { addMessage } from '@/redux/slices/supportSlice';
+import { addMessage, setMessages, setActiveRoom } from '@/redux/slices/supportSlice';
+import { supportApi } from '@/lib/api';
+import { useAuth } from '@/context/auth-context';
+import { storage } from '@/lib/storage';
 import { format } from 'date-fns';
 import { 
     Send as FiSend, 
@@ -30,12 +33,38 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
     showInternalNotes = false 
 }) => {
     const dispatch = useDispatch();
-    const { user } = useSelector((state: RootState) => state.auth || { user: null });
+    const { user: contextUser } = useAuth();
+    const user = contextUser || storage.getUser();
     const { messages = [], typingParticipants = [] } = useSelector((state: RootState) => state.support || { messages: [], typingParticipants: [] });
     const [input, setInput] = useState('');
     const [isInternal, setIsInternal] = useState(false);
     const scrollRef = useRef<HTMLDivElement>(null);
     const { sendMessage, sendTyping } = useSupportSocket(roomId);
+
+    // Fetch chat history when roomId changes
+    useEffect(() => {
+        if (!roomId) return;
+        
+        let isMounted = true;
+        dispatch(setActiveRoom(roomId));
+
+        const fetchChatHistory = async () => {
+            try {
+                const res = await supportApi.getTicketDetails(roomId);
+                if (isMounted && res.success && res.data) {
+                    dispatch(setMessages(res.data.messages || []));
+                }
+            } catch (err) {
+                console.error("Failed to load chat history:", err);
+            }
+        };
+
+        fetchChatHistory();
+
+        return () => {
+            isMounted = false;
+        };
+    }, [roomId, dispatch]);
 
     // Scroll to bottom on new messages
     useEffect(() => {
@@ -48,6 +77,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
         if (!input.trim()) return;
 
         const tempId = Date.now().toString();
+        console.log(`💬 User triggered message send (tempId: ${tempId}): "${input.substring(0, 30)}..."`);
         
         // Optimistic UI update
         const tempMsg = {
@@ -109,7 +139,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                 className="flex-1 overflow-y-auto p-4 space-y-4 scroll-smooth custom-scrollbar"
             >
                 {messages.map((msg, index) => {
-                    const isMe = msg.sender?._id === user?._id;
+                                        const senderId = typeof msg.sender === 'object' ? msg.sender?._id : msg.sender;
+                    const isMe = senderId === user?._id;
                     return (
                         <motion.div
                             key={msg._id || index}
@@ -120,7 +151,9 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                             <div className={`max-w-[80%] group`}>
                                 {!isMe && (
                                     <p className="text-[10px] text-muted-foreground ml-2 mb-1">
-                                        {msg.sender.fullName}
+                                        {typeof msg.sender === 'object' 
+                                            ? (msg.sender?.fullName || msg.sender?.fullname || 'Support') 
+                                            : 'Support'}
                                     </p>
                                 )}
                                 <div className={`

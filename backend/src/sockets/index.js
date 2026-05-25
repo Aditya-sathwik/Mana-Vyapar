@@ -18,7 +18,24 @@ export const initializeSocket = async (httpServer) => {
 
     const io = new Server(httpServer, {
         cors: {
-            origin: process.env.CORS_ORIGIN || "*",
+            origin: (origin, callback) => {
+                if (!origin) return callback(null, true);
+
+                const allowedPatterns = [
+                    /^http:\/\/localhost:\d+$/,
+                    /^http:\/\/.*\.lvh\.me:\d+$/
+                ];
+
+                const isAllowed = allowedPatterns.some(pattern => pattern.test(origin)) ||
+                    origin === process.env.CORS_ORIGIN ||
+                    process.env.CORS_ORIGIN === "*";
+
+                if (isAllowed) {
+                    callback(null, origin);
+                } else {
+                    callback(new Error('Not allowed by CORS'));
+                }
+            },
             credentials: true
         },
         adapter: createAdapter(pubClient, subClient)

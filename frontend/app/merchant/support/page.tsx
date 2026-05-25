@@ -1,6 +1,8 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import toast from "react-hot-toast"
+import { supportApi } from "@/lib/api"
 import { motion, AnimatePresence } from "framer-motion"
 import { 
   Headphones, 
@@ -64,30 +66,65 @@ const MOCK_TICKETS = [
 ]
 
 export default function MerchantSupportPage() {
-  const [tickets, setTickets] = useState(MOCK_TICKETS)
-  const [selectedTicket, setSelectedTicket] = useState<typeof MOCK_TICKETS[0] | null>(null)
-  const [messageInput, setMessageInput] = useState("")
+  const [tickets, setTickets] = useState<any[]>([])
+  const [selectedTicket, setSelectedTicket] = useState<any | null>(null)
   const [isNewTicketModalOpen, setIsNewTicketModalOpen] = useState(false)
 
-  const handleSendMessage = () => {
-    if (!messageInput.trim() || !selectedTicket) return
-    
-    const newMessage = {
-      id: `msg-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
-      sender: "merchant",
-      text: messageInput,
-      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-    }
+  // Form states for new ticket creation
+  const [newTitle, setNewTitle] = useState("")
+  const [newCategory, setNewCategory] = useState("Technical Issue")
+  const [newPriority, setNewPriority] = useState("Medium")
+  const [newDescription, setNewDescription] = useState("")
+  const [loading, setLoading] = useState(true)
+  const [submitting, setSubmitting] = useState(false)
 
-    const updatedSelectedTicket = {
-        ...selectedTicket,
-        messages: [...selectedTicket.messages, newMessage]
+  const fetchTickets = async () => {
+    try {
+      setLoading(true)
+      const res = await supportApi.getTickets()
+      if (res.success && Array.isArray(res.data)) {
+        setTickets(res.data)
+      } else if (Array.isArray(res)) {
+        setTickets(res)
+      }
+    } catch (err: any) {
+      console.error("Failed to fetch tickets:", err)
+      toast.error(err?.message || "Failed to load support inquiries")
+    } finally {
+      setLoading(false)
     }
-
-    setTickets(prev => prev.map(t => t.id === selectedTicket.id ? updatedSelectedTicket : t))
-    setSelectedTicket(updatedSelectedTicket)
-    setMessageInput("")
   }
+
+  useEffect(() => {
+    fetchTickets()
+  }, [])
+
+  const handleCreateTicket = async () => {
+    if (!newTitle.trim() || !newDescription.trim()) return
+    try {
+      setSubmitting(true)
+      const res = await supportApi.createTicket({
+        title: newTitle,
+        description: newDescription,
+        category: newCategory,
+        priority: newPriority
+      })
+      toast.success("Support ticket created successfully!")
+      setNewTitle("")
+      setNewDescription("")
+      setNewCategory("Technical Issue")
+      setNewPriority("Medium")
+      setIsNewTicketModalOpen(false)
+      await fetchTickets()
+    } catch (err: any) {
+      console.error("Failed to create ticket:", err)
+      toast.error(err?.message || "Failed to submit inquiry. Please try again.")
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+
 
   return (
     <div className="space-y-8 pb-20">
@@ -126,42 +163,62 @@ export default function MerchantSupportPage() {
           </div>
           
           <div className="flex-1 overflow-y-auto custom-scrollbar p-3 space-y-2">
-            {tickets.map((ticket) => (
-              <motion.div
-                key={ticket.id}
-                whileHover={{ x: 4 }}
-                onClick={() => setSelectedTicket(ticket)}
-                className={cn(
-                  "p-4 rounded-2xl cursor-pointer transition-all border border-transparent group",
-                  selectedTicket?.id === ticket.id 
-                    ? "bg-primary/10 border-primary/20 shadow-lg shadow-primary/5" 
-                    : "hover:bg-muted/40"
-                )}
-              >
-                <div className="flex justify-between items-start mb-2">
-                  <span className="text-[10px] font-black text-primary uppercase tracking-widest">#{ticket.id}</span>
-                  <span className="text-[10px] font-bold text-muted-foreground uppercase">{ticket.updatedAt}</span>
-                </div>
-                <h3 className="font-bold text-sm tracking-tight mb-1 truncate">{ticket.subject}</h3>
-                <p className="text-xs text-muted-foreground line-clamp-1 mb-3">{ticket.lastMessage}</p>
-                <div className="flex items-center gap-2">
-                  <span className={cn(
-                    "text-[8px] font-black px-2 py-0.5 rounded-full uppercase tracking-widest border",
-                    ticket.status === 'in-progress' ? 'bg-blue-500/10 text-blue-500 border-blue-500/20' :
-                    ticket.status === 'resolved' ? 'bg-primary/10 text-primary border-primary/20' :
-                    'bg-amber-500/10 text-amber-500 border-amber-500/20'
-                  )}>
-                    {ticket.status.replace('-', ' ')}
-                  </span>
-                  <span className={cn(
-                     "text-[8px] font-black px-2 py-0.5 rounded-full uppercase tracking-widest",
-                     ticket.priority === 'high' ? 'bg-red-500/10 text-red-500' : 'bg-muted text-muted-foreground'
-                  )}>
-                    {ticket.priority}
-                  </span>
-                </div>
-              </motion.div>
-            ))}
+            {loading ? (
+              <div className="p-8 text-center text-xs font-bold uppercase tracking-widest text-muted-foreground animate-pulse">
+                Loading live inquiries...
+              </div>
+            ) : tickets.length === 0 ? (
+              <div className="p-8 text-center text-xs font-bold uppercase tracking-widest text-muted-foreground">
+                No active inquiries
+              </div>
+            ) : (
+              tickets.map((ticket) => {
+                const ticketId = ticket.ticketNumber || ticket._id || ticket.id;
+                const ticketTitle = ticket.title || ticket.subject;
+                const ticketUpdatedAt = ticket.updatedAt ? new Date(ticket.updatedAt).toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'Recently';
+                const statusLower = (ticket.status || 'open').toLowerCase();
+                const priorityLower = (ticket.priority || 'medium').toLowerCase();
+
+                return (
+                  <motion.div
+                    key={ticket._id || ticketId}
+                    whileHover={{ x: 4 }}
+                    onClick={() => setSelectedTicket(ticket)}
+                    className={cn(
+                      "p-4 rounded-2xl cursor-pointer transition-all border border-transparent group",
+                      (selectedTicket?.ticketNumber === ticket.ticketNumber || selectedTicket?._id === ticket._id)
+                        ? "bg-primary/10 border-primary/20 shadow-lg shadow-primary/5" 
+                        : "hover:bg-muted/40"
+                    )}
+                  >
+                    <div className="flex justify-between items-start mb-2">
+                      <span className="text-[10px] font-black text-primary uppercase tracking-widest">#{ticketId}</span>
+                      <span className="text-[10px] font-bold text-muted-foreground uppercase">{ticketUpdatedAt}</span>
+                    </div>
+                    <h3 className="font-bold text-sm tracking-tight mb-1 truncate">{ticketTitle}</h3>
+                    <p className="text-xs text-muted-foreground line-clamp-1 mb-3">
+                      {ticket.lastMessageSnippet || ticket.lastMessage || "No messages yet"}
+                    </p>
+                    <div className="flex items-center gap-2">
+                      <span className={cn(
+                        "text-[8px] font-black px-2 py-0.5 rounded-full uppercase tracking-widest border",
+                        statusLower === 'in progress' || statusLower === 'in-progress' ? 'bg-blue-500/10 text-blue-500 border-blue-500/20' :
+                        statusLower === 'resolved' ? 'bg-primary/10 text-primary border-primary/20' :
+                        'bg-amber-500/10 text-amber-500 border-amber-500/20'
+                      )}>
+                        {statusLower}
+                      </span>
+                      <span className={cn(
+                         "text-[8px] font-black px-2 py-0.5 rounded-full uppercase tracking-widest",
+                         priorityLower === 'high' || priorityLower === 'critical' ? 'bg-red-500/10 text-red-500' : 'bg-muted text-muted-foreground'
+                      )}>
+                        {priorityLower}
+                      </span>
+                    </div>
+                  </motion.div>
+                );
+              })
+            )}
           </div>
         </div>
 
@@ -175,9 +232,9 @@ export default function MerchantSupportPage() {
               {/* Chat Area */}
               <div className="flex-1 overflow-hidden">
                 <ChatInterface 
-                  roomId={selectedTicket.id} 
+                  roomId={selectedTicket.ticketNumber || selectedTicket.id} 
                   role="Merchant" 
-                  title={selectedTicket.subject} 
+                  title={selectedTicket.title || selectedTicket.subject} 
                   showInternalNotes={false}
                 />
               </div>
@@ -275,31 +332,50 @@ export default function MerchantSupportPage() {
                 <div className="p-8 space-y-6">
                     <div className="space-y-2">
                         <label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest ml-1">Inquiry Subject</label>
-                        <Input placeholder="Brief descriptive title..." className="h-14 rounded-2xl bg-muted/30 border-border/50 text-sm font-bold pl-4" />
+                        <Input 
+                            value={newTitle}
+                            onChange={(e) => setNewTitle(e.target.value)}
+                            placeholder="Brief descriptive title..." 
+                            className="h-14 rounded-2xl bg-muted/30 border-border/50 text-sm font-bold pl-4" 
+                        />
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
-                            <label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest ml-1">Department</label>
-                            <select className="w-full h-14 rounded-2xl bg-muted/30 border border-border/50 text-xs font-bold px-4 appearance-none outline-none focus:border-primary/50 transition-all uppercase tracking-widest">
-                                <option>Billing & Payouts</option>
-                                <option>Inventory Sync</option>
-                                <option>API Integration</option>
-                                <option>Website Builder</option>
-                                <option>Other</option>
+                            <label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest ml-1">Department / Category</label>
+                            <select 
+                                value={newCategory}
+                                onChange={(e) => setNewCategory(e.target.value)}
+                                className="w-full h-14 rounded-2xl bg-muted/30 border border-border/50 text-xs font-bold px-4 appearance-none outline-none focus:border-primary/50 transition-all uppercase tracking-widest"
+                            >
+                                <option value="Technical Issue">Technical Issue</option>
+                                <option value="Billing">Billing & Payouts</option>
+                                <option value="Feature Request">Feature Request</option>
+                                <option value="Bug Report">Bug Report</option>
+                                <option value="Account Issue">Account Issue</option>
+                                <option value="WhatsApp Integration">WhatsApp Integration</option>
+                                <option value="Payment Gateway">Payment Gateway</option>
+                                <option value="Other">Other</option>
                             </select>
                         </div>
                         <div className="space-y-2">
-                            <label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest ml-1">Urgency</label>
-                            <select className="w-full h-14 rounded-2xl bg-muted/30 border border-border/50 text-xs font-bold px-4 appearance-none outline-none focus:border-primary/50 transition-all uppercase tracking-widest">
-                                <option>Normal</option>
-                                <option>Elevated</option>
-                                <option className="text-red-500">Critical (Production Halt)</option>
+                            <label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest ml-1">Urgency / Priority</label>
+                            <select 
+                                value={newPriority}
+                                onChange={(e) => setNewPriority(e.target.value)}
+                                className="w-full h-14 rounded-2xl bg-muted/30 border border-border/50 text-xs font-bold px-4 appearance-none outline-none focus:border-primary/50 transition-all uppercase tracking-widest"
+                            >
+                                <option value="Low">Low</option>
+                                <option value="Medium">Medium</option>
+                                <option value="High">High</option>
+                                <option value="Critical">Critical</option>
                             </select>
                         </div>
                     </div>
                     <div className="space-y-2">
                         <label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest ml-1">Contextual Details</label>
                         <textarea 
+                            value={newDescription}
+                            onChange={(e) => setNewDescription(e.target.value)}
                             className="w-full bg-muted/30 border border-border/50 rounded-2xl p-4 text-sm font-medium focus:outline-none focus:border-primary/50 transition-all min-h-[150px] resize-none"
                             placeholder="Describe your request in detail for the technical team..."
                         />
@@ -317,16 +393,20 @@ export default function MerchantSupportPage() {
                         variant="outline" 
                         onClick={() => setIsNewTicketModalOpen(false)}
                         className="flex-1 rounded-2xl h-14 text-[10px] font-black uppercase tracking-widest border-border/50"
+                        disabled={submitting}
                     >
-                        Save Draft
+                        Cancel
                     </Button>
                     <Button 
+                        onClick={handleCreateTicket}
                         className="flex-[2] rounded-2xl h-14 bg-primary text-white text-[10px] font-black uppercase tracking-widest shadow-xl shadow-primary/20"
+                        disabled={submitting || !newTitle.trim() || !newDescription.trim()}
                     >
-                        Transmit Inquiry
+                        {submitting ? "Transmitting..." : "Transmit Inquiry"}
                     </Button>
                 </div>
              </motion.div>
+
           </div>
         )}
       </AnimatePresence>

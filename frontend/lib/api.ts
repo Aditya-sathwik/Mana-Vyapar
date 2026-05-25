@@ -32,4 +32,13 @@ export const storefrontApi = {
   getCategories: () => apiFetch('/categories'),
 };
 
+export const supportApi = {
+  getTickets: () => apiFetch('/support/tickets'),
+  createTicket: (data: { title: string; description: string; category: string; priority: string }) => apiFetch('/support/tickets', {
+    method: 'POST',
+    body: JSON.stringify(data)
+  }),
+  getTicketDetails: (ticketId: string) => apiFetch(`/support/tickets/${ticketId}`),
+};
+
 export default storefrontApi;

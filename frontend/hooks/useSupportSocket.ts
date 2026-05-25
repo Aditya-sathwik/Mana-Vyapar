@@ -3,25 +3,59 @@ import { useDispatch, useSelector } from 'react-redux';
 import { io, Socket } from 'socket.io-client';
 import { addMessage, setTyping, setAllRead, updateMessageStatus } from '../redux/slices/supportSlice';
 import { RootState } from '../redux/store';
+import { storage } from '@/lib/storage';
+
+import { useAuth } from '@/context/auth-context';
 
 let socket: Socket | null = null;
 
 export const useSupportSocket = (roomId: string | null) => {
     const dispatch = useDispatch();
-    const { user } = useSelector((state: RootState) => state.auth);
+    const { user: contextUser } = useAuth();
+    const user = contextUser || storage.getUser();
 
     useEffect(() => {
         if (!user || !roomId) return;
 
+        const token = storage.getAccessToken();
+        if (!token) {
+            console.error("⚠️ Cannot initialize socket: No access token found in storage.");
+            return;
+        }
+
         // Initialize socket if not exists
         if (!socket) {
+            console.log("🔌 Initializing socket connection...");
             socket = io(process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:8080', {
-                auth: { token: localStorage.getItem('accessToken') },
-                withCredentials: true
+                auth: { token },
+                withCredentials: true,
+                autoConnect: false
+            });
+
+            // Register connection logs
+            socket.on('connect', () => {
+                console.log('✅ Socket connected successfully! ID:', socket?.id);
+            });
+
+            socket.on('connect_error', (err) => {
+                console.error('❌ Socket connection error:', err.message);
+            });
+
+            socket.on('disconnect', (reason) => {
+                console.warn('🔌 Socket disconnected. Reason:', reason);
             });
         }
 
+        // Dynamically update the token in case it changed/refreshed
+        socket.auth = { token };
+
+        if (!socket.connected) {
+            console.log("🔌 Socket is disconnected, connecting now...");
+            socket.connect();
+        }
+
         // Join room
+        console.log(`📣 Socket emitting 'join_room' for [${roomId}]`);
         socket.emit('join_room', roomId);
 
         // Listen for events
@@ -64,6 +98,7 @@ export const useSupportSocket = (roomId: string | null) => {
 
     const sendMessage = useCallback((content: string, messageType = 'TEXT', attachments = [], tempId?: string) => {
         if (socket && roomId) {
+            console.log(`📤 Sending message to room [${roomId}] (tempId: ${tempId}): "${content.substring(0, 30)}..."`);
             socket.emit('send_message', {
                 roomId,
                 content,
@@ -71,6 +106,8 @@ export const useSupportSocket = (roomId: string | null) => {
                 attachments,
                 tempId
             });
+        } else {
+            console.warn(`⚠️ Cannot send message: socket is ${socket ? 'connected but roomId is missing' : 'not connected'}`, { roomId });
         }
     }, [roomId]);
 

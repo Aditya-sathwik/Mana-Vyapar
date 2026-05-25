@@ -193,8 +193,8 @@ supportTicketSchema.index({ assignedTo: 1, status: 1 });
 supportTicketSchema.index({ priority: 1, status: 1 });
 supportTicketSchema.index({ createdAt: -1 });
 
-// Pre-save hook to generate ticket number
-supportTicketSchema.pre("save", async function (next) {
+// Pre-validate hook to generate ticket number before schema validation checks it
+supportTicketSchema.pre("validate", async function (next) {
   if (this.isNew && !this.ticketNumber) {
     const count = await mongoose.model("SupportTicket").countDocuments();
     this.ticketNumber = `TKT${Date.now()}${count + 1}`;

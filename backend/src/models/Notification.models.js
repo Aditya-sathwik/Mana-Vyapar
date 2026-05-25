@@ -10,7 +10,7 @@ const notificationSchema = new Schema(
         },
         type: {
             type: String,
-            enum: ["ORDER", "PAYMENT", "STOCK", "CUSTOMER", "SYSTEM"],
+            enum: ["ORDER", "PAYMENT", "STOCK", "CUSTOMER", "SYSTEM", "CHAT"],
             required: true
         },
         title: {
